@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import * as satellite from "satellite.js";
+import { Html } from "@react-three/drei";
 import { EARTH_RADIUS } from "./Earth";
 import { geodeticToVector3, propagate, type LiveState } from "@/lib/orbit";
 import type { CatalogEntry } from "@/lib/satellite-catalog";
@@ -19,8 +20,7 @@ type Props = {
 
 export default function SatelliteMarker({ entry, line1, line2, isSelected, onSelect }: Props) {
   const satrec = useMemo(() => satellite.twoline2satrec(line1, line2), [line1, line2]);
-  const meshRef = useRef<THREE.Mesh>(null);
-  const trailRef = useRef<THREE.Line>(null);
+  const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   const lastTelemetryPush = useRef(0);
   const color = CATEGORY_COLOR[entry.category];
@@ -41,9 +41,9 @@ export default function SatelliteMarker({ entry, line1, line2, isSelected, onSel
 
   useFrame(({ clock }) => {
     const state = propagate(satrec, new Date());
-    if (!state || !meshRef.current) return;
+    if (!state || !groupRef.current) return;
     const [x, y, z] = geodeticToVector3(state.lat, state.lon, state.altitudeKm, EARTH_RADIUS);
-    meshRef.current.position.set(x, y, z);
+    groupRef.current.position.set(x, y, z);
 
     if (isSelected) {
       const now = clock.getElapsedTime();
@@ -54,27 +54,63 @@ export default function SatelliteMarker({ entry, line1, line2, isSelected, onSel
     }
   });
 
+  const handleClick = (e: any) => {
+    e.stopPropagation();
+    const state = propagate(satrec, new Date());
+    onSelect(entry.id, state);
+  };
+
   return (
     <group>
-      <line ref={trailRef as any}>
+      {/* Trail sits at absolute world positions, independent of the moving group */}
+      <line>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[trailPositions, 3]} />
         </bufferGeometry>
         <lineBasicMaterial color={color} transparent opacity={0.35} />
       </line>
-      <mesh
-        ref={meshRef}
-        onClick={(e) => {
-          e.stopPropagation();
-          const state = propagate(satrec, new Date());
-          onSelect(entry.id, state);
-        }}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-      >
-        <sphereGeometry args={[isSelected || hovered ? 0.05 : 0.032, 12, 12]} />
-        <meshBasicMaterial color={color} />
-      </mesh>
+
+      <group ref={groupRef}>
+        {/* Visible dot — kept small on purpose */}
+        <mesh renderOrder={1}>
+          <sphereGeometry args={[isSelected || hovered ? 0.055 : 0.032, 12, 12]} />
+          <meshBasicMaterial color={color} depthTest={false} />
+        </mesh>
+
+        {/* Invisible larger sphere = the actual click/tap target, much easier to hit */}
+        <mesh
+          onClick={handleClick}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            setHovered(true);
+            document.body.style.cursor = "pointer";
+          }}
+          onPointerOut={() => {
+            setHovered(false);
+            document.body.style.cursor = "auto";
+          }}
+        >
+          <sphereGeometry args={[0.16, 8, 8]} />
+          <meshBasicMaterial visible={false} />
+        </mesh>
+
+        {/* Name label — screen-space, scales with distance, hides behind the globe */}
+        <Html center distanceFactor={9} occlude="blending" style={{ pointerEvents: "none" }}>
+          <div
+            className="whitespace-nowrap font-mono select-none transition-opacity"
+            style={{
+              fontSize: isSelected || hovered ? "12px" : "9px",
+              color,
+              opacity: isSelected || hovered ? 1 : 0.75,
+              textShadow: "0 0 4px #05070D, 0 0 8px #05070D",
+              transform: "translateY(14px)",
+              fontWeight: isSelected || hovered ? 600 : 400,
+            }}
+          >
+            {entry.name}
+          </div>
+        </Html>
+      </group>
     </group>
   );
 }
