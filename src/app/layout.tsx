@@ -40,6 +40,20 @@ export const metadata: Metadata = {
     "satellite visibility",
   ],
   metadataBase: new URL("https://example.com"),
+  manifest: "/site.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Orbit Watch",
+  },
   openGraph: {
     title: "Orbit Watch — Live ISS & Satellite Tracker",
     description: SITE_DESCRIPTION,
