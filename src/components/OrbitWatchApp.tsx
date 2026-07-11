@@ -6,6 +6,7 @@ import Hud from "./Hud";
 import LoadingScreen from "./LoadingScreen";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { LiveState } from "@/lib/orbit";
+import { useLocation } from "@/lib/use-location";
 
 // three.js touches window/canvas — must be client-only, no SSR
 const Scene = dynamic(() => import("./Scene"), {
@@ -13,11 +14,22 @@ const Scene = dynamic(() => import("./Scene"), {
   loading: () => <LoadingScreen />,
 });
 
+// Leaflet also touches window — client-only, no SSR
+const MapView = dynamic(() => import("./MapView"), {
+  ssr: false,
+  loading: () => <LoadingScreen />,
+});
+
+export type ViewMode = "3d" | "map";
+
 export default function OrbitWatchApp({ satellites }: { satellites: TleResult[] }) {
   const [selectedId, setSelectedId] = useState<number | null>(
     satellites[0]?.id ?? null
   );
   const [liveState, setLiveState] = useState<LiveState | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("3d");
+  const { location, status: locationStatus, request: requestLocation, setLocation } =
+    useLocation();
 
   // Deep link support: /?sat=25544 preselects a satellite on load.
   useEffect(() => {
@@ -41,14 +53,36 @@ export default function OrbitWatchApp({ satellites }: { satellites: TleResult[] 
     if (id === null) setLiveState(null);
   }, []);
 
+  const handleManualLocation = useCallback(
+    (lat: number, lon: number) => {
+      setLocation({ lat, lon });
+    },
+    [setLocation]
+  );
+
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-void">
-      <Scene satellites={satellites} selectedId={selectedId} onSelect={handleSelect} />
+      {viewMode === "3d" ? (
+        <Scene satellites={satellites} selectedId={selectedId} onSelect={handleSelect} />
+      ) : (
+        <MapView
+          satellites={satellites}
+          selectedId={selectedId}
+          onSelect={handleSelect}
+          location={location}
+        />
+      )}
       <Hud
         satellites={satellites}
         selectedId={selectedId}
         liveState={liveState}
         onSelect={handlePickFromList}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        location={location}
+        locationStatus={locationStatus}
+        onRequestLocation={requestLocation}
+        onManualLocation={handleManualLocation}
       />
     </div>
   );
