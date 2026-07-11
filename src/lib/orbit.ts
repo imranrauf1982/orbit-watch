@@ -60,3 +60,32 @@ export function geodeticToVector3(
 
   return [x, y, z];
 }
+
+export type OrbitalElements = {
+  inclinationDeg: number;
+  periodMin: number;
+  apogeeKm: number;
+  perigeeKm: number;
+  eccentricity: number;
+  revsPerDay: number;
+};
+
+const EARTH_MU_KM3_S2 = 398600.4418;
+
+/**
+ * Derives human-readable orbital elements (period, apogee/perigee, inclination)
+ * directly from a parsed satrec — no extra propagation needed.
+ */
+export function getOrbitalElements(satrec: satellite.SatRec): OrbitalElements {
+  const inclinationDeg = satrec.inclo * (180 / Math.PI);
+  const noRadPerMin = satrec.no; // mean motion, rad/min
+  const periodMin = (2 * Math.PI) / noRadPerMin;
+  const nRadPerSec = noRadPerMin / 60;
+  const semiMajorAxisKm = Math.cbrt(EARTH_MU_KM3_S2 / (nRadPerSec * nRadPerSec));
+  const eccentricity = satrec.ecco;
+  const apogeeKm = semiMajorAxisKm * (1 + eccentricity) - EARTH_RADIUS_KM;
+  const perigeeKm = semiMajorAxisKm * (1 - eccentricity) - EARTH_RADIUS_KM;
+  const revsPerDay = 1440 / periodMin;
+
+  return { inclinationDeg, periodMin, apogeeKm, perigeeKm, eccentricity, revsPerDay };
+}
