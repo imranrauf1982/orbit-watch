@@ -1,0 +1,10 @@
+{
+  "name": "Orbit Watch",
+  "short_name": "OrbitWatch",
+  "description": "Live 3D satellite tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#05070D",
+  "theme_color": "#05070D",
+  "icons": []
+}
