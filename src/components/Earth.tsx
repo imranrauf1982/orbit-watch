@@ -1,90 +1,88 @@
 "use client";
 
 import { useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
 import { subsolarPoint } from "@/lib/sun";
 
 export const EARTH_RADIUS = 2.4;
 
-const TERMINATOR_VERTEX = /* glsl */ `
-  varying vec3 vNormal;
-  void main() {
-    vNormal = normalize(normal);
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-const TERMINATOR_FRAGMENT = /* glsl */ `
-  varying vec3 vNormal;
-  uniform vec3 sunDir;
-  void main() {
-    float lightAmount = dot(vNormal, sunDir);
-    // soft band around the terminator, dark on the night side
-    float night = smoothstep(0.12, -0.12, lightAmount);
-    gl_FragColor = vec4(0.0, 0.01, 0.03, night * 0.55);
-  }
-`;
-
-/** lat/lon (deg) -> unit direction vector, matching the app's toXYZ convention. */
+// Same convention as geodeticToVector3 in lib/orbit.ts: u = 0.5 + lon/360,
+// Greenwich meridian at texture center — keeps satellite ground tracks
+// aligned with the real continents rendered here.
 function latLonToDirection(lat: number, lon: number): THREE.Vector3 {
   const latRad = (lat * Math.PI) / 180;
   const lonRad = (lon * Math.PI) / 180;
   return new THREE.Vector3(
-    Math.cos(latRad) * Math.cos(lonRad + Math.PI / 2),
+    Math.cos(latRad) * Math.cos(lonRad),
     Math.sin(latRad),
-    Math.cos(latRad) * Math.sin(lonRad + Math.PI / 2)
+    -Math.cos(latRad) * Math.sin(lonRad)
   );
 }
 
-/** Builds a wireframe graticule (lines of latitude & longitude) as a LineSegments geometry. */
-function buildGraticule(radius: number, step = 15) {
-  const points: number[] = [];
-  const segs = 64;
-
-  // Meridians (longitude lines)
-  for (let lon = -180; lon < 180; lon += step) {
-    for (let i = 0; i < segs; i++) {
-      const lat1 = -90 + (180 * i) / segs;
-      const lat2 = -90 + (180 * (i + 1)) / segs;
-      points.push(...toXYZ(lat1, lon, radius));
-      points.push(...toXYZ(lat2, lon, radius));
-    }
+const EARTH_VERTEX = /* glsl */ `
+  varying vec2 vUv;
+  varying vec3 vWorldNormal;
+  void main() {
+    vUv = uv;
+    vWorldNormal = normalize(mat3(modelMatrix) * normal);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
-  // Parallels (latitude lines)
-  for (let lat = -75; lat <= 75; lat += step) {
-    for (let i = 0; i < segs; i++) {
-      const lon1 = -180 + (360 * i) / segs;
-      const lon2 = -180 + (360 * (i + 1)) / segs;
-      points.push(...toXYZ(lat, lon1, radius));
-      points.push(...toXYZ(lat, lon2, radius));
-    }
-  }
-  return new Float32Array(points);
-}
+`;
 
-function toXYZ(lat: number, lon: number, r: number): [number, number, number] {
-  const latRad = (lat * Math.PI) / 180;
-  const lonRad = (lon * Math.PI) / 180;
-  const x = r * Math.cos(latRad) * Math.cos(lonRad + Math.PI / 2);
-  const y = r * Math.sin(latRad);
-  const z = r * Math.cos(latRad) * Math.sin(lonRad + Math.PI / 2);
-  return [x, y, z];
-}
+// Blends day (real continents, lit) and night (city lights) textures based
+// on the real subsolar direction, with a soft twilight terminator band.
+const EARTH_FRAGMENT = /* glsl */ `
+  uniform sampler2D dayMap;
+  uniform sampler2D nightMap;
+  uniform vec3 sunDir;
+  varying vec2 vUv;
+  varying vec3 vWorldNormal;
+
+  void main() {
+    float intensity = dot(vWorldNormal, normalize(sunDir));
+    float dayAmount = smoothstep(-0.18, 0.15, intensity);
+
+    vec3 dayColor = texture2D(dayMap, vUv).rgb;
+    vec3 nightColor = texture2D(nightMap, vUv).rgb * 1.6;
+
+    vec3 color = mix(nightColor, dayColor, dayAmount);
+
+    // subtle warm terminator glow
+    float twilight = smoothstep(0.0, 0.22, 1.0 - abs(intensity)) * (1.0 - dayAmount * 0.6);
+    color += vec3(0.35, 0.16, 0.06) * twilight * 0.25;
+
+    gl_FragColor = vec4(color, 1.0);
+  }
+`;
 
 export default function Earth() {
   const groupRef = useRef<THREE.Group>(null);
-  const graticule = useMemo(() => buildGraticule(EARTH_RADIUS + 0.005), []);
+  const cloudsRef = useRef<THREE.Mesh>(null);
 
-  const terminatorUniforms = useMemo(
-    () => ({ sunDir: { value: new THREE.Vector3(1, 0, 0) } }),
-    []
+  const [dayMap, nightMap, cloudsMap] = useLoader(THREE.TextureLoader, [
+    "/textures/earth_day.jpg",
+    "/textures/earth_lights.png",
+    "/textures/earth_clouds.png",
+  ]);
+
+  const earthUniforms = useMemo(
+    () => ({
+      dayMap: { value: dayMap },
+      nightMap: { value: nightMap },
+      sunDir: { value: new THREE.Vector3(1, 0, 0) },
+    }),
+    [dayMap, nightMap]
   );
+
   const lastSunUpdate = useRef(0);
 
   useFrame((state, delta) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 0.01; // slow ambient drift
+      groupRef.current.rotation.y += delta * 0.008; // slow ambient drift
+    }
+    if (cloudsRef.current) {
+      cloudsRef.current.rotation.y += delta * 0.012; // clouds drift slightly faster
     }
     // Real subsolar point barely moves within a few seconds — recompute
     // occasionally rather than every frame to keep this cheap.
@@ -92,59 +90,45 @@ export default function Earth() {
     if (now - lastSunUpdate.current > 5) {
       lastSunUpdate.current = now;
       const { lat, lon } = subsolarPoint(new Date());
-      terminatorUniforms.sunDir.value.copy(latLonToDirection(lat, lon));
+      earthUniforms.sunDir.value.copy(latLonToDirection(lat, lon));
     }
   });
 
   return (
     <>
       <group ref={groupRef}>
-        {/* Core sphere */}
+        {/* Core textured sphere — real continents, day/night blend */}
         <mesh>
-          <sphereGeometry args={[EARTH_RADIUS, 64, 64]} />
-          <meshStandardMaterial
-            color="#0B1220"
-            emissive="#0A1A2E"
-            emissiveIntensity={0.4}
-            roughness={0.85}
-            metalness={0.1}
+          <sphereGeometry args={[EARTH_RADIUS, 96, 96]} />
+          <shaderMaterial
+            uniforms={earthUniforms}
+            vertexShader={EARTH_VERTEX}
+            fragmentShader={EARTH_FRAGMENT}
           />
         </mesh>
 
-        {/* Graticule grid */}
-        <lineSegments>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              args={[graticule, 3]}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial color="#4FD8EB" transparent opacity={0.18} />
-        </lineSegments>
-
-        {/* Atmosphere rim glow */}
-        <mesh>
-          <sphereGeometry args={[EARTH_RADIUS * 1.035, 48, 48]} />
-          <meshBasicMaterial
-            color="#4FD8EB"
+        {/* Cloud layer — thin, semi-transparent, drifts independently */}
+        <mesh ref={cloudsRef}>
+          <sphereGeometry args={[EARTH_RADIUS * 1.012, 64, 64]} />
+          <meshStandardMaterial
+            map={cloudsMap}
             transparent
-            opacity={0.06}
-            side={THREE.BackSide}
+            opacity={0.35}
+            depthWrite={false}
           />
+        </mesh>
+
+        {/* Faint equatorial ring — a small nod to the old tech-HUD look */}
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[EARTH_RADIUS * 1.0, EARTH_RADIUS * 1.002, 128]} />
+          <meshBasicMaterial color="#4FD8EB" transparent opacity={0.25} side={THREE.DoubleSide} />
         </mesh>
       </group>
 
-      {/* Day/night terminator — deliberately NOT a child of the rotating
-          group, since it represents the real (non-rotating) sun direction */}
-      <mesh renderOrder={1}>
-        <sphereGeometry args={[EARTH_RADIUS * 1.008, 64, 64]} />
-        <shaderMaterial
-          transparent
-          depthWrite={false}
-          uniforms={terminatorUniforms}
-          vertexShader={TERMINATOR_VERTEX}
-          fragmentShader={TERMINATOR_FRAGMENT}
-        />
+      {/* Atmosphere rim glow */}
+      <mesh>
+        <sphereGeometry args={[EARTH_RADIUS * 1.045, 48, 48]} />
+        <meshBasicMaterial color="#4FD8EB" transparent opacity={0.08} side={THREE.BackSide} />
       </mesh>
     </>
   );
