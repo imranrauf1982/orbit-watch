@@ -81,7 +81,7 @@ export default function SatellitePanel({
   const color = CATEGORY_COLOR[entry.category];
 
   return (
-    <div className="pointer-events-auto absolute bottom-0 left-0 right-0 sm:right-auto sm:bottom-6 sm:left-6 sm:w-96 border-t sm:border sm:rounded-lg border-panelBorder bg-panel/95 backdrop-blur flex flex-col max-h-[75vh] sm:max-h-[32rem]">
+    <div className="pointer-events-auto absolute bottom-0 left-0 right-0 sm:right-auto sm:bottom-6 sm:left-6 sm:w-96 border-t sm:border sm:rounded-lg border-panelBorder bg-panel/95 backdrop-blur flex flex-col max-h-[75vh] sm:max-h-[32rem] animate-panel-in">
       {/* Header */}
       <div className="flex items-center justify-between p-4 pb-2">
         <div className="flex items-center gap-2 min-w-0">
@@ -210,36 +210,52 @@ export default function SatellitePanel({
               </p>
             ) : passes && passes.length > 0 ? (
               <>
-                <ul className="divide-y divide-panelBorder -mx-1">
-                  {passes.map((p, i) => {
-                    const brightness = estimateBrightness(entry.category, p.maxElevationDeg);
-                    return (
-                      <li key={i} className="px-1 py-2.5 flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-xs text-ink font-body">{fmtTime(p.startTime)}</p>
-                          <p className="text-[11px] text-muted font-mono">
-                            {Math.round(p.durationSec / 60)} min · max {fmt(p.maxElevationDeg, 0)}° ·{" "}
-                            {azimuthToCompass(p.startAzimuthDeg)}→{azimuthToCompass(p.endAzimuthDeg)}
-                          </p>
-                          {p.visible && (
-                            <p className="text-[11px] text-muted/80 font-mono" title={brightness.hint}>
-                              {brightness.label}
-                            </p>
-                          )}
-                        </div>
-                        <span
-                          className={`shrink-0 text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                            p.visible
-                              ? "bg-signal/15 text-signal"
-                              : "bg-panelBorder text-muted"
-                          }`}
-                        >
-                          {p.visible ? "VISIBLE" : "DAYLIGHT"}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+                <div className="-mx-1 overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="text-[10px] font-mono text-muted uppercase tracking-wide">
+                        <th className="px-1 pb-1.5 font-medium">Date &amp; time</th>
+                        <th className="px-1 pb-1.5 font-medium text-right">Max el.</th>
+                        <th className="px-1 pb-1.5 font-medium text-right">Dur.</th>
+                        <th className="px-1 pb-1.5 font-medium">Direction</th>
+                        <th className="px-1 pb-1.5 font-medium text-right">Vis.</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-panelBorder">
+                      {passes.slice(0, 8).map((p, i) => {
+                        const brightness = estimateBrightness(entry.category, p.maxElevationDeg);
+                        return (
+                          <tr key={i} className="align-top">
+                            <td className="px-1 py-2 text-xs text-ink font-body whitespace-nowrap">
+                              {fmtTime(p.startTime)}
+                            </td>
+                            <td className="px-1 py-2 text-xs text-orbit font-mono text-right tabular whitespace-nowrap">
+                              {fmt(p.maxElevationDeg, 0)}°
+                            </td>
+                            <td className="px-1 py-2 text-xs text-ink font-mono text-right tabular whitespace-nowrap">
+                              {Math.round(p.durationSec / 60)}m
+                            </td>
+                            <td className="px-1 py-2 text-[11px] text-muted font-mono whitespace-nowrap">
+                              <span title="Rising">▲ {azimuthToCompass(p.startAzimuthDeg)}</span>
+                              <br />
+                              <span title="Setting">▼ {azimuthToCompass(p.endAzimuthDeg)}</span>
+                            </td>
+                            <td className="px-1 py-2 text-right whitespace-nowrap">
+                              <span
+                                className={`inline-block text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                                  p.visible ? "bg-signal/15 text-signal" : "bg-panelBorder text-muted"
+                                }`}
+                                title={p.visible ? brightness.hint : "Satellite is in daylight — hard to see"}
+                              >
+                                {p.visible ? brightness.label : "Daylight"}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
                 <AlertSignup satelliteId={entry.id} satelliteName={entry.name} />
                 <div className="mt-3 pt-3 border-t border-panelBorder">
                   <p className="text-[11px] text-muted font-body mb-1">Not your location?</p>
