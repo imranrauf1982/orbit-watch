@@ -39,6 +39,11 @@ export function propagate(
  * Converts geodetic lat/lon/altitude into a 3D cartesian point on a unit-radius
  * globe (scene units), so the rendered globe can be any visual radius.
  * sceneRadius should match the Earth mesh radius used in the scene.
+ *
+ * This matches the standard equirectangular texture convention used by the
+ * day/night Earth maps (u = 0.5 + lon/360, Greenwich meridian at texture
+ * center), so satellite ground tracks line up with the real continents
+ * rendered on the globe.
  */
 export function geodeticToVector3(
   lat: number,
@@ -53,10 +58,9 @@ export function geodeticToVector3(
   const latRad = (lat * Math.PI) / 180;
   const lonRad = (lon * Math.PI) / 180;
 
-  // +90 deg offset aligns texture seam with standard equirectangular maps
-  const x = r * Math.cos(latRad) * Math.cos(lonRad + Math.PI / 2);
+  const x = r * Math.cos(latRad) * Math.cos(lonRad);
   const y = r * Math.sin(latRad);
-  const z = r * Math.cos(latRad) * Math.sin(lonRad + Math.PI / 2);
+  const z = -r * Math.cos(latRad) * Math.sin(lonRad);
 
   return [x, y, z];
 }
