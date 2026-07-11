@@ -23,11 +23,34 @@ const mono = IBM_Plex_Mono({
   display: "swap",
 });
 
+const SITE_DESCRIPTION =
+  "Track the ISS, Hubble, Tiangong, and more in a live 3D orbital map. Real-time positions from public TLE data, plus visible-pass predictions for your exact location — free, no signup.";
+
 export const metadata: Metadata = {
-  title: "Orbit Watch — Live Satellite Tracker",
-  description:
-    "Real-time 3D tracking of the ISS, Hubble, and other satellites in orbit, built on live orbital element data.",
+  title: "Orbit Watch — Live ISS & Satellite Tracker | Real-Time 3D Orbital Map",
+  description: SITE_DESCRIPTION,
+  keywords: [
+    "ISS tracker",
+    "satellite tracker",
+    "live satellite map",
+    "ISS pass predictions",
+    "when to see the ISS",
+    "Hubble tracker",
+    "orbital map",
+    "satellite visibility",
+  ],
   metadataBase: new URL("https://example.com"),
+  openGraph: {
+    title: "Orbit Watch — Live ISS & Satellite Tracker",
+    description: SITE_DESCRIPTION,
+    type: "website",
+    siteName: "Orbit Watch",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Orbit Watch — Live ISS & Satellite Tracker",
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export const viewport: Viewport = {
