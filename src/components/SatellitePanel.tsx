@@ -6,7 +6,10 @@ import { CATEGORY_COLOR, CATEGORY_LABEL, type CatalogEntry } from "@/lib/satelli
 import type { LiveState } from "@/lib/orbit";
 import { getOrbitalElements } from "@/lib/orbit";
 import { computePasses, azimuthToCompass, type PassPrediction } from "@/lib/passes";
+import { estimateBrightness } from "@/lib/brightness";
 import type { ObserverLocation, LocationStatus } from "@/lib/use-location";
+import LocationSearch from "./LocationSearch";
+import AlertSignup from "./AlertSignup";
 
 type Tab = "telemetry" | "info" | "passes";
 
@@ -18,6 +21,7 @@ type Props = {
   location: ObserverLocation | null;
   locationStatus: LocationStatus;
   onRequestLocation: () => void;
+  onManualLocation: (lat: number, lon: number) => void;
   onClose: () => void;
   onShare: () => void;
   shareCopied: boolean;
@@ -45,6 +49,7 @@ export default function SatellitePanel({
   location,
   locationStatus,
   onRequestLocation,
+  onManualLocation,
   onClose,
   onShare,
   shareCopied,
@@ -196,38 +201,61 @@ export default function SatellitePanel({
                     Geolocation isn&apos;t supported in this browser.
                   </p>
                 )}
+                <p className="text-[11px] text-muted font-mono mt-3 mb-1">or</p>
+                <LocationSearch onPick={onManualLocation} />
               </div>
             ) : computing ? (
               <p className="text-xs text-muted font-body py-4 text-center animate-pulse">
                 Scanning the next few days of orbits…
               </p>
             ) : passes && passes.length > 0 ? (
-              <ul className="divide-y divide-panelBorder -mx-1">
-                {passes.map((p, i) => (
-                  <li key={i} className="px-1 py-2.5 flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-xs text-ink font-body">{fmtTime(p.startTime)}</p>
-                      <p className="text-[11px] text-muted font-mono">
-                        {Math.round(p.durationSec / 60)} min · max {fmt(p.maxElevationDeg, 0)}° ·{" "}
-                        {azimuthToCompass(p.startAzimuthDeg)}→{azimuthToCompass(p.endAzimuthDeg)}
-                      </p>
-                    </div>
-                    <span
-                      className={`shrink-0 text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                        p.visible
-                          ? "bg-signal/15 text-signal"
-                          : "bg-panelBorder text-muted"
-                      }`}
-                    >
-                      {p.visible ? "VISIBLE" : "DAYLIGHT"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <ul className="divide-y divide-panelBorder -mx-1">
+                  {passes.map((p, i) => {
+                    const brightness = estimateBrightness(entry.category, p.maxElevationDeg);
+                    return (
+                      <li key={i} className="px-1 py-2.5 flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-xs text-ink font-body">{fmtTime(p.startTime)}</p>
+                          <p className="text-[11px] text-muted font-mono">
+                            {Math.round(p.durationSec / 60)} min · max {fmt(p.maxElevationDeg, 0)}° ·{" "}
+                            {azimuthToCompass(p.startAzimuthDeg)}→{azimuthToCompass(p.endAzimuthDeg)}
+                          </p>
+                          {p.visible && (
+                            <p className="text-[11px] text-muted/80 font-mono" title={brightness.hint}>
+                              {brightness.label}
+                            </p>
+                          )}
+                        </div>
+                        <span
+                          className={`shrink-0 text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                            p.visible
+                              ? "bg-signal/15 text-signal"
+                              : "bg-panelBorder text-muted"
+                          }`}
+                        >
+                          {p.visible ? "VISIBLE" : "DAYLIGHT"}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <AlertSignup satelliteId={entry.id} satelliteName={entry.name} />
+                <div className="mt-3 pt-3 border-t border-panelBorder">
+                  <p className="text-[11px] text-muted font-body mb-1">Not your location?</p>
+                  <LocationSearch onPick={onManualLocation} />
+                </div>
+              </>
             ) : passes ? (
-              <p className="text-xs text-muted font-body py-4 text-center">
-                No passes over the horizon in the next few days from your location.
-              </p>
+              <div>
+                <p className="text-xs text-muted font-body py-4 text-center">
+                  No passes over the horizon in the next few days from your location.
+                </p>
+                <div className="pt-1 border-t border-panelBorder">
+                  <p className="text-[11px] text-muted font-body mb-1 mt-2">Try another location:</p>
+                  <LocationSearch onPick={onManualLocation} />
+                </div>
+              </div>
             ) : null}
           </div>
         )}
