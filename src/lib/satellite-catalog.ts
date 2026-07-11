@@ -19,7 +19,15 @@ export const SATELLITE_CATALOG: CatalogEntry[] = [
   { id: 44713, name: "Starlink-1007", category: "constellation" },
   { id: 43600, name: "Iridium NEXT 106", category: "constellation" },
   { id: 41765, name: "GOES-16", category: "weather" },
+  { id: 43226, name: "GOES-17", category: "weather" },
+  { id: 25338, name: "NOAA-15", category: "weather" },
+  { id: 28654, name: "NOAA-18", category: "weather" },
+  { id: 37849, name: "Suomi NPP", category: "science" },
 ];
+
+// Entries fall out silently if Celestrak has no current TLE for the ID
+// (decayed object, etc.) — fetchAllTle() filters those, so it's safe to
+// keep this list a little generous.
 
 export const CATEGORY_LABEL: Record<CatalogEntry["category"], string> = {
   station: "Space Station",
