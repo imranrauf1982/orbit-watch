@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+::selection {
+  background: #ff6a3d;
+  color: #05070d;
+}
+
+/* Visible keyboard focus, kept crisp instead of the default blue ring */
+:focus-visible {
+  outline: 2px solid #ff6a3d;
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
