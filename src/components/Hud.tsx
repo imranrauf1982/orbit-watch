@@ -8,6 +8,9 @@ import {
 } from "@/lib/satellite-catalog";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { LiveState } from "@/lib/orbit";
+import { useLocation } from "@/lib/use-location";
+import SatellitePanel from "./SatellitePanel";
+import AboutModal from "./AboutModal";
 
 type Props = {
   satellites: TleResult[];
@@ -16,13 +19,12 @@ type Props = {
   onSelect: (id: number | null) => void;
 };
 
-function fmt(n: number, digits = 2) {
-  return n.toFixed(digits);
-}
-
 export default function Hud({ satellites, selectedId, liveState, onSelect }: Props) {
   const [query, setQuery] = useState("");
   const [listOpen, setListOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+  const { location, status: locationStatus, request: requestLocation } = useLocation();
 
   const available = useMemo(
     () =>
@@ -33,6 +35,18 @@ export default function Hud({ satellites, selectedId, liveState, onSelect }: Pro
   );
 
   const selectedEntry = SATELLITE_CATALOG.find((c) => c.id === selectedId) ?? null;
+  const selectedTle = satellites.find((s) => s.id === selectedId) ?? null;
+
+  const handleShare = () => {
+    if (selectedId === null || typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("sat", String(selectedId));
+    navigator.clipboard?.writeText(url.toString()).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 1800);
+    });
+    window.history.replaceState(null, "", url.toString());
+  };
 
   return (
     <div className="pointer-events-none absolute inset-0 flex flex-col">
@@ -46,13 +60,23 @@ export default function Hud({ satellites, selectedId, liveState, onSelect }: Pro
             Live positions from real orbital element data
           </p>
         </div>
-        <button
-          onClick={() => setListOpen((v) => !v)}
-          className="sm:hidden rounded-md border border-panelBorder bg-panel/80 px-3 py-1.5 text-xs font-mono text-ink backdrop-blur"
-          aria-expanded={listOpen}
-        >
-          {listOpen ? "CLOSE" : "TARGETS"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setAboutOpen(true)}
+            className="rounded-md border border-panelBorder bg-panel/80 h-7 w-7 flex items-center justify-center text-xs font-mono text-muted hover:text-ink backdrop-blur"
+            aria-label="About Orbit Watch"
+            title="About & data sources"
+          >
+            i
+          </button>
+          <button
+            onClick={() => setListOpen((v) => !v)}
+            className="sm:hidden rounded-md border border-panelBorder bg-panel/80 px-3 py-1.5 text-xs font-mono text-ink backdrop-blur"
+            aria-expanded={listOpen}
+          >
+            {listOpen ? "CLOSE" : "TARGETS"}
+          </button>
+        </div>
       </header>
 
       <div className="flex-1" />
@@ -104,40 +128,23 @@ export default function Hud({ satellites, selectedId, liveState, onSelect }: Pro
         </ul>
       </div>
 
-      {/* Telemetry panel */}
-      {selectedEntry && liveState && (
-        <div className="pointer-events-auto absolute bottom-0 left-0 right-0 sm:right-auto sm:bottom-6 sm:left-6 sm:w-80 border-t sm:border sm:rounded-lg border-panelBorder bg-panel/95 backdrop-blur p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: CATEGORY_COLOR[selectedEntry.category] }}
-              />
-              <h2 className="font-display font-bold text-sm text-ink">{selectedEntry.name}</h2>
-            </div>
-            <button
-              onClick={() => onSelect(null)}
-              className="text-muted hover:text-ink text-xs font-mono"
-              aria-label="Close telemetry panel"
-            >
-              CLOSE
-            </button>
-          </div>
-          <dl className="grid grid-cols-2 gap-y-2 gap-x-3 font-mono text-xs">
-            <dt className="text-muted">LATITUDE</dt>
-            <dd className="tabular text-signal text-right">{fmt(liveState.lat)}°</dd>
-
-            <dt className="text-muted">LONGITUDE</dt>
-            <dd className="tabular text-signal text-right">{fmt(liveState.lon)}°</dd>
-
-            <dt className="text-muted">ALTITUDE</dt>
-            <dd className="tabular text-orbit text-right">{fmt(liveState.altitudeKm, 0)} km</dd>
-
-            <dt className="text-muted">VELOCITY</dt>
-            <dd className="tabular text-orbit text-right">{fmt(liveState.velocityKmS)} km/s</dd>
-          </dl>
-        </div>
+      {/* Satellite panel: live telemetry, orbital info, upcoming passes */}
+      {selectedEntry && selectedTle && (
+        <SatellitePanel
+          entry={selectedEntry}
+          line1={selectedTle.line1}
+          line2={selectedTle.line2}
+          liveState={liveState}
+          location={location}
+          locationStatus={locationStatus}
+          onRequestLocation={requestLocation}
+          onClose={() => onSelect(null)}
+          onShare={handleShare}
+          shareCopied={shareCopied}
+        />
       )}
+
+      {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
     </div>
   );
 }
