@@ -71,8 +71,8 @@ export default function Hud({
   return (
     <div className="pointer-events-none absolute inset-0 flex flex-col">
       {/* Header */}
-      <header className="pointer-events-auto flex items-start justify-between gap-4 p-4 sm:p-6">
-        <div>
+      <header className="pointer-events-auto flex flex-wrap items-start justify-between gap-x-4 gap-y-3 p-4 sm:p-6">
+        <div className="min-w-0">
           <h1 className="font-display text-xl sm:text-2xl font-bold tracking-tight text-ink">
             ORBIT WATCH
           </h1>
@@ -80,12 +80,12 @@ export default function Hud({
             Live positions from real orbital element data
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2 max-w-full">
           {/* 3D / Map view toggle */}
           <div className="flex rounded-md border border-panelBorder bg-panel/80 backdrop-blur overflow-hidden text-[11px] font-mono">
             <button
               onClick={() => onViewModeChange("3d")}
-              className={`px-2.5 py-1.5 transition-colors ${
+              className={`px-3 py-1.5 transition-colors ${
                 viewMode === "3d" ? "bg-signal/20 text-signal" : "text-muted hover:text-ink"
               }`}
               aria-pressed={viewMode === "3d"}
@@ -94,7 +94,7 @@ export default function Hud({
             </button>
             <button
               onClick={() => onViewModeChange("map")}
-              className={`px-2.5 py-1.5 border-l border-panelBorder transition-colors ${
+              className={`px-3 py-1.5 border-l border-panelBorder transition-colors ${
                 viewMode === "map" ? "bg-signal/20 text-signal" : "text-muted hover:text-ink"
               }`}
               aria-pressed={viewMode === "map"}
@@ -102,29 +102,33 @@ export default function Hud({
               MAP
             </button>
           </div>
-          <button
-            onClick={() => setSupportOpen(true)}
-            className="rounded-md border border-panelBorder bg-panel/80 h-7 px-2 flex items-center justify-center text-[11px] font-mono text-signal hover:text-ink backdrop-blur"
-            aria-label="Support Orbit Watch"
-            title="Support Orbit Watch"
-          >
-            ♥
-          </button>
-          <button
-            onClick={() => setAboutOpen(true)}
-            className="rounded-md border border-panelBorder bg-panel/80 h-7 w-7 flex items-center justify-center text-xs font-mono text-muted hover:text-ink backdrop-blur"
-            aria-label="About Orbit Watch"
-            title="About & data sources"
-          >
-            i
-          </button>
-          <button
-            onClick={() => setListOpen((v) => !v)}
-            className="sm:hidden rounded-md border border-panelBorder bg-panel/80 px-3 py-1.5 text-xs font-mono text-ink backdrop-blur"
-            aria-expanded={listOpen}
-          >
-            {listOpen ? "CLOSE" : "TARGETS"}
-          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSupportOpen(true)}
+              className="rounded-md border border-panelBorder bg-panel/80 h-8 px-2.5 flex items-center justify-center gap-1 text-[11px] font-mono text-signal hover:text-ink backdrop-blur transition-colors"
+              aria-label="Support Orbit Watch"
+              title="Support Orbit Watch"
+            >
+              <span aria-hidden>♥</span>
+              <span className="hidden sm:inline">SUPPORT</span>
+            </button>
+            <button
+              onClick={() => setAboutOpen(true)}
+              className="rounded-md border border-panelBorder bg-panel/80 h-8 px-2.5 flex items-center justify-center text-[11px] font-mono text-muted hover:text-ink backdrop-blur transition-colors"
+              aria-label="About Orbit Watch"
+              title="About & data sources"
+            >
+              ABOUT
+            </button>
+            <button
+              onClick={() => setListOpen((v) => !v)}
+              className="sm:hidden rounded-md border border-panelBorder bg-panel/80 h-8 px-3 flex items-center justify-center text-[11px] font-mono text-ink backdrop-blur transition-colors"
+              aria-expanded={listOpen}
+            >
+              {listOpen ? "CLOSE" : "TARGETS"}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -182,6 +186,7 @@ export default function Hud({
       {/* Satellite panel: live telemetry, orbital info, upcoming passes */}
       {selectedEntry && selectedTle && (
         <SatellitePanel
+          key={selectedEntry.id}
           entry={selectedEntry}
           line1={selectedTle.line1}
           line2={selectedTle.line2}
