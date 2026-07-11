@@ -22,6 +22,7 @@ export default function SatelliteMarker({ entry, line1, line2, isSelected, onSel
   const meshRef = useRef<THREE.Mesh>(null);
   const trailRef = useRef<THREE.Line>(null);
   const [hovered, setHovered] = useState(false);
+  const lastTelemetryPush = useRef(0);
   const color = CATEGORY_COLOR[entry.category];
 
   // Precompute a short trailing arc (~10 min behind) once per satrec; cheap and static-ish.
@@ -38,13 +39,18 @@ export default function SatelliteMarker({ entry, line1, line2, isSelected, onSel
     return new Float32Array(pts);
   }, [satrec]);
 
-  useFrame(() => {
+  useFrame(({ clock }) => {
     const state = propagate(satrec, new Date());
     if (!state || !meshRef.current) return;
     const [x, y, z] = geodeticToVector3(state.lat, state.lon, state.altitudeKm, EARTH_RADIUS);
     meshRef.current.position.set(x, y, z);
+
     if (isSelected) {
-      onSelect(entry.id, state);
+      const now = clock.getElapsedTime();
+      if (now - lastTelemetryPush.current > 0.5) {
+        lastTelemetryPush.current = now;
+        onSelect(entry.id, state);
+      }
     }
   });
 
