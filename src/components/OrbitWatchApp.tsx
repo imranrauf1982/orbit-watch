@@ -1,19 +1,16 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Hud from "./Hud";
+import LoadingScreen from "./LoadingScreen";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { LiveState } from "@/lib/orbit";
 
 // three.js touches window/canvas — must be client-only, no SSR
 const Scene = dynamic(() => import("./Scene"), {
   ssr: false,
-  loading: () => (
-    <div className="absolute inset-0 flex items-center justify-center">
-      <p className="font-mono text-xs text-muted animate-pulse">INITIALIZING ORBIT MODEL…</p>
-    </div>
-  ),
+  loading: () => <LoadingScreen />,
 });
 
 export default function OrbitWatchApp({ satellites }: { satellites: TleResult[] }) {
@@ -21,6 +18,18 @@ export default function OrbitWatchApp({ satellites }: { satellites: TleResult[] 
     satellites[0]?.id ?? null
   );
   const [liveState, setLiveState] = useState<LiveState | null>(null);
+
+  // Deep link support: /?sat=25544 preselects a satellite on load.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const param = new URLSearchParams(window.location.search).get("sat");
+    if (!param) return;
+    const id = Number(param);
+    if (Number.isFinite(id) && satellites.some((s) => s.id === id)) {
+      setSelectedId(id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSelect = useCallback((id: number, state: LiveState | null) => {
     setSelectedId(id);
