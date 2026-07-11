@@ -8,23 +8,43 @@ import {
 } from "@/lib/satellite-catalog";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { LiveState } from "@/lib/orbit";
-import { useLocation } from "@/lib/use-location";
+import type { ObserverLocation, LocationStatus } from "@/lib/use-location";
+import type { ViewMode } from "./OrbitWatchApp";
 import SatellitePanel from "./SatellitePanel";
 import AboutModal from "./AboutModal";
+import SupportModal from "./SupportModal";
+import Footer from "./Footer";
 
 type Props = {
   satellites: TleResult[];
   selectedId: number | null;
   liveState: LiveState | null;
   onSelect: (id: number | null) => void;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
+  location: ObserverLocation | null;
+  locationStatus: LocationStatus;
+  onRequestLocation: () => void;
+  onManualLocation: (lat: number, lon: number) => void;
 };
 
-export default function Hud({ satellites, selectedId, liveState, onSelect }: Props) {
+export default function Hud({
+  satellites,
+  selectedId,
+  liveState,
+  onSelect,
+  viewMode,
+  onViewModeChange,
+  location,
+  locationStatus,
+  onRequestLocation,
+  onManualLocation,
+}: Props) {
   const [query, setQuery] = useState("");
   const [listOpen, setListOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
-  const { location, status: locationStatus, request: requestLocation } = useLocation();
 
   const available = useMemo(
     () =>
@@ -61,6 +81,35 @@ export default function Hud({ satellites, selectedId, liveState, onSelect }: Pro
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* 3D / Map view toggle */}
+          <div className="flex rounded-md border border-panelBorder bg-panel/80 backdrop-blur overflow-hidden text-[11px] font-mono">
+            <button
+              onClick={() => onViewModeChange("3d")}
+              className={`px-2.5 py-1.5 transition-colors ${
+                viewMode === "3d" ? "bg-signal/20 text-signal" : "text-muted hover:text-ink"
+              }`}
+              aria-pressed={viewMode === "3d"}
+            >
+              3D
+            </button>
+            <button
+              onClick={() => onViewModeChange("map")}
+              className={`px-2.5 py-1.5 border-l border-panelBorder transition-colors ${
+                viewMode === "map" ? "bg-signal/20 text-signal" : "text-muted hover:text-ink"
+              }`}
+              aria-pressed={viewMode === "map"}
+            >
+              MAP
+            </button>
+          </div>
+          <button
+            onClick={() => setSupportOpen(true)}
+            className="rounded-md border border-panelBorder bg-panel/80 h-7 px-2 flex items-center justify-center text-[11px] font-mono text-signal hover:text-ink backdrop-blur"
+            aria-label="Support Orbit Watch"
+            title="Support Orbit Watch"
+          >
+            ♥
+          </button>
           <button
             onClick={() => setAboutOpen(true)}
             className="rounded-md border border-panelBorder bg-panel/80 h-7 w-7 flex items-center justify-center text-xs font-mono text-muted hover:text-ink backdrop-blur"
@@ -80,6 +129,8 @@ export default function Hud({ satellites, selectedId, liveState, onSelect }: Pro
       </header>
 
       <div className="flex-1" />
+
+      <Footer onAbout={() => setAboutOpen(true)} onSupport={() => setSupportOpen(true)} />
 
       {/* Satellite list — sidebar on desktop, sheet on mobile */}
       <div
@@ -137,7 +188,8 @@ export default function Hud({ satellites, selectedId, liveState, onSelect }: Pro
           liveState={liveState}
           location={location}
           locationStatus={locationStatus}
-          onRequestLocation={requestLocation}
+          onRequestLocation={onRequestLocation}
+          onManualLocation={onManualLocation}
           onClose={() => onSelect(null)}
           onShare={handleShare}
           shareCopied={shareCopied}
@@ -145,6 +197,7 @@ export default function Hud({ satellites, selectedId, liveState, onSelect }: Pro
       )}
 
       {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
+      {supportOpen && <SupportModal onClose={() => setSupportOpen(false)} />}
     </div>
   );
 }
