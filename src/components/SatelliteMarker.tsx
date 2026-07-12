@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import * as satellite from "satellite.js";
 import { EARTH_RADIUS } from "./Earth";
@@ -83,6 +84,7 @@ export default function SatelliteMarker({ entry, line1, line2, isSelected, onSel
   const groupRef = useRef<THREE.Group>(null);
   const trailRef = useRef<THREE.Line>(null);
   const [hovered, setHovered] = useState(false);
+  const [label, setLabel] = useState<LiveState | null>(null);
   const lastTelemetryPush = useRef(0);
   const color = CATEGORY_COLOR[entry.category];
 
@@ -121,6 +123,7 @@ export default function SatelliteMarker({ entry, line1, line2, isSelected, onSel
       if (now - lastTelemetryPush.current > 0.5) {
         lastTelemetryPush.current = now;
         onSelect(entry.id, state);
+        setLabel(state);
       }
     }
   });
@@ -158,6 +161,22 @@ export default function SatelliteMarker({ entry, line1, line2, isSelected, onSel
             <sphereGeometry args={[0.075, 12, 12]} />
             <meshBasicMaterial color={color} transparent opacity={0.12} />
           </mesh>
+        )}
+
+        {/* Floating info tag that follows the satellite in 3D space, right
+            next to the model, in addition to the bottom-left detail panel. */}
+        {isSelected && label && (
+          <Html position={[0, 0.11, 0]} center distanceFactor={6} zIndexRange={[10, 0]}>
+            <div
+              className="pointer-events-none whitespace-nowrap rounded-md border border-panelBorder bg-panel/90 px-2 py-1 text-center font-mono backdrop-blur"
+              style={{ fontSize: "10px", lineHeight: 1.3 }}
+            >
+              <div className="font-bold text-ink">{entry.name}</div>
+              <div className="text-muted">
+                {label.altitudeKm.toFixed(0)} km · {label.velocityKmS.toFixed(2)} km/s
+              </div>
+            </div>
+          </Html>
         )}
       </group>
     </group>
