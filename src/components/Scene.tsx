@@ -2,20 +2,48 @@
 
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stars, PerspectiveCamera } from "@react-three/drei";
-import { Suspense } from "react";
+import { Suspense, useMemo } from "react";
 import Earth from "./Earth";
 import SatelliteMarker from "./SatelliteMarker";
+import SatelliteCloud from "./SatelliteCloud";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { LiveState } from "@/lib/orbit";
-import { SATELLITE_CATALOG } from "@/lib/satellite-catalog";
+import {
+  SATELLITE_CATALOG,
+  FEATURED_IDS,
+  bulkObjectGroup,
+  type FilterGroup,
+} from "@/lib/satellite-catalog";
 
 type Props = {
-  satellites: TleResult[];
+  satellites: TleResult[]; // full filtered set for this view (featured ∪ mass)
   selectedId: number | null;
   onSelect: (id: number, state: LiveState | null) => void;
+  filter: FilterGroup;
 };
 
-export default function Scene({ satellites, selectedId, onSelect }: Props) {
+export default function Scene({ satellites, selectedId, onSelect, filter }: Props) {
+  // Detailed procedural models: the curated catalog, plus whatever's
+  // currently selected (so a mass-cloud pick "upgrades" to a real model).
+  const detailed = useMemo(
+    () =>
+      satellites.filter(
+        (s) => FEATURED_IDS.has(s.id) || s.id === selectedId
+      ),
+    [satellites, selectedId]
+  );
+
+  // Everything else renders as an instanced point cloud (Phase 2).
+  const mass = useMemo(() => {
+    const detailedIds = new Set(detailed.map((s) => s.id));
+    return satellites.filter((s) => {
+      if (detailedIds.has(s.id)) return false;
+      if (filter === "starlink") return bulkObjectGroup(s.name, s.id) === "starlink";
+      if (filter === "stations") return bulkObjectGroup(s.name, s.id) === "station";
+      return true; // "all" and "featured" both fall back to whatever's left after detailed filtering
+    });
+  }, [satellites, detailed, filter]);
+
   return (
     <Canvas
       dpr={[1, 1.75]} // capped device-pixel-ratio keeps mobile GPUs happy
@@ -30,9 +58,12 @@ export default function Scene({ satellites, selectedId, onSelect }: Props) {
       <Suspense fallback={null}>
         <Stars radius={80} depth={40} count={2500} factor={2} saturation={0} fade speed={0.4} />
         <Earth />
-        {satellites.map((sat) => {
-          const entry = SATELLITE_CATALOG.find((c) => c.id === sat.id);
-          if (!entry) return null;
+        {detailed.map((sat) => {
+          const entry =
+            SATELLITE_CATALOG.find((c) => c.id === sat.id) ??
+            // A non-featured satellite the user selected from the mass cloud
+            // still needs a CatalogEntry shape to reuse SatelliteMarker.
+            { id: sat.id, name: sat.name, category: "science" as const };
           return (
             <SatelliteMarker
               key={sat.id}
@@ -44,6 +75,7 @@ export default function Scene({ satellites, selectedId, onSelect }: Props) {
             />
           );
         })}
+        {filter !== "featured" && <SatelliteCloud satellites={mass} onSelect={onSelect} />}
       </Suspense>
 
       <OrbitControls
