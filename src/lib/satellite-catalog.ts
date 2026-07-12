@@ -44,3 +44,44 @@ export const CATEGORY_COLOR: Record<CatalogEntry["category"], string> = {
   weather: "#FFB84D",
   science: "#7CE38B",
 };
+
+// A fast lookup Set of the featured/curated NORAD IDs — used everywhere we
+// need to split "detailed model" satellites from the "mass point cloud".
+export const FEATURED_IDS: ReadonlySet<number> = new Set(
+  SATELLITE_CATALOG.map((c) => c.id)
+);
+
+/**
+ * Filter groups for the full bulk catalog (thousands of objects fetched from
+ * CelesTrak's `GROUP=active` set). These are cheap name-pattern heuristics —
+ * CelesTrak doesn't tag category in the trimmed TLE payload, so we bucket by
+ * name. Good enough for filtering what's rendered; not meant to be precise
+ * taxonomy.
+ */
+export type FilterGroup = "featured" | "starlink" | "stations" | "all";
+
+export const FILTER_GROUP_LABEL: Record<FilterGroup, string> = {
+  featured: "Featured",
+  starlink: "Starlink",
+  stations: "Space Stations",
+  all: "All Active",
+};
+
+const STATION_NAME_PATTERN = /\b(ISS|ZARYA|TIANGONG|CSS|MIR)\b/i;
+
+export function bulkObjectGroup(name: string, id: number): "starlink" | "station" | "other" {
+  if (FEATURED_IDS.has(id) && STATION_NAME_PATTERN.test(name)) return "station";
+  if (/^STARLINK/i.test(name)) return "starlink";
+  if (STATION_NAME_PATTERN.test(name)) return "station";
+  return "other";
+}
+
+/** Deterministic color for a "mass" (non-featured) satellite point, bucketed
+ * by the same rough grouping used for filters, so Starlink trains read as a
+ * cluster and everything else reads as a neutral dust of dots. */
+export function bulkObjectColor(name: string, id: number): string {
+  const group = bulkObjectGroup(name, id);
+  if (group === "starlink") return "#8A93A6";
+  if (group === "station") return "#FF6A3D";
+  return "#4FD8EB";
+}
