@@ -83,31 +83,17 @@ export async function fetchBulkTle(): Promise<TleResult[]> {
 }
 
 /**
- * Back-compat helper: the featured/curated set only (same ~15 satellites
- * that used to be the entire catalog), sliced out of the bulk fetch instead
- * of doing one HTTP request per satellite. Falls back to a direct per-ID
- * request only for a featured object CelesTrak's bulk group happens to be
- * missing (e.g. temporarily excluded from GROUP=active) — this should be
- * rare, so it's fine for it to be slower than the bulk path.
+ * Fast path for the initial page load: fetches only the curated/featured
+ * satellites (~15-20), each as its own tiny request, run in parallel.
+ * Deliberately does NOT go through fetchBulkTle() — pulling the entire
+ * multi-thousand-object catalog just to render the default Featured view
+ * is what was making first paint take a very long time. The full catalog
+ * is fetched separately, lazily, on the client (see /api/tle) only once
+ * the person actually asks for it (a non-Featured filter, or a search).
  */
-export async function fetchFeaturedTle(bulk?: TleResult[]): Promise<TleResult[]> {
-  const all = bulk ?? (await fetchBulkTle());
-  const byId = new Map(all.map((r) => [r.id, r]));
-  const missing: number[] = [];
-  const featured: TleResult[] = [];
-
-  for (const entry of SATELLITE_CATALOG) {
-    const hit = byId.get(entry.id);
-    if (hit) featured.push(hit);
-    else missing.push(entry.id);
-  }
-
-  if (missing.length > 0) {
-    const backfilled = await Promise.all(missing.map(fetchOneById));
-    for (const r of backfilled) if (r) featured.push(r);
-  }
-
-  return featured;
+export async function fetchFeaturedTle(): Promise<TleResult[]> {
+  const results = await Promise.all(SATELLITE_CATALOG.map((entry) => fetchOneById(entry.id)));
+  return results.filter((r): r is TleResult => r !== null);
 }
 
 async function fetchOneById(id: number): Promise<TleResult | null> {
