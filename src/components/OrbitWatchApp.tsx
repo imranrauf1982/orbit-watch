@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Hud from "./Hud";
 import LoadingScreen from "./LoadingScreen";
 import type { TleResult } from "@/lib/fetch-tle";
@@ -22,16 +22,49 @@ const MapView = dynamic(() => import("./MapView"), {
 });
 
 export type ViewMode = "3d" | "map";
+export type CatalogStatus = "loading" | "ready" | "error";
 
-export default function OrbitWatchApp({ satellites }: { satellites: TleResult[] }) {
-  // Default selection is the first curated/featured satellite (e.g. ISS),
-  // not just satellites[0] — the bulk array is in CelesTrak's own order now.
+export default function OrbitWatchApp({ initialSatellites }: { initialSatellites: TleResult[] }) {
+  // Page loads with just the curated ~15 satellites (fast). The full
+  // multi-thousand-object catalog is fetched here, in the background,
+  // right after mount — it doesn't block first paint, and by the time
+  // someone clicks "All Active" or searches for something outside the
+  // curated set, it's usually already arrived.
+  const [satellites, setSatellites] = useState<TleResult[]>(initialSatellites);
+  const [catalogStatus, setCatalogStatus] = useState<CatalogStatus>("loading");
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/tle")
+      .then((res) => res.json())
+      .then((data: { satellites?: TleResult[] }) => {
+        if (cancelled) return;
+        if (data.satellites && data.satellites.length > 0) {
+          // The bulk set is authoritative; keep any curated entry it's
+          // somehow missing (rare — e.g. temporarily excluded upstream).
+          const byId = new Map(data.satellites.map((s) => [s.id, s]));
+          for (const s of initialSatellites) if (!byId.has(s.id)) byId.set(s.id, s);
+          setSatellites(Array.from(byId.values()));
+          setCatalogStatus("ready");
+        } else {
+          setCatalogStatus("error");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setCatalogStatus("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const defaultSelectedId = useMemo(() => {
     for (const entry of SATELLITE_CATALOG) {
-      if (satellites.some((s) => s.id === entry.id)) return entry.id;
+      if (initialSatellites.some((s) => s.id === entry.id)) return entry.id;
     }
-    return satellites[0]?.id ?? null;
-  }, [satellites]);
+    return initialSatellites[0]?.id ?? null;
+  }, [initialSatellites]);
 
   const [selectedId, setSelectedId] = useState<number | null>(defaultSelectedId);
   const [liveState, setLiveState] = useState<LiveState | null>(null);
@@ -42,20 +75,27 @@ export default function OrbitWatchApp({ satellites }: { satellites: TleResult[] 
   const { location, status: locationStatus, request: requestLocation, setLocation } =
     useLocation();
 
-  // Deep link support: /?sat=25544 preselects a satellite on load.
+  // Deep link support: /?sat=25544 preselects a satellite on load. Kept
+  // pending until it's actually found in `satellites` — if it's outside the
+  // curated set, that means waiting for the background catalog fetch above.
+  const pendingDeepLink = useRef<{ id: number; applied: boolean } | null>(null);
   useEffect(() => {
     if (typeof window === "undefined") return;
     const param = new URLSearchParams(window.location.search).get("sat");
     if (!param) return;
     const id = Number(param);
-    if (Number.isFinite(id) && satellites.some((s) => s.id === id)) {
-      setSelectedId(id);
-      // A deep-linked satellite outside the curated set needs the "All
-      // Active" filter on, or it won't exist in the rendered scene to select.
-      if (!SATELLITE_CATALOG.some((c) => c.id === id)) setFilter("all");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (Number.isFinite(id)) pendingDeepLink.current = { id, applied: false };
   }, []);
+
+  useEffect(() => {
+    const pending = pendingDeepLink.current;
+    if (!pending || pending.applied) return;
+    if (satellites.some((s) => s.id === pending.id)) {
+      setSelectedId(pending.id);
+      if (!SATELLITE_CATALOG.some((c) => c.id === pending.id)) setFilter("all");
+      pending.applied = true;
+    }
+  }, [satellites]);
 
   const handleSelect = useCallback((id: number, state: LiveState | null) => {
     setSelectedId(id);
@@ -94,6 +134,7 @@ export default function OrbitWatchApp({ satellites }: { satellites: TleResult[] 
       )}
       <Hud
         satellites={satellites}
+        catalogStatus={catalogStatus}
         selectedId={selectedId}
         liveState={liveState}
         onSelect={handlePickFromList}
