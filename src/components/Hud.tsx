@@ -1,10 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Fuse from "fuse.js";
 import {
   SATELLITE_CATALOG,
   CATEGORY_LABEL,
   CATEGORY_COLOR,
+  FILTER_GROUP_LABEL,
+  bulkObjectGroup,
+  bulkObjectColor,
+  type FilterGroup,
+  type CatalogEntry,
 } from "@/lib/satellite-catalog";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { LiveState } from "@/lib/orbit";
@@ -26,7 +32,20 @@ type Props = {
   locationStatus: LocationStatus;
   onRequestLocation: () => void;
   onManualLocation: (lat: number, lon: number) => void;
+  filter: FilterGroup;
+  onFilterChange: (filter: FilterGroup) => void;
 };
+
+type ListItem = {
+  id: number;
+  name: string;
+  categoryLabel: string;
+  color: string;
+  featured: boolean;
+};
+
+const ROW_HEIGHT = 52; // px — must match the row's rendered height below
+const OVERSCAN = 6;
 
 export default function Hud({
   satellites,
@@ -39,6 +58,8 @@ export default function Hud({
   locationStatus,
   onRequestLocation,
   onManualLocation,
+  filter,
+  onFilterChange,
 }: Props) {
   const [query, setQuery] = useState("");
   const [listOpen, setListOpen] = useState(false);
@@ -46,15 +67,95 @@ export default function Hud({
   const [supportOpen, setSupportOpen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
 
-  const available = useMemo(
-    () =>
-      SATELLITE_CATALOG.filter((c) => satellites.some((s) => s.id === c.id)).filter(
-        (c) => c.name.toLowerCase().includes(query.toLowerCase())
-      ),
-    [satellites, query]
+  // Flatten TLE results + curated catalog into one searchable/listable shape.
+  // Kept minimal (Phase 4: this list can run into the thousands under the
+  // "All Active" filter, so no heavy per-item objects).
+  const allItems = useMemo<ListItem[]>(() => {
+    return satellites.map((s) => {
+      const entry = SATELLITE_CATALOG.find((c) => c.id === s.id);
+      if (entry) {
+        return {
+          id: entry.id,
+          name: entry.name,
+          categoryLabel: CATEGORY_LABEL[entry.category],
+          color: CATEGORY_COLOR[entry.category],
+          featured: true,
+        };
+      }
+      const group = bulkObjectGroup(s.name, s.id);
+      return {
+        id: s.id,
+        name: s.name,
+        categoryLabel: group === "starlink" ? "Starlink" : group === "station" ? "Space Station" : "Active",
+        color: bulkObjectColor(s.name, s.id),
+        featured: false,
+      };
+    });
+  }, [satellites]);
+
+  const filteredByGroup = useMemo(() => {
+    if (filter === "featured") return allItems.filter((i) => i.featured);
+    if (filter === "starlink")
+      return allItems.filter((i) => i.featured || bulkObjectGroup(i.name, i.id) === "starlink");
+    if (filter === "stations")
+      return allItems.filter((i) => i.featured || bulkObjectGroup(i.name, i.id) === "station");
+    return allItems;
+  }, [allItems, filter]);
+
+  const fuse = useMemo(
+    () => new Fuse(filteredByGroup, { keys: ["name"], threshold: 0.35, ignoreLocation: true }),
+    [filteredByGroup]
   );
 
-  const selectedEntry = SATELLITE_CATALOG.find((c) => c.id === selectedId) ?? null;
+  const available = useMemo(() => {
+    if (!query.trim()) return filteredByGroup;
+    return fuse.search(query).map((r) => r.item);
+  }, [query, fuse, filteredByGroup]);
+
+  // --- Lightweight manual list virtualization (Phase 4) ---
+  // The "All Active" filter can put thousands of rows in this list; only
+  // the rows actually in the scrollport (plus a small overscan) get mounted.
+  const scrollRef = useRef<HTMLUListElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(400);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => setScrollTop(el.scrollTop);
+    setViewportHeight(el.clientHeight);
+    el.addEventListener("scroll", onScroll, { passive: true });
+    const ro = new ResizeObserver(() => setViewportHeight(el.clientHeight));
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      ro.disconnect();
+    };
+  }, [listOpen]);
+
+  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
+  const endIndex = Math.min(
+    available.length,
+    Math.ceil((scrollTop + viewportHeight) / ROW_HEIGHT) + OVERSCAN
+  );
+  const visibleRows = available.slice(startIndex, endIndex);
+
+  const selectedEntry: CatalogEntry | null = useMemo(() => {
+    if (selectedId === null) return null;
+    const featured = SATELLITE_CATALOG.find((c) => c.id === selectedId);
+    if (featured) return featured;
+    const sat = satellites.find((s) => s.id === selectedId);
+    if (!sat) return null;
+    // Non-featured selection (picked from search/list/map/point-cloud) —
+    // synthesize a CatalogEntry so SatellitePanel doesn't need two code paths.
+    const group = bulkObjectGroup(sat.name, sat.id);
+    return {
+      id: sat.id,
+      name: sat.name,
+      category: group === "station" ? "station" : "constellation",
+    };
+  }, [selectedId, satellites]);
+
   const selectedTle = satellites.find((s) => s.id === selectedId) ?? null;
 
   const handleShare = () => {
@@ -67,6 +168,8 @@ export default function Hud({
     });
     window.history.replaceState(null, "", url.toString());
   };
+
+  const filterGroups: FilterGroup[] = ["featured", "starlink", "stations", "all"];
 
   return (
     <div className="pointer-events-none absolute inset-0 flex flex-col">
@@ -142,39 +245,63 @@ export default function Hud({
           listOpen ? "translate-x-0" : "translate-x-full sm:translate-x-0"
         } flex flex-col`}
       >
-        <div className="p-3 border-b border-panelBorder">
+        <div className="p-3 border-b border-panelBorder space-y-2">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search satellite…"
             className="w-full rounded-md bg-void border border-panelBorder px-3 py-2 text-sm text-ink placeholder:text-muted font-body focus:border-signal outline-none"
           />
-        </div>
-        <ul className="overflow-y-auto flex-1 divide-y divide-panelBorder">
-          {available.map((entry) => (
-            <li key={entry.id}>
+          <div className="flex flex-wrap gap-1">
+            {filterGroups.map((g) => (
               <button
-                onClick={() => {
-                  onSelect(entry.id);
-                  setListOpen(false);
-                }}
-                className={`w-full text-left px-3 py-2.5 flex items-center gap-2.5 hover:bg-white/5 transition-colors ${
-                  selectedId === entry.id ? "bg-white/5" : ""
+                key={g}
+                onClick={() => onFilterChange(g)}
+                className={`rounded px-2 py-1 text-[10px] font-mono border transition-colors ${
+                  filter === g
+                    ? "border-signal/60 bg-signal/20 text-signal"
+                    : "border-panelBorder text-muted hover:text-ink"
                 }`}
+                aria-pressed={filter === g}
               >
-                <span
-                  className="h-2 w-2 rounded-full shrink-0"
-                  style={{ backgroundColor: CATEGORY_COLOR[entry.category] }}
-                />
-                <span className="flex-1 min-w-0">
-                  <span className="block text-sm text-ink truncate font-body">{entry.name}</span>
-                  <span className="block text-[11px] text-muted font-mono">
-                    {CATEGORY_LABEL[entry.category]}
-                  </span>
-                </span>
+                {FILTER_GROUP_LABEL[g]}
               </button>
-            </li>
-          ))}
+            ))}
+          </div>
+          <p className="text-[10px] text-muted font-mono">
+            {available.length.toLocaleString()} object{available.length === 1 ? "" : "s"}
+          </p>
+        </div>
+        <ul ref={scrollRef} className="overflow-y-auto flex-1 relative">
+          <li style={{ height: available.length * ROW_HEIGHT }} className="relative">
+            {visibleRows.map((entry, i) => {
+              const index = startIndex + i;
+              return (
+                <button
+                  key={entry.id}
+                  onClick={() => {
+                    onSelect(entry.id);
+                    setListOpen(false);
+                  }}
+                  style={{ top: index * ROW_HEIGHT, height: ROW_HEIGHT }}
+                  className={`absolute left-0 right-0 text-left px-3 flex items-center gap-2.5 border-b border-panelBorder hover:bg-white/5 transition-colors ${
+                    selectedId === entry.id ? "bg-white/5" : ""
+                  }`}
+                >
+                  <span
+                    className="h-2 w-2 rounded-full shrink-0"
+                    style={{ backgroundColor: entry.color }}
+                  />
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm text-ink truncate font-body">{entry.name}</span>
+                    <span className="block text-[11px] text-muted font-mono">
+                      {entry.categoryLabel}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </li>
           {available.length === 0 && (
             <li className="px-3 py-6 text-center text-sm text-muted font-body">
               No matches. Try another name.
