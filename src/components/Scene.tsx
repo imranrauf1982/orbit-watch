@@ -2,10 +2,11 @@
 
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stars, PerspectiveCamera } from "@react-three/drei";
-import { Suspense, useMemo } from "react";
+import { Suspense, useMemo, useRef } from "react";
 import Earth from "./Earth";
 import SatelliteMarker from "./SatelliteMarker";
 import SatelliteCloud from "./SatelliteCloud";
+import CameraFocus from "./CameraFocus";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { LiveState } from "@/lib/orbit";
 import {
@@ -23,6 +24,8 @@ type Props = {
 };
 
 export default function Scene({ satellites, selectedId, onSelect, filter }: Props) {
+  const controlsRef = useRef<any>(null);
+
   // Detailed procedural models: the curated catalog, plus whatever's
   // currently selected (so a mass-cloud pick "upgrades" to a real model).
   const detailed = useMemo(
@@ -50,7 +53,7 @@ export default function Scene({ satellites, selectedId, onSelect, filter }: Prop
       gl={{ antialias: true, powerPreference: "high-performance" }}
       className="!touch-none"
     >
-      <PerspectiveCamera makeDefault position={[0, 2, 7]} fov={45} />
+      <PerspectiveCamera makeDefault fov={45} />
       <color attach="background" args={["#05070D"]} />
       <ambientLight intensity={0.6} />
       <directionalLight position={[5, 3, 5]} intensity={1.1} />
@@ -78,7 +81,12 @@ export default function Scene({ satellites, selectedId, onSelect, filter }: Prop
         {filter !== "featured" && <SatelliteCloud satellites={mass} onSelect={onSelect} />}
       </Suspense>
 
+      {/* Swings the camera to face whatever gets selected, from any source
+          (list, search, map, clicking a dot on the far side of the globe). */}
+      <CameraFocus selectedId={selectedId} satellites={satellites} controlsRef={controlsRef} />
+
       <OrbitControls
+        ref={controlsRef}
         enablePan={false}
         minDistance={3.2}
         maxDistance={14}
@@ -88,3 +96,4 @@ export default function Scene({ satellites, selectedId, onSelect, filter }: Prop
     </Canvas>
   );
 }
+
