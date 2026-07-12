@@ -67,16 +67,26 @@ export default function SatellitePanel({
   }, [entry.id]);
 
   useEffect(() => {
-    if (tab !== "passes" || !location || passes || computing) return;
+    if (tab !== "passes" || !location || passes) return;
+    let cancelled = false;
     setComputing(true);
     // Defer so the "calculating" state actually paints before the (synchronous) crunch.
     const id = setTimeout(() => {
+      if (cancelled) return;
       const result = computePasses(satrec, location.lat, location.lon);
       setPasses(result);
       setComputing(false);
     }, 30);
-    return () => clearTimeout(id);
-  }, [tab, location, passes, computing, satrec]);
+    return () => {
+      cancelled = true;
+      clearTimeout(id);
+    };
+    // `computing` intentionally excluded: including it here caused this
+    // effect to re-run the instant setComputing(true) fired above, and its
+    // own cleanup would clearTimeout(id) before the 30ms callback ever ran
+    // — computePasses() never executed, so "Scanning…" never resolved.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, location, passes, satrec]);
 
   const color = CATEGORY_COLOR[entry.category];
 
