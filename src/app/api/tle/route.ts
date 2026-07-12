@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { fetchAllTle } from "@/lib/fetch-tle";
+import { fetchBulkTle } from "@/lib/fetch-tle";
 
 export const revalidate = 3600; // TLEs are stable for hours; refresh hourly
 
 export async function GET() {
-  const satellites = await fetchAllTle();
+  const satellites = await fetchBulkTle();
 
   return NextResponse.json(
     { satellites, fetchedAt: new Date().toISOString() },
