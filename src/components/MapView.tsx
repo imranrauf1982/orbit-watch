@@ -5,7 +5,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, Polyline, CircleMarker, Tooltip, useMap } from "react-leaflet";
 import * as satellite from "satellite.js";
 import { propagate, type LiveState } from "@/lib/orbit";
-import { SATELLITE_CATALOG, CATEGORY_COLOR } from "@/lib/satellite-catalog";
+import {
+  SATELLITE_CATALOG,
+  CATEGORY_COLOR,
+  FEATURED_IDS,
+  bulkObjectGroup,
+  bulkObjectColor,
+  type FilterGroup,
+} from "@/lib/satellite-catalog";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { ObserverLocation } from "@/lib/use-location";
 
@@ -14,6 +21,7 @@ type Props = {
   selectedId: number | null;
   onSelect: (id: number, state: LiveState | null) => void;
   location: ObserverLocation | null;
+  filter: FilterGroup;
 };
 
 /** Splits a lon/lat track into segments, breaking wherever it wraps the antimeridian. */
@@ -50,17 +58,46 @@ function Recenter({ lat, lon, trigger }: { lat: number; lon: number; trigger: nu
   return null;
 }
 
-export default function MapView({ satellites, selectedId, onSelect, location }: Props) {
+export default function MapView({ satellites, selectedId, onSelect, location, filter }: Props) {
   const [tick, setTick] = useState(0);
 
+  // Mass sets update less often than the 3D view's worker cadence would
+  // need in a browser main-thread loop — 2s keeps thousands of Leaflet
+  // canvas redraws from competing with pan/zoom interaction.
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 2000);
     return () => clearInterval(id);
   }, []);
 
+  // Same detailed/mass split as the 3D Scene: curated + selected get full
+  // treatment (tooltip, ground track eligibility); everything else is a
+  // lightweight canvas-rendered dot (Phase 2).
+  const visibleSatellites = useMemo(() => {
+    // The selected satellite always renders, even if it falls outside the
+    // active filter (e.g. picked via search, or a deep link) — otherwise
+    // selecting it would make it vanish from the map.
+    if (filter === "featured")
+      return satellites.filter((s) => FEATURED_IDS.has(s.id) || s.id === selectedId);
+    if (filter === "starlink")
+      return satellites.filter(
+        (s) =>
+          FEATURED_IDS.has(s.id) ||
+          s.id === selectedId ||
+          bulkObjectGroup(s.name, s.id) === "starlink"
+      );
+    if (filter === "stations")
+      return satellites.filter(
+        (s) =>
+          FEATURED_IDS.has(s.id) ||
+          s.id === selectedId ||
+          bulkObjectGroup(s.name, s.id) === "station"
+      );
+    return satellites;
+  }, [satellites, filter, selectedId]);
+
   const satrecs = useMemo(() => {
     const map = new Map<number, satellite.SatRec>();
-    for (const s of satellites) {
+    for (const s of visibleSatellites) {
       try {
         map.set(s.id, satellite.twoline2satrec(s.line1, s.line2));
       } catch {
@@ -68,7 +105,7 @@ export default function MapView({ satellites, selectedId, onSelect, location }: 
       }
     }
     return map;
-  }, [satellites]);
+  }, [visibleSatellites]);
 
   const positions = useMemo(() => {
     const now = new Date();
@@ -104,6 +141,10 @@ export default function MapView({ satellites, selectedId, onSelect, location }: 
   }, [selectedId, satrecs, tick]);
 
   const selectedPos = selectedId !== null ? positions.get(selectedId) : null;
+  const selectedGroundColor =
+    selectedId !== null
+      ? CATEGORY_COLOR[SATELLITE_CATALOG.find((c) => c.id === selectedId)?.category ?? "science"]
+      : "#4FD8EB";
 
   return (
     <div className="h-full w-full bg-void">
@@ -113,6 +154,10 @@ export default function MapView({ satellites, selectedId, onSelect, location }: 
         minZoom={2}
         worldCopyJump
         zoomControl={false}
+        // Canvas renderer batches all vector markers onto shared <canvas>
+        // panes instead of one DOM node per marker (Phase 2) — the win that
+        // matters once `filter` goes beyond the curated set.
+        preferCanvas
         style={{ height: "100%", width: "100%", background: "#05070D" }}
         attributionControl={true}
       >
@@ -132,9 +177,7 @@ export default function MapView({ satellites, selectedId, onSelect, location }: 
             key={i}
             positions={segment}
             pathOptions={{
-              color: selectedId !== null ? CATEGORY_COLOR[
-                SATELLITE_CATALOG.find((c) => c.id === selectedId)?.category ?? "science"
-              ] : "#4FD8EB",
+              color: selectedGroundColor,
               weight: 2,
               opacity: 0.6,
               dashArray: "4 4",
@@ -142,30 +185,34 @@ export default function MapView({ satellites, selectedId, onSelect, location }: 
           />
         ))}
 
-        {satellites.map((sat) => {
+        {visibleSatellites.map((sat) => {
           const entry = SATELLITE_CATALOG.find((c) => c.id === sat.id);
           const pos = positions.get(sat.id);
-          if (!entry || !pos) return null;
+          if (!pos) return null;
           const isSelected = selectedId === sat.id;
-          const color = CATEGORY_COLOR[entry.category];
+          const isFeatured = entry !== undefined;
+          const color = entry ? CATEGORY_COLOR[entry.category] : bulkObjectColor(sat.name, sat.id);
+          const name = entry?.name ?? sat.name;
           return (
             <CircleMarker
               key={sat.id}
               center={[pos.lat, pos.lon]}
-              radius={isSelected ? 7 : 4.5}
+              radius={isSelected ? 7 : isFeatured ? 4.5 : 2.5}
               pathOptions={{
                 color: isSelected ? "#FFFFFF" : color,
                 weight: isSelected ? 2 : 1,
                 fillColor: color,
-                fillOpacity: 0.9,
+                fillOpacity: isFeatured || isSelected ? 0.9 : 0.6,
               }}
               eventHandlers={{
                 click: () => onSelect(sat.id, pos),
               }}
             >
-              <Tooltip direction="top" offset={[0, -4]} opacity={0.9}>
-                {entry.name}
-              </Tooltip>
+              {(isFeatured || isSelected) && (
+                <Tooltip direction="top" offset={[0, -4]} opacity={0.9}>
+                  {name}
+                </Tooltip>
+              )}
             </CircleMarker>
           );
         })}
