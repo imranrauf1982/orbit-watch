@@ -39,20 +39,45 @@ function parseBulkTle(text: string): TleResult[] {
   return results;
 }
 
+async function fetchBulkOnce(useCache: boolean): Promise<TleResult[]> {
+  const res = await fetch(BULK_URL, {
+    // A real UA can't hurt against hosts that reject default/blank ones.
+    headers: { "User-Agent": "orbit-watch (contact: support@orbitwatch.app)" },
+    ...(useCache ? { next: { revalidate: 3600 } } : { cache: "no-store" as const }),
+  });
+  if (!res.ok) {
+    throw new Error(`CelesTrak bulk fetch failed: ${res.status} ${res.statusText}`);
+  }
+  const text = await res.text();
+  return parseBulkTle(text);
+}
+
 /**
  * Fetches CelesTrak's full "active" satellite group in a single request
  * (several thousand objects) and trims it down server-side before it ever
  * reaches the client. Cached for an hour via Next.js fetch revalidation —
  * CelesTrak is a free public service, so we don't want to hit it more than
  * necessary regardless of how many browser sessions are open.
+ *
+ * IMPORTANT: a failed or empty first attempt is retried once with
+ * `cache: "no-store"`. Without this, a single transient CelesTrak hiccup
+ * (rate limit, timeout, etc.) at exactly the wrong moment gets cached as an
+ * empty result for the full revalidate window (up to an hour) — every
+ * visitor in that window would see "0 objects" even after CelesTrak recovers.
  */
 export async function fetchBulkTle(): Promise<TleResult[]> {
   try {
-    const res = await fetch(BULK_URL, { next: { revalidate: 3600 } });
-    if (!res.ok) return [];
-    const text = await res.text();
-    return parseBulkTle(text);
-  } catch {
+    const first = await fetchBulkOnce(true);
+    if (first.length > 0) return first;
+    console.error("CelesTrak bulk fetch returned 0 satellites, retrying without cache");
+  } catch (err) {
+    console.error("CelesTrak bulk fetch failed, retrying without cache:", err);
+  }
+
+  try {
+    return await fetchBulkOnce(false);
+  } catch (err) {
+    console.error("CelesTrak bulk fetch retry also failed:", err);
     return [];
   }
 }
