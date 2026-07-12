@@ -27,6 +27,20 @@ export default function CameraFocus({ selectedId, satellites, controlsRef }: Pro
   const { camera } = useThree();
   const anim = useRef<{ from: THREE.Vector3; to: THREE.Vector3; t: number } | null>(null);
 
+  // Runs exactly once on mount. Previously this position was set via a JSX
+  // prop on <PerspectiveCamera position={[0,2,7]} />, which React Three
+  // Fiber re-applies on every re-render of <Scene> — including the ones
+  // triggered every ~0.5s by the selected satellite's telemetry refresh.
+  // That silently snapped the camera back to [0,2,7] shortly after any
+  // "focus on selection" animation ran, which is why selecting a satellite
+  // looked like it moved but never actually settled on facing it.
+  useEffect(() => {
+    camera.position.set(0, 2, 7);
+    camera.lookAt(0, 0, 0);
+    controlsRef.current?.update?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const satrec = useMemo(() => {
     if (selectedId === null) return null;
     const sat = satellites.find((s) => s.id === selectedId);
