@@ -1,12 +1,12 @@
 import OrbitWatchApp from "@/components/OrbitWatchApp";
-import { fetchBulkTle } from "@/lib/fetch-tle";
+import { fetchFeaturedTle } from "@/lib/fetch-tle";
 
 export const revalidate = 3600;
 
 export default async function Page() {
-  // One bulk request for every actively tracked object (Phase 1). The
-  // featured/curated subset used to be its own fetch loop — it's now just a
-  // filter over this same array, so no extra round trips.
-  const satellites = await fetchBulkTle();
-  return <OrbitWatchApp satellites={satellites} />;
+  // Fast path: only the curated ~15-satellite set, fetched in parallel.
+  // The full multi-thousand-object catalog is loaded lazily on the client
+  // (see OrbitWatchApp) so first paint doesn't wait on it.
+  const satellites = await fetchFeaturedTle();
+  return <OrbitWatchApp initialSatellites={satellites} />;
 }
