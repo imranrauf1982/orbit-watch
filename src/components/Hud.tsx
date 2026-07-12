@@ -23,6 +23,7 @@ import Footer from "./Footer";
 
 type Props = {
   satellites: TleResult[];
+  catalogStatus: "loading" | "ready" | "error";
   selectedId: number | null;
   liveState: LiveState | null;
   onSelect: (id: number | null) => void;
@@ -49,6 +50,7 @@ const OVERSCAN = 6;
 
 export default function Hud({
   satellites,
+  catalogStatus,
   selectedId,
   liveState,
   onSelect,
@@ -103,10 +105,15 @@ export default function Hud({
   }, [allItems, filter]);
 
   const fuse = useMemo(
-    () => new Fuse(filteredByGroup, { keys: ["name"], threshold: 0.35, ignoreLocation: true }),
-    [filteredByGroup]
+    () => new Fuse(allItems, { keys: ["name"], threshold: 0.35, ignoreLocation: true }),
+    [allItems]
   );
 
+  // Searching intentionally ignores the active filter tab — a search is a
+  // request to find a specific object regardless of which group it's in.
+  // (Previously this searched only within the current tab, which made
+  // anything outside "Featured" report as "not matched" even when it
+  // genuinely existed in the data.)
   const available = useMemo(() => {
     if (!query.trim()) return filteredByGroup;
     return fuse.search(query).map((r) => r.item);
@@ -270,6 +277,7 @@ export default function Hud({
           </div>
           <p className="text-[10px] text-muted font-mono">
             {available.length.toLocaleString()} object{available.length === 1 ? "" : "s"}
+            {catalogStatus === "loading" && " · loading full catalog…"}
           </p>
         </div>
         <ul ref={scrollRef} className="overflow-y-auto flex-1 relative">
@@ -302,7 +310,12 @@ export default function Hud({
               );
             })}
           </li>
-          {available.length === 0 && (
+          {available.length === 0 && catalogStatus === "loading" && (query.trim() || filter !== "featured") && (
+            <li className="px-3 py-6 text-center text-sm text-muted font-body">
+              Still loading the full satellite catalog — try again in a moment.
+            </li>
+          )}
+          {available.length === 0 && !(catalogStatus === "loading" && (query.trim() || filter !== "featured")) && (
             <li className="px-3 py-6 text-center text-sm text-muted font-body">
               No matches. Try another name.
             </li>
