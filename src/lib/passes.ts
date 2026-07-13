@@ -1,5 +1,6 @@
 import * as satellite from "satellite.js";
 import { isEclipsed, solarElevationDeg } from "./sun";
+import { lookAnglesFromEci } from "./topocentric";
 
 export type PassPrediction = {
   startTime: Date;
@@ -44,12 +45,6 @@ export function computePasses(
   const stepSec = opts.stepSec ?? 20;
   const minElevationDeg = opts.minElevationDeg ?? 0;
 
-  const observerGd = {
-    latitude: satellite.degreesToRadians(observerLatDeg),
-    longitude: satellite.degreesToRadians(observerLonDeg),
-    height: 0.05,
-  };
-
   const passes: PassPrediction[] = [];
   const totalSteps = Math.floor((days * 86400) / stepSec);
   const startMs = Date.now();
@@ -71,10 +66,9 @@ export function computePasses(
     if (!pv || typeof pv.position === "boolean") continue;
 
     const gmst = satellite.gstime(date);
-    const posEcf = satellite.eciToEcf(pv.position, gmst);
-    const look = satellite.ecfToLookAngles(observerGd, posEcf);
-    const elevationDeg = look.elevation * (180 / Math.PI);
-    const azimuthDeg = look.azimuth * (180 / Math.PI);
+    const look = lookAnglesFromEci(pv.position, gmst, observerLatDeg, observerLonDeg);
+    const elevationDeg = look.elevationDeg;
+    const azimuthDeg = look.azimuthDeg;
 
     if (elevationDeg > minElevationDeg) {
       if (!current) {
