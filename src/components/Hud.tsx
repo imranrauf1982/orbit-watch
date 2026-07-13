@@ -35,6 +35,8 @@ type Props = {
   onManualLocation: (lat: number, lon: number) => void;
   filter: FilterGroup;
   onFilterChange: (filter: FilterGroup) => void;
+  showDots: boolean;
+  onShowDotsChange: (show: boolean) => void;
 };
 
 type ListItem = {
@@ -62,6 +64,8 @@ export default function Hud({
   onManualLocation,
   filter,
   onFilterChange,
+  showDots,
+  onShowDotsChange,
 }: Props) {
   const [query, setQuery] = useState("");
   const [listOpen, setListOpen] = useState(false);
@@ -275,9 +279,28 @@ export default function Hud({
               </button>
             ))}
           </div>
+          {filter !== "featured" && (
+            <button
+              onClick={() => onShowDotsChange(!showDots)}
+              className={`w-full rounded px-2 py-1.5 text-[10px] font-mono border transition-colors flex items-center justify-center gap-1.5 ${
+                showDots
+                  ? "border-panelBorder text-muted hover:text-ink"
+                  : "border-signal/60 bg-signal/20 text-signal"
+              }`}
+              aria-pressed={!showDots}
+              title="Toggle the background satellite dots on or off"
+            >
+              <span
+                className="inline-block h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: showDots ? "#4FD8EB" : "#3A4152" }}
+              />
+              {showDots ? "HIDE DOTS" : "SHOW DOTS"}
+            </button>
+          )}
           <p className="text-[10px] text-muted font-mono">
             {available.length.toLocaleString()} object{available.length === 1 ? "" : "s"}
             {catalogStatus === "loading" && " · loading full catalog…"}
+            {!showDots && filter !== "featured" && " · dots hidden"}
           </p>
         </div>
         <ul ref={scrollRef} className="overflow-y-auto flex-1 relative">
