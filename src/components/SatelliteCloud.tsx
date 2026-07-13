@@ -8,6 +8,7 @@ import { propagate } from "@/lib/orbit";
 import { bulkObjectColor } from "@/lib/satellite-catalog";
 import { EARTH_RADIUS } from "./Earth";
 import { useSatelliteCloud } from "@/lib/use-satellite-cloud";
+import { getSimTime } from "@/lib/sim-clock";
 import * as satellite from "satellite.js";
 
 type Props = {
@@ -77,7 +78,7 @@ export default function SatelliteCloud({ satellites, onSelect }: Props) {
     if (!sat) return;
     try {
       const rec = satellite.twoline2satrec(sat.line1, sat.line2);
-      const state = propagate(rec, new Date());
+      const state = propagate(rec, getSimTime());
       onSelect(id, state);
     } catch {
       onSelect(id, null);
