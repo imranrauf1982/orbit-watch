@@ -18,6 +18,15 @@ let anchorRealMs = Date.now();
 let anchorSimMs = Date.now();
 const listeners = new Set<Listener>();
 
+// useSyncExternalStore compares snapshots by reference — returning a fresh
+// object literal on every call (as this used to do) makes React think the
+// store changed on every render and causes an infinite update loop. Cache
+// the snapshot and only replace it when speed/paused actually change.
+let snapshot = { speed, paused };
+function updateSnapshot() {
+  snapshot = { speed, paused };
+}
+
 function rebaseAnchor() {
   anchorSimMs = getSimTime().getTime();
   anchorRealMs = Date.now();
@@ -41,12 +50,14 @@ export function setSimSpeed(next: number) {
   rebaseAnchor();
   speed = next;
   if (next !== 0) paused = false;
+  updateSnapshot();
   listeners.forEach((l) => l());
 }
 
 export function toggleSimPaused() {
   rebaseAnchor();
   paused = !paused;
+  updateSnapshot();
   listeners.forEach((l) => l());
 }
 
@@ -54,6 +65,7 @@ export function resetSimClock() {
   rebaseAnchor();
   speed = 1;
   paused = false;
+  updateSnapshot();
   listeners.forEach((l) => l());
 }
 
@@ -65,5 +77,5 @@ export function subscribeSimClock(cb: Listener) {
 }
 
 export function getSimClockSnapshot() {
-  return { speed, paused };
+  return snapshot;
 }
