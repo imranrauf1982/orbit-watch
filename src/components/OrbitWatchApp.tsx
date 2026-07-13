@@ -21,7 +21,14 @@ const MapView = dynamic(() => import("./MapView"), {
   loading: () => <LoadingScreen />,
 });
 
-export type ViewMode = "3d" | "map";
+// Pure SVG — no special client-only requirement, but dynamic-imported
+// anyway for consistency and to keep it out of the initial bundle.
+const SkyDomeView = dynamic(() => import("./SkyDomeView"), {
+  ssr: false,
+  loading: () => <LoadingScreen />,
+});
+
+export type ViewMode = "3d" | "map" | "sky";
 export type CatalogStatus = "loading" | "ready" | "error";
 
 export default function OrbitWatchApp({ initialSatellites }: { initialSatellites: TleResult[] }) {
@@ -77,11 +84,12 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
     useLocation();
 
   const handleViewModeChange = useCallback((mode: ViewMode) => {
-    // The 2D map reads as alarming/broken when it opens straight into
-    // thousands of dots (unlike the 3D globe, where it reads as "cool").
-    // Default every entry into Map to the clean view — the "Show Dots"
-    // toggle is still right there if they want them back.
-    if (mode === "map") setShowDots(false);
+    // The 2D map (and the sky dome, same reasoning) reads as
+    // alarming/broken when it opens straight into thousands of dots
+    // (unlike the 3D globe, where it reads as "cool"). Default every entry
+    // into a flat view to the clean state — "Show Dots" is still right
+    // there if they want them back.
+    if (mode === "map" || mode === "sky") setShowDots(false);
     setViewMode(mode);
   }, []);
 
@@ -134,7 +142,7 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
           filter={filter}
           showDots={showDots}
         />
-      ) : (
+      ) : viewMode === "map" ? (
         <MapView
           satellites={satellites}
           selectedId={selectedId}
@@ -142,6 +150,18 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
           location={location}
           filter={filter}
           showDots={showDots}
+        />
+      ) : (
+        <SkyDomeView
+          satellites={satellites}
+          selectedId={selectedId}
+          onSelect={handleSelect}
+          filter={filter}
+          showDots={showDots}
+          location={location}
+          locationStatus={locationStatus}
+          onRequestLocation={requestLocation}
+          onManualLocation={handleManualLocation}
         />
       )}
       <Hud
