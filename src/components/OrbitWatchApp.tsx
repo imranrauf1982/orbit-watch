@@ -40,6 +40,8 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
   const [satellites, setSatellites] = useState<TleResult[]>(initialSatellites);
   const [catalogStatus, setCatalogStatus] = useState<CatalogStatus>("loading");
 
+  const TLE_CACHE_KEY = "orbitwatch_tle_cache_v1";
+
   useEffect(() => {
     let cancelled = false;
     fetch("/api/tle")
@@ -51,14 +53,42 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
           // somehow missing (rare — e.g. temporarily excluded upstream).
           const byId = new Map(data.satellites.map((s) => [s.id, s]));
           for (const s of initialSatellites) if (!byId.has(s.id)) byId.set(s.id, s);
-          setSatellites(Array.from(byId.values()));
+          const merged = Array.from(byId.values());
+          setSatellites(merged);
           setCatalogStatus("ready");
+          // Cache client-side too (belt-and-suspenders alongside the
+          // service worker) so a fully offline reload still has data.
+          try {
+            window.localStorage.setItem(
+              TLE_CACHE_KEY,
+              JSON.stringify({ satellites: merged, savedAt: Date.now() })
+            );
+          } catch {
+            /* storage full or unavailable — not critical */
+          }
         } else {
-          setCatalogStatus("error");
+          throw new Error("empty response");
         }
       })
       .catch(() => {
-        if (!cancelled) setCatalogStatus("error");
+        if (cancelled) return;
+        // CelesTrak/network unavailable — fall back to the last cache we
+        // saved from a previous successful visit, if any, rather than
+        // leaving the person with just the curated set.
+        try {
+          const raw = window.localStorage.getItem(TLE_CACHE_KEY);
+          if (raw) {
+            const cached = JSON.parse(raw) as { satellites: TleResult[] };
+            if (cached.satellites?.length > 0) {
+              setSatellites(cached.satellites);
+              setCatalogStatus("ready");
+              return;
+            }
+          }
+        } catch {
+          /* ignore malformed cache */
+        }
+        setCatalogStatus("error");
       });
     return () => {
       cancelled = true;
@@ -80,6 +110,7 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
   // thousands of dots by default).
   const [filter, setFilter] = useState<FilterGroup>("featured");
   const [showDots, setShowDots] = useState(true);
+  const [showOrbitPaths, setShowOrbitPaths] = useState(false);
   const { location, status: locationStatus, request: requestLocation, setLocation } =
     useLocation();
 
@@ -141,6 +172,7 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
           onSelect={handleSelect}
           filter={filter}
           showDots={showDots}
+          showOrbitPaths={showOrbitPaths}
         />
       ) : viewMode === "map" ? (
         <MapView
@@ -180,6 +212,8 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
         onFilterChange={setFilter}
         showDots={showDots}
         onShowDotsChange={setShowDots}
+        showOrbitPaths={showOrbitPaths}
+        onShowOrbitPathsChange={setShowOrbitPaths}
       />
     </div>
   );
