@@ -66,7 +66,7 @@ function SatellitePhoto({
   targetScale: number;
 }) {
   const scaleRef = useRef<THREE.Group>(null);
-  const baseHeight = 0.13;
+  const baseHeight = 0.26; // matched against the procedural model's wingspan so photos don't read smaller
 
   useFrame((_, delta) => {
     if (scaleRef.current) {
