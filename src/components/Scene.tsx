@@ -72,9 +72,8 @@ export default function Scene({
     >
       <PerspectiveCamera makeDefault fov={45} />
       <color attach="background" args={["#05070D"]} />
-      <ambientLight intensity={0.45} />
-      <directionalLight position={[5, 3, 5]} intensity={1.3} />
-      <directionalLight position={[-6, -2, -4]} intensity={0.18} color="#4FD8EB" />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[5, 3, 5]} intensity={1.1} />
 
       <Suspense fallback={null}>
         <Stars radius={80} depth={40} count={2500} factor={2} saturation={0} fade speed={0.4} />
@@ -123,4 +122,3 @@ export default function Scene({
     </Canvas>
   );
 }
-
