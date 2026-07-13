@@ -27,6 +27,31 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* High-contrast mode — brighter text/borders for readability in bright
+   sunlight or for low-vision users. Toggled via the CONTRAST button or "C". */
+.high-contrast {
+  --panelBorder: #6b7690;
+}
+.high-contrast body,
+.high-contrast .text-muted {
+  color: #e7ebf5 !important;
+}
+.high-contrast .text-ink {
+  color: #ffffff !important;
+}
+.high-contrast .border-panelBorder {
+  border-color: #8b96b3 !important;
+}
+.high-contrast .bg-panel,
+.high-contrast .bg-panel\/80,
+.high-contrast .bg-panel\/90,
+.high-contrast .bg-panel\/95 {
+  background-color: #10131c !important;
+}
+.high-contrast :focus-visible {
+  outline-width: 3px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
