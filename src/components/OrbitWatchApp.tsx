@@ -76,6 +76,15 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
   const { location, status: locationStatus, request: requestLocation, setLocation } =
     useLocation();
 
+  const handleViewModeChange = useCallback((mode: ViewMode) => {
+    // The 2D map reads as alarming/broken when it opens straight into
+    // thousands of dots (unlike the 3D globe, where it reads as "cool").
+    // Default every entry into Map to the clean view — the "Show Dots"
+    // toggle is still right there if they want them back.
+    if (mode === "map") setShowDots(false);
+    setViewMode(mode);
+  }, []);
+
   // Deep link support: /?sat=25544 preselects a satellite on load. Kept
   // pending until it's actually found in `satellites` — if it's outside the
   // curated set, that means waiting for the background catalog fetch above.
@@ -142,7 +151,7 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
         liveState={liveState}
         onSelect={handlePickFromList}
         viewMode={viewMode}
-        onViewModeChange={setViewMode}
+        onViewModeChange={handleViewModeChange}
         location={location}
         locationStatus={locationStatus}
         onRequestLocation={requestLocation}
