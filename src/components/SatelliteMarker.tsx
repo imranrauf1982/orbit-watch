@@ -1,14 +1,14 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+import { Html, Billboard } from "@react-three/drei";
 import * as THREE from "three";
 import * as satellite from "satellite.js";
 import { EARTH_RADIUS } from "./Earth";
 import { geodeticToVector3, propagate, type LiveState } from "@/lib/orbit";
 import type { CatalogEntry } from "@/lib/satellite-catalog";
-import { CATEGORY_COLOR } from "@/lib/satellite-catalog";
+import { CATEGORY_COLOR, genericImageSlug } from "@/lib/satellite-catalog";
 
 type Props = {
   entry: CatalogEntry;
@@ -18,8 +18,78 @@ type Props = {
   onSelect: (id: number, state: LiveState | null) => void;
 };
 
+/**
+ * Loads /satellites/<slug>.png if present, without ever throwing or
+ * blocking render. If the file doesn't exist yet (most slugs won't, until
+ * real photos are added to /public/satellites/), this just quietly resolves
+ * to null and the caller falls back to the procedural model — so nothing
+ * breaks for satellites that don't have a photo yet.
+ */
+function useOptionalSatellitePhoto(slug: string | undefined) {
+  const [result, setResult] = useState<{ texture: THREE.Texture; aspect: number } | null>(null);
+
+  useEffect(() => {
+    setResult(null);
+    if (!slug) return;
+    let cancelled = false;
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      `/satellites/${slug}.png`,
+      (tex) => {
+        if (cancelled) return;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        const aspect = tex.image ? tex.image.width / tex.image.height : 1;
+        setResult({ texture: tex, aspect });
+      },
+      undefined,
+      () => {
+        /* 404 or decode failure — stay null, fall back to procedural model */
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  return result;
+}
+
+/** A real photo of the satellite, always facing the camera, sized to
+ * roughly match the footprint of the procedural model it replaces. */
+function SatellitePhoto({
+  texture,
+  aspect,
+  targetScale,
+}: {
+  texture: THREE.Texture;
+  aspect: number;
+  targetScale: number;
+}) {
+  const scaleRef = useRef<THREE.Group>(null);
+  const baseHeight = 0.13;
+
+  useFrame((_, delta) => {
+    if (scaleRef.current) {
+      const s = scaleRef.current.scale.x + (targetScale - scaleRef.current.scale.x) * Math.min(delta * 8, 1);
+      scaleRef.current.scale.setScalar(s);
+    }
+  });
+
+  return (
+    <group ref={scaleRef}>
+      <Billboard>
+        <mesh scale={[baseHeight * aspect, baseHeight, 1]}>
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial map={texture} transparent toneMapped={false} />
+        </mesh>
+      </Billboard>
+    </group>
+  );
+}
+
 /** A small procedural satellite: body + solar panel wings + antenna — no
- * external model files needed, cheap to render dozens of at once. */
+ * external model files needed, cheap to render dozens of at once. Used as
+ * the fallback whenever a real photo isn't available for this satellite. */
 function SatelliteModel({ color, targetScale }: { color: string; targetScale: number }) {
   const spinRef = useRef<THREE.Group>(null);
   const scaleRef = useRef<THREE.Group>(null);
@@ -87,6 +157,7 @@ export default function SatelliteMarker({ entry, line1, line2, isSelected, onSel
   const [label, setLabel] = useState<LiveState | null>(null);
   const lastTelemetryPush = useRef(0);
   const color = CATEGORY_COLOR[entry.category];
+  const photo = useOptionalSatellitePhoto(entry.imageSlug ?? genericImageSlug(entry.category));
 
   // Precompute a short trailing arc (~10 min behind) once per satrec; cheap and static-ish.
   const trailPositions = useMemo(() => {
@@ -154,7 +225,11 @@ export default function SatelliteMarker({ entry, line1, line2, isSelected, onSel
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
 
-        <SatelliteModel color={color} targetScale={modelScale} />
+        {photo ? (
+          <SatellitePhoto texture={photo.texture} aspect={photo.aspect} targetScale={modelScale} />
+        ) : (
+          <SatelliteModel color={color} targetScale={modelScale} />
+        )}
 
         {isSelected && (
           <mesh>
