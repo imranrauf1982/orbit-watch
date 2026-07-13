@@ -6,9 +6,10 @@ import { Html, Billboard } from "@react-three/drei";
 import * as THREE from "three";
 import * as satellite from "satellite.js";
 import { EARTH_RADIUS } from "./Earth";
-import { geodeticToVector3, propagate, type LiveState } from "@/lib/orbit";
+import { geodeticToVector3, propagate, getOrbitalElements, type LiveState } from "@/lib/orbit";
 import type { CatalogEntry } from "@/lib/satellite-catalog";
 import { CATEGORY_COLOR, genericImageSlug } from "@/lib/satellite-catalog";
+import { getSimTime } from "@/lib/sim-clock";
 
 type Props = {
   entry: CatalogEntry;
@@ -16,6 +17,7 @@ type Props = {
   line2: string;
   isSelected: boolean;
   onSelect: (id: number, state: LiveState | null) => void;
+  showOrbitPath?: boolean;
 };
 
 /**
@@ -149,7 +151,14 @@ function SatelliteModel({ color, targetScale }: { color: string; targetScale: nu
   );
 }
 
-export default function SatelliteMarker({ entry, line1, line2, isSelected, onSelect }: Props) {
+export default function SatelliteMarker({
+  entry,
+  line1,
+  line2,
+  isSelected,
+  onSelect,
+  showOrbitPath = false,
+}: Props) {
   const satrec = useMemo(() => satellite.twoline2satrec(line1, line2), [line1, line2]);
   const groupRef = useRef<THREE.Group>(null);
   const trailRef = useRef<THREE.Line>(null);
@@ -173,12 +182,36 @@ export default function SatelliteMarker({ entry, line1, line2, isSelected, onSel
     return new Float32Array(pts);
   }, [satrec]);
 
+  // Full-orbit path: one complete revolution sampled ahead of "now", shown
+  // only when the person toggles "SHOW ORBITS" on — free (client-side
+  // satellite.js math already loaded) and off by default to avoid clutter.
+  const orbitPathPositions = useMemo(() => {
+    if (!showOrbitPath) return null;
+    let periodMin = 90;
+    try {
+      periodMin = getOrbitalElements(satrec).periodMin;
+    } catch {
+      /* fall back to default LEO-ish period */
+    }
+    const steps = 120;
+    const pts: number[] = [];
+    const now = Date.now();
+    for (let i = 0; i <= steps; i++) {
+      const t = new Date(now + (i / steps) * periodMin * 60 * 1000);
+      const s = propagate(satrec, t);
+      if (!s) continue;
+      const [x, y, z] = geodeticToVector3(s.lat, s.lon, s.altitudeKm, EARTH_RADIUS);
+      pts.push(x, y, z);
+    }
+    return new Float32Array(pts);
+  }, [satrec, showOrbitPath]);
+
   const outward = useMemo(() => new THREE.Vector3(), []);
   const upAxis = useMemo(() => new THREE.Vector3(0, 1, 0), []);
   const quat = useMemo(() => new THREE.Quaternion(), []);
 
   useFrame(({ clock }) => {
-    const state = propagate(satrec, new Date());
+    const state = propagate(satrec, getSimTime());
     if (!state || !groupRef.current) return;
     const [x, y, z] = geodeticToVector3(state.lat, state.lon, state.altitudeKm, EARTH_RADIUS);
     groupRef.current.position.set(x, y, z);
@@ -210,12 +243,21 @@ export default function SatelliteMarker({ entry, line1, line2, isSelected, onSel
         <lineBasicMaterial color={color} transparent opacity={0.35} />
       </line>
 
+      {orbitPathPositions && (
+        <line>
+          <bufferGeometry>
+            <bufferAttribute attach="attributes-position" args={[orbitPathPositions, 3]} />
+          </bufferGeometry>
+          <lineBasicMaterial color={color} transparent opacity={0.18} />
+        </line>
+      )}
+
       <group ref={groupRef}>
         {/* Invisible larger hit-target sphere makes the small model easy to click/tap */}
         <mesh
           onClick={(e) => {
             e.stopPropagation();
-            const state = propagate(satrec, new Date());
+            const state = propagate(satrec, getSimTime());
             onSelect(entry.id, state);
           }}
           onPointerOver={() => setHovered(true)}
