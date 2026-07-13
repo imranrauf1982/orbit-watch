@@ -7,9 +7,11 @@ import { getSimClockSnapshot, subscribeSimClock } from "@/lib/sim-clock";
 type Props = {
   onAbout: () => void;
   onSupport: () => void;
+  /** True while the satellite detail panel is open — lifts the pill above it instead of overlapping. */
+  raised?: boolean;
 };
 
-export default function Footer({ onAbout, onSupport }: Props) {
+export default function Footer({ onAbout, onSupport, raised = false }: Props) {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -30,7 +32,12 @@ export default function Footer({ onAbout, onSupport }: Props) {
     : null;
 
   return (
-    <footer className="pointer-events-auto hidden sm:flex items-center gap-3 self-center mb-3 rounded-full border border-panelBorder bg-panel/80 backdrop-blur px-4 py-1.5 text-[11px] font-mono text-muted shadow-[0_4px_24px_-6px_rgba(0,0,0,0.6)]">
+    <footer
+      className={`pointer-events-auto hidden sm:flex items-center gap-3 self-center mb-3 rounded-full border border-panelBorder bg-panel/80 backdrop-blur px-4 py-1.5 text-[11px] font-mono text-muted shadow-[0_4px_24px_-6px_rgba(0,0,0,0.6)] transition-opacity duration-200 ${
+        raised ? "opacity-0 pointer-events-none" : "opacity-100"
+      }`}
+      aria-hidden={raised}
+    >
       <span className="flex items-center gap-1.5">
         <span className="h-1.5 w-1.5 rounded-full bg-signal animate-pulse" />
         {viewers !== null ? `${viewers} tracking now` : "—"}
