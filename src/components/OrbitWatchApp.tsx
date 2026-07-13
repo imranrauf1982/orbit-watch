@@ -114,6 +114,40 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
   const { location, status: locationStatus, request: requestLocation, setLocation } =
     useLocation();
 
+  // --- Quick Actions state (Where Am I? / Fly With Satellite / What's Above Me?) ---
+  // "Fly With Satellite" chase-cam toggle. Only meaningful in the 3D view —
+  // auto-exits if the person switches views or clears the selection so it
+  // never gets stuck active behind a different screen.
+  const [flyMode, setFlyMode] = useState(false);
+  // "Where Am I?" temporary line between the observer and a satellite. The
+  // `key` makes re-triggering on the same satellite restart the timer/line
+  // (a fresh mount) instead of being a no-op state update.
+  const [locateLine, setLocateLine] = useState<{ id: number; key: number } | null>(null);
+
+  useEffect(() => {
+    if (viewMode !== "3d") setFlyMode(false);
+  }, [viewMode]);
+
+  useEffect(() => {
+    if (selectedId === null) setFlyMode(false);
+  }, [selectedId]);
+
+  // Auto-clear the locate line a few seconds after it's shown — it's meant
+  // to be a temporary visual callout, not a persistent overlay.
+  useEffect(() => {
+    if (!locateLine) return;
+    const timer = setTimeout(() => setLocateLine(null), 9000);
+    return () => clearTimeout(timer);
+  }, [locateLine]);
+
+  const handleToggleFlyMode = useCallback((next: boolean) => {
+    setFlyMode(next);
+  }, []);
+
+  const handleShowLocateLine = useCallback((id: number) => {
+    setLocateLine({ id, key: Date.now() });
+  }, []);
+
   const handleViewModeChange = useCallback((mode: ViewMode) => {
     // The 2D map (and the sky dome, same reasoning) reads as
     // alarming/broken when it opens straight into thousands of dots
@@ -173,6 +207,9 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
           filter={filter}
           showDots={showDots}
           showOrbitPaths={showOrbitPaths}
+          flyMode={flyMode}
+          locateLine={locateLine}
+          location={location}
         />
       ) : viewMode === "map" ? (
         <MapView
@@ -214,7 +251,22 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
         onShowDotsChange={setShowDots}
         showOrbitPaths={showOrbitPaths}
         onShowOrbitPathsChange={setShowOrbitPaths}
+        flyMode={flyMode}
+        onToggleFlyMode={handleToggleFlyMode}
+        onShowLocateLine={handleShowLocateLine}
       />
+
+      {/* Small, always-reachable exit button for the "Fly With Satellite"
+          chase cam — sits above the HUD's z-index so it stays clickable
+          regardless of which panels are open. */}
+      {flyMode && (
+        <button
+          onClick={() => setFlyMode(false)}
+          className="pointer-events-auto fixed top-4 left-1/2 -translate-x-1/2 z-[2100] rounded-md border border-signal/60 bg-panel/95 px-4 py-2 text-[11px] font-mono text-signal backdrop-blur shadow-[0_4px_20px_-6px_rgba(0,0,0,0.7)] hover:bg-signal/10 transition-colors"
+        >
+          EXIT FLY MODE
+        </button>
+      )}
     </div>
   );
 }
