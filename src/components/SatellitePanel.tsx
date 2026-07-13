@@ -10,6 +10,7 @@ import { estimateBrightness } from "@/lib/brightness";
 import type { ObserverLocation, LocationStatus } from "@/lib/use-location";
 import LocationSearch from "./LocationSearch";
 import AlertSignup from "./AlertSignup";
+import { downloadOrbitKml } from "@/lib/kml-export";
 
 type Tab = "telemetry" | "info" | "passes";
 
@@ -39,6 +40,10 @@ function fmtTime(d: Date) {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function fmtUtc(d: Date) {
+  return d.toISOString().slice(11, 16) + " UTC";
 }
 
 export default function SatellitePanel({
@@ -105,6 +110,14 @@ export default function SatellitePanel({
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <button
+            onClick={() => downloadOrbitKml(entry.name, line1, line2)}
+            className="text-muted hover:text-ink text-[11px] font-mono"
+            aria-label="Export orbit as KML"
+            title="Download this orbit as a KML file (Google Earth, GIS tools)"
+          >
+            KML
+          </button>
+          <button
             onClick={onShare}
             className="text-muted hover:text-ink text-[11px] font-mono"
             aria-label="Copy shareable link"
@@ -149,6 +162,12 @@ export default function SatellitePanel({
         {tab === "telemetry" &&
           (liveState ? (
             <dl className="grid grid-cols-2 gap-y-2 gap-x-3 font-mono text-xs">
+              <dt className="text-muted">TIME</dt>
+              <dd className="tabular text-ink text-right">
+                {new Date().toLocaleTimeString()}
+                <span className="block text-[10px] text-muted">{fmtUtc(new Date())}</span>
+              </dd>
+
               <dt className="text-muted">LATITUDE</dt>
               <dd className="tabular text-signal text-right">{fmt(liveState.lat)}°</dd>
 
@@ -238,6 +257,9 @@ export default function SatellitePanel({
                           <tr key={i} className="align-top">
                             <td className="px-1 py-2 text-xs text-ink font-body whitespace-nowrap">
                               {fmtTime(p.startTime)}
+                              <span className="block text-[10px] text-muted font-mono">
+                                {fmtUtc(p.startTime)}
+                              </span>
                             </td>
                             <td className="px-1 py-2 text-xs text-orbit font-mono text-right tabular whitespace-nowrap">
                               {fmt(p.maxElevationDeg, 0)}°
