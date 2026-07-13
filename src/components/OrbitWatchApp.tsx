@@ -72,6 +72,7 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
   // Default to the small curated set (Phase 2 constraint: don't render
   // thousands of dots by default).
   const [filter, setFilter] = useState<FilterGroup>("featured");
+  const [showDots, setShowDots] = useState(true);
   const { location, status: locationStatus, request: requestLocation, setLocation } =
     useLocation();
 
@@ -122,6 +123,7 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
           selectedId={selectedId}
           onSelect={handleSelect}
           filter={filter}
+          showDots={showDots}
         />
       ) : (
         <MapView
@@ -130,6 +132,7 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
           onSelect={handleSelect}
           location={location}
           filter={filter}
+          showDots={showDots}
         />
       )}
       <Hud
@@ -146,6 +149,8 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
         onManualLocation={handleManualLocation}
         filter={filter}
         onFilterChange={setFilter}
+        showDots={showDots}
+        onShowDotsChange={setShowDots}
       />
     </div>
   );
