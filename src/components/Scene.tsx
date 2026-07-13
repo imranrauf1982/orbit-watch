@@ -1,8 +1,8 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stars, PerspectiveCamera } from "@react-three/drei";
-import { Suspense, useMemo, useRef } from "react";
+import { OrbitControls, Stars, PerspectiveCamera, Stats } from "@react-three/drei";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Earth from "./Earth";
 import SatelliteMarker from "./SatelliteMarker";
 import SatelliteCloud from "./SatelliteCloud";
@@ -22,10 +22,26 @@ type Props = {
   onSelect: (id: number, state: LiveState | null) => void;
   filter: FilterGroup;
   showDots: boolean;
+  showOrbitPaths?: boolean;
 };
 
-export default function Scene({ satellites, selectedId, onSelect, filter, showDots }: Props) {
+export default function Scene({
+  satellites,
+  selectedId,
+  onSelect,
+  filter,
+  showDots,
+  showOrbitPaths = false,
+}: Props) {
   const controlsRef = useRef<any>(null);
+
+  // Perf overlay (stats-gl style FPS/MS/MB panel) — free, dev-only, opt-in
+  // via ?debug=1 so it never shows for regular visitors.
+  const [debug, setDebug] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setDebug(new URLSearchParams(window.location.search).get("debug") === "1");
+  }, []);
 
   // Detailed procedural models: the curated catalog, plus whatever's
   // currently selected (so a mass-cloud pick "upgrades" to a real model).
@@ -82,11 +98,14 @@ export default function Scene({ satellites, selectedId, onSelect, filter, showDo
               line2={sat.line2}
               isSelected={selectedId === sat.id}
               onSelect={onSelect}
+              showOrbitPath={showOrbitPaths && (selectedId === sat.id || FEATURED_IDS.has(sat.id))}
             />
           );
         })}
         {filter !== "featured" && showDots && <SatelliteCloud satellites={mass} onSelect={onSelect} />}
       </Suspense>
+
+      {debug && <Stats className="!left-auto !right-2 !top-2" />}
 
       {/* Swings the camera to face whatever gets selected, from any source
           (list, search, map, clicking a dot on the far side of the globe). */}
