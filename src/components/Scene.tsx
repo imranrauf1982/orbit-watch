@@ -1,14 +1,19 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Stars, PerspectiveCamera, Stats } from "@react-three/drei";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import Earth from "./Earth";
+import * as THREE from "three";
+import * as satellite from "satellite.js";
+import Earth, { EARTH_RADIUS } from "./Earth";
 import SatelliteMarker from "./SatelliteMarker";
 import SatelliteCloud from "./SatelliteCloud";
 import CameraFocus from "./CameraFocus";
 import FlyCam from "./FlyCam";
 import LocateLine from "./LocateLine";
+import ContinentLabels from "./ContinentLabels";
+import { propagate, geodeticToVector3 } from "@/lib/orbit";
+import { getSimTime } from "@/lib/sim-clock";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { LiveState } from "@/lib/orbit";
 import type { ObserverLocation } from "@/lib/use-location";
@@ -32,6 +37,75 @@ type Props = {
   locateLine?: { id: number; key: number } | null;
   location?: ObserverLocation | null;
 };
+
+const LOCATE_DURATION_SEC = 0.9;
+
+/**
+ * "Where Am I?" should actually take the person to the globe and show them
+ * the line, not just draw it somewhere off-screen. This swings the camera
+ * (preserving current zoom, same approach as CameraFocus) to face the
+ * midpoint direction between the observer's location and the tracked
+ * satellite, so both ends of the line land in view together.
+ */
+function LocateFocus({
+  locateLine,
+  location,
+  satellites,
+  controlsRef,
+}: {
+  locateLine: { id: number; key: number } | null;
+  location: { lat: number; lon: number } | null;
+  satellites: { id: number; line1: string; line2: string }[];
+  controlsRef: React.RefObject<any>;
+}) {
+  const { camera } = useThree();
+  const anim = useRef<{ from: THREE.Vector3; to: THREE.Vector3; t: number } | null>(null);
+
+  useEffect(() => {
+    if (!locateLine || !location) return;
+    const sat = satellites.find((s) => s.id === locateLine.id);
+    if (!sat) return;
+    let satrec: satellite.SatRec;
+    try {
+      satrec = satellite.twoline2satrec(sat.line1, sat.line2);
+    } catch {
+      return;
+    }
+    const state = propagate(satrec, getSimTime());
+    if (!state) return;
+
+    const [sx, sy, sz] = geodeticToVector3(state.lat, state.lon, state.altitudeKm, EARTH_RADIUS);
+    const satDir = new THREE.Vector3(sx, sy, sz).normalize();
+    const [ox, oy, oz] = geodeticToVector3(location.lat, location.lon, 0, EARTH_RADIUS);
+    const obsDir = new THREE.Vector3(ox, oy, oz).normalize();
+
+    // Average direction between the two points, so both the observer marker
+    // and the satellite land in view together rather than one going
+    // off-screen behind the globe.
+    const midDir = satDir.add(obsDir).normalize();
+    const distance = camera.position.length();
+
+    anim.current = {
+      from: camera.position.clone(),
+      to: midDir.multiplyScalar(distance),
+      t: 0,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locateLine, location, satellites]);
+
+  useFrame((_, delta) => {
+    const a = anim.current;
+    if (!a) return;
+    a.t = Math.min(1, a.t + delta / LOCATE_DURATION_SEC);
+    const eased = 1 - Math.pow(1 - a.t, 3);
+    camera.position.lerpVectors(a.from, a.to, eased);
+    camera.lookAt(0, 0, 0);
+    controlsRef.current?.update?.();
+    if (a.t >= 1) anim.current = null;
+  });
+
+  return null;
+}
 
 export default function Scene({
   satellites,
@@ -89,6 +163,7 @@ export default function Scene({
       <Suspense fallback={null}>
         <Stars radius={80} depth={40} count={2500} factor={2} saturation={0} fade speed={0.4} />
         <Earth />
+        <ContinentLabels dim={flyMode} />
         {detailed.map((sat) => {
           const entry =
             SATELLITE_CATALOG.find((c) => c.id === sat.id) ?? {
@@ -110,6 +185,7 @@ export default function Scene({
               isSelected={selectedId === sat.id}
               onSelect={onSelect}
               showOrbitPath={showOrbitPaths && (selectedId === sat.id || FEATURED_IDS.has(sat.id))}
+              flyMode={flyMode}
             />
           );
         })}
@@ -135,6 +211,14 @@ export default function Scene({
           Skipped while flying — FlyCam owns the camera during chase mode. */}
       {!flyMode && (
         <CameraFocus selectedId={selectedId} satellites={satellites} controlsRef={controlsRef} />
+      )}
+      {!flyMode && (
+        <LocateFocus
+          locateLine={locateLine}
+          location={location}
+          satellites={satellites}
+          controlsRef={controlsRef}
+        />
       )}
 
       {/* "Fly With Satellite" — chase cam. Only active in flyMode. */}
