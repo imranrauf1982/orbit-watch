@@ -21,9 +21,10 @@ type Props = {
   selectedId: number | null;
   onSelect: (id: number, state: LiveState | null) => void;
   filter: FilterGroup;
+  showDots: boolean;
 };
 
-export default function Scene({ satellites, selectedId, onSelect, filter }: Props) {
+export default function Scene({ satellites, selectedId, onSelect, filter, showDots }: Props) {
   const controlsRef = useRef<any>(null);
 
   // Detailed procedural models: the curated catalog, plus whatever's
@@ -84,7 +85,7 @@ export default function Scene({ satellites, selectedId, onSelect, filter }: Prop
             />
           );
         })}
-        {filter !== "featured" && <SatelliteCloud satellites={mass} onSelect={onSelect} />}
+        {filter !== "featured" && showDots && <SatelliteCloud satellites={mass} onSelect={onSelect} />}
       </Suspense>
 
       {/* Swings the camera to face whatever gets selected, from any source
