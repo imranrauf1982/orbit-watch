@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Fuse from "fuse.js";
 import {
   SATELLITE_CATALOG,
@@ -20,6 +20,14 @@ import SatellitePanel from "./SatellitePanel";
 import AboutModal from "./AboutModal";
 import SupportModal from "./SupportModal";
 import Footer from "./Footer";
+import OnboardingTutorial from "./OnboardingTutorial";
+import {
+  getSimClockSnapshot,
+  subscribeSimClock,
+  setSimSpeed,
+  toggleSimPaused,
+} from "@/lib/sim-clock";
+import { useHighContrast } from "@/lib/use-high-contrast";
 
 type Props = {
   satellites: TleResult[];
@@ -37,6 +45,8 @@ type Props = {
   onFilterChange: (filter: FilterGroup) => void;
   showDots: boolean;
   onShowDotsChange: (show: boolean) => void;
+  showOrbitPaths: boolean;
+  onShowOrbitPathsChange: (show: boolean) => void;
 };
 
 type ListItem = {
@@ -66,12 +76,81 @@ export default function Hud({
   onFilterChange,
   showDots,
   onShowDotsChange,
+  showOrbitPaths,
+  onShowOrbitPathsChange,
 }: Props) {
   const [query, setQuery] = useState("");
   const [listOpen, setListOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [highContrast, setHighContrast] = useHighContrast();
+
+  // Playback speed (3D view). Subscribed to the module-level sim-clock store
+  // so any component can read/drive it without prop drilling.
+  const simClock = useSyncExternalStore(subscribeSimClock, getSimClockSnapshot, () => ({
+    speed: 1,
+    paused: false,
+  }));
+  const SPEED_STEPS = [1, 10, 60, 600, 3600];
+
+  // First-visit onboarding — shows once, reopenable anytime via HELP or "?".
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!window.localStorage.getItem("orbitwatch_onboarded")) {
+      setTutorialOpen(true);
+    }
+  }, []);
+  const dismissTutorial = () => {
+    setTutorialOpen(false);
+    window.localStorage.setItem("orbitwatch_onboarded", "1");
+  };
+
+  // Keyboard shortcuts: 1/2/3 switch views, / focuses search, Esc closes
+  // panels, space pauses/resumes sim time, +/- change playback speed,
+  // c toggles high-contrast, ? opens help. Ignored while typing in a field.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const typing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
+
+      if (e.key === "/" && !typing) {
+        e.preventDefault();
+        setListOpen(true);
+        setTimeout(() => searchInputRef.current?.focus(), 0);
+        return;
+      }
+      if (e.key === "Escape") {
+        if (listOpen) setListOpen(false);
+        else if (selectedId !== null) onSelect(null);
+        return;
+      }
+      if (typing) return;
+
+      if (e.key === "1") onViewModeChange("3d");
+      else if (e.key === "2") onViewModeChange("map");
+      else if (e.key === "3") onViewModeChange("sky");
+      else if (e.key === " ") {
+        e.preventDefault();
+        toggleSimPaused();
+      } else if (e.key === "+" || e.key === "=") {
+        const idx = SPEED_STEPS.indexOf(Math.abs(simClock.speed)) ;
+        setSimSpeed(SPEED_STEPS[Math.min(idx + 1, SPEED_STEPS.length - 1)] || SPEED_STEPS[1]);
+      } else if (e.key === "-" || e.key === "_") {
+        const idx = SPEED_STEPS.indexOf(Math.abs(simClock.speed));
+        setSimSpeed(SPEED_STEPS[Math.max(idx - 1, 0)] || SPEED_STEPS[0]);
+      } else if (e.key === "c" || e.key === "C") {
+        setHighContrast((v) => !v);
+      } else if (e.key === "?") {
+        setTutorialOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listOpen, selectedId, simClock.speed]);
 
   // Flatten TLE results + curated catalog into one searchable/listable shape.
   // Kept minimal (Phase 4: this list can run into the thousands under the
@@ -226,7 +305,59 @@ export default function Hud({
             </button>
           </div>
 
+          {viewMode === "3d" && (
+            <div className="flex rounded-md border border-panelBorder bg-panel/80 backdrop-blur overflow-hidden text-[11px] font-mono">
+              <button
+                onClick={() => toggleSimPaused()}
+                className={`px-2.5 py-1.5 transition-colors ${
+                  simClock.paused ? "bg-signal/20 text-signal" : "text-muted hover:text-ink"
+                }`}
+                title="Pause/resume simulated time (Space)"
+                aria-pressed={simClock.paused}
+              >
+                {simClock.paused ? "▶" : "❚❚"}
+              </button>
+              {SPEED_STEPS.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSimSpeed(s)}
+                  className={`px-2 py-1.5 border-l border-panelBorder transition-colors ${
+                    !simClock.paused && simClock.speed === s
+                      ? "bg-signal/20 text-signal"
+                      : "text-muted hover:text-ink"
+                  }`}
+                  title={`Run simulation at ${s}x speed`}
+                >
+                  {s}x
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setHighContrast((v) => !v)}
+              className={`rounded-md border h-8 px-2.5 flex items-center justify-center text-[11px] font-mono backdrop-blur transition-colors ${
+                highContrast
+                  ? "border-signal/60 bg-signal/20 text-signal"
+                  : "border-panelBorder bg-panel/80 text-muted hover:text-ink"
+              }`}
+              aria-pressed={highContrast}
+              title="Toggle high-contrast mode (C)"
+            >
+              <span className="hidden sm:inline">CONTRAST</span>
+              <span className="sm:hidden" aria-hidden>
+                ◐
+              </span>
+            </button>
+            <button
+              onClick={() => setTutorialOpen(true)}
+              className="rounded-md border border-panelBorder bg-panel/80 h-8 px-2.5 flex items-center justify-center text-[11px] font-mono text-muted hover:text-ink backdrop-blur transition-colors"
+              aria-label="Help & keyboard shortcuts"
+              title="Help & keyboard shortcuts (?)"
+            >
+              ?
+            </button>
             <button
               onClick={() => setSupportOpen(true)}
               className="rounded-md border border-panelBorder bg-panel/80 h-8 px-2.5 flex items-center justify-center gap-1 text-[11px] font-mono text-signal hover:text-ink backdrop-blur transition-colors"
@@ -267,6 +398,7 @@ export default function Hud({
       >
         <div className="p-3 border-b border-panelBorder space-y-2">
           <input
+            ref={searchInputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search satellite…"
@@ -304,6 +436,20 @@ export default function Hud({
                 style={{ backgroundColor: showDots ? "#4FD8EB" : "#3A4152" }}
               />
               {showDots ? "HIDE DOTS" : "SHOW DOTS"}
+            </button>
+          )}
+          {viewMode === "3d" && (
+            <button
+              onClick={() => onShowOrbitPathsChange(!showOrbitPaths)}
+              className={`w-full rounded px-2 py-1.5 text-[10px] font-mono border transition-colors flex items-center justify-center gap-1.5 ${
+                showOrbitPaths
+                  ? "border-signal/60 bg-signal/20 text-signal"
+                  : "border-panelBorder text-muted hover:text-ink"
+              }`}
+              aria-pressed={showOrbitPaths}
+              title="Toggle full orbital paths for featured satellites"
+            >
+              {showOrbitPaths ? "HIDE ORBITS" : "SHOW ORBITS"}
             </button>
           )}
           <p className="text-[10px] text-muted font-mono">
@@ -375,6 +521,7 @@ export default function Hud({
 
       {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
       {supportOpen && <SupportModal onClose={() => setSupportOpen(false)} />}
+      {tutorialOpen && <OnboardingTutorial onClose={dismissTutorial} />}
     </div>
   );
 }
