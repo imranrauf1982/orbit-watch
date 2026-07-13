@@ -22,6 +22,7 @@ type Props = {
   onSelect: (id: number, state: LiveState | null) => void;
   location: ObserverLocation | null;
   filter: FilterGroup;
+  showDots: boolean;
 };
 
 /** Splits a lon/lat track into segments, breaking wherever it wraps the antimeridian. */
@@ -58,7 +59,7 @@ function Recenter({ lat, lon, trigger }: { lat: number; lon: number; trigger: nu
   return null;
 }
 
-export default function MapView({ satellites, selectedId, onSelect, location, filter }: Props) {
+export default function MapView({ satellites, selectedId, onSelect, location, filter, showDots }: Props) {
   const [tick, setTick] = useState(0);
 
   // Mass sets update less often than the 3D view's worker cadence would
@@ -95,9 +96,17 @@ export default function MapView({ satellites, selectedId, onSelect, location, fi
     return satellites;
   }, [satellites, filter, selectedId]);
 
+  // When dots are hidden, skip propagating the mass set entirely too — not
+  // just skip drawing it — so "Hide Dots" is also a real performance win,
+  // not purely cosmetic.
+  const renderedSatellites = useMemo(() => {
+    if (showDots) return visibleSatellites;
+    return visibleSatellites.filter((s) => FEATURED_IDS.has(s.id) || s.id === selectedId);
+  }, [visibleSatellites, showDots, selectedId]);
+
   const satrecs = useMemo(() => {
     const map = new Map<number, satellite.SatRec>();
-    for (const s of visibleSatellites) {
+    for (const s of renderedSatellites) {
       try {
         map.set(s.id, satellite.twoline2satrec(s.line1, s.line2));
       } catch {
@@ -105,7 +114,7 @@ export default function MapView({ satellites, selectedId, onSelect, location, fi
       }
     }
     return map;
-  }, [visibleSatellites]);
+  }, [renderedSatellites]);
 
   const positions = useMemo(() => {
     const now = new Date();
@@ -185,7 +194,7 @@ export default function MapView({ satellites, selectedId, onSelect, location, fi
           />
         ))}
 
-        {visibleSatellites.map((sat) => {
+        {renderedSatellites.map((sat) => {
           const entry = SATELLITE_CATALOG.find((c) => c.id === sat.id);
           const pos = positions.get(sat.id);
           if (!pos) return null;
