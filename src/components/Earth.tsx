@@ -56,6 +56,33 @@ const EARTH_FRAGMENT = /* glsl */ `
   }
 `;
 
+const ATMOSPHERE_VERTEX = /* glsl */ `
+  varying vec3 vNormal;
+  varying vec3 vViewPosition;
+  void main() {
+    vNormal = normalize(normalMatrix * normal);
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    vViewPosition = -mvPosition.xyz;
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`;
+
+// Fresnel term (steepest at the grazing edge of the sphere, near-zero
+// facing the camera) — this is what produces a genuine glowing rim
+// instead of a flat, uniformly-transparent shell.
+const ATMOSPHERE_FRAGMENT = /* glsl */ `
+  varying vec3 vNormal;
+  varying vec3 vViewPosition;
+  uniform vec3 glowColor;
+  uniform float power;
+  uniform float strength;
+  void main() {
+    vec3 viewDir = normalize(vViewPosition);
+    float fresnel = pow(1.0 - max(dot(vNormal, viewDir), 0.0), power);
+    gl_FragColor = vec4(glowColor, fresnel * strength);
+  }
+`;
+
 export default function Earth() {
   const groupRef = useRef<THREE.Group>(null);
   const cloudsRef = useRef<THREE.Mesh>(null);
@@ -125,10 +152,41 @@ export default function Earth() {
         </mesh>
       </group>
 
-      {/* Atmosphere rim glow */}
+      {/* Atmosphere rim glow — tight bright inner layer + soft wide outer
+          halo, both using a real Fresnel falloff so the glow concentrates
+          at the grazing edge (like actual atmospheric scattering) rather
+          than reading as a uniform transparent shell. */}
       <mesh>
-        <sphereGeometry args={[EARTH_RADIUS * 1.045, 48, 48]} />
-        <meshBasicMaterial color="#4FD8EB" transparent opacity={0.08} side={THREE.BackSide} />
+        <sphereGeometry args={[EARTH_RADIUS * 1.015, 64, 64]} />
+        <shaderMaterial
+          vertexShader={ATMOSPHERE_VERTEX}
+          fragmentShader={ATMOSPHERE_FRAGMENT}
+          uniforms={{
+            glowColor: { value: new THREE.Color("#6FE3F5") },
+            power: { value: 3.2 },
+            strength: { value: 1.0 },
+          }}
+          transparent
+          side={THREE.FrontSide}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[EARTH_RADIUS * 1.09, 48, 48]} />
+        <shaderMaterial
+          vertexShader={ATMOSPHERE_VERTEX}
+          fragmentShader={ATMOSPHERE_FRAGMENT}
+          uniforms={{
+            glowColor: { value: new THREE.Color("#4FD8EB") },
+            power: { value: 2.2 },
+            strength: { value: 0.55 },
+          }}
+          transparent
+          side={THREE.BackSide}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
       </mesh>
     </>
   );
