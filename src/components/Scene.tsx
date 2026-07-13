@@ -63,10 +63,16 @@ export default function Scene({ satellites, selectedId, onSelect, filter }: Prop
         <Earth />
         {detailed.map((sat) => {
           const entry =
-            SATELLITE_CATALOG.find((c) => c.id === sat.id) ??
-            // A non-featured satellite the user selected from the mass cloud
-            // still needs a CatalogEntry shape to reuse SatelliteMarker.
-            { id: sat.id, name: sat.name, category: "science" as const };
+            SATELLITE_CATALOG.find((c) => c.id === sat.id) ?? {
+              id: sat.id,
+              name: sat.name,
+              category:
+                bulkObjectGroup(sat.name, sat.id) === "station"
+                  ? ("station" as const)
+                  : bulkObjectGroup(sat.name, sat.id) === "starlink"
+                  ? ("constellation" as const)
+                  : ("science" as const),
+            };
           return (
             <SatelliteMarker
               key={sat.id}
