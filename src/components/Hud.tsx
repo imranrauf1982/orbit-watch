@@ -195,7 +195,7 @@ export default function Hud({
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2 max-w-full">
-          {/* 3D / Map view toggle */}
+          {/* 3D / Map / Sky view toggle */}
           <div className="flex rounded-md border border-panelBorder bg-panel/80 backdrop-blur overflow-hidden text-[11px] font-mono">
             <button
               onClick={() => onViewModeChange("3d")}
@@ -214,6 +214,15 @@ export default function Hud({
               aria-pressed={viewMode === "map"}
             >
               MAP
+            </button>
+            <button
+              onClick={() => onViewModeChange("sky")}
+              className={`px-3 py-1.5 border-l border-panelBorder transition-colors ${
+                viewMode === "sky" ? "bg-signal/20 text-signal" : "text-muted hover:text-ink"
+              }`}
+              aria-pressed={viewMode === "sky"}
+            >
+              SKY
             </button>
           </div>
 
