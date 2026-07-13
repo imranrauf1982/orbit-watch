@@ -96,7 +96,7 @@ export default function SatellitePanel({
   const color = CATEGORY_COLOR[entry.category];
 
   return (
-    <div className="pointer-events-auto absolute bottom-0 left-0 right-0 sm:right-auto sm:bottom-6 sm:left-6 sm:w-96 border-t sm:border sm:rounded-lg border-panelBorder bg-panel/95 backdrop-blur flex flex-col max-h-[75vh] sm:max-h-[32rem] animate-panel-in">
+    <div className="pointer-events-auto absolute bottom-0 left-0 right-0 sm:right-auto sm:bottom-6 sm:left-6 sm:w-96 border-t sm:border sm:rounded-lg border-panelBorder bg-panel/95 backdrop-blur flex flex-col max-h-[75vh] sm:max-h-[32rem] animate-panel-in shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)]">
       {/* Header */}
       <div className="flex items-center justify-between p-4 pb-2">
         <div className="flex items-center gap-2 min-w-0">
