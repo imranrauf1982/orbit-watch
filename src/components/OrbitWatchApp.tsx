@@ -7,6 +7,7 @@ import LoadingScreen from "./LoadingScreen";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { LiveState } from "@/lib/orbit";
 import { useLocation } from "@/lib/use-location";
+import { checkDuePassAlerts } from "@/lib/pass-alerts";
 import { SATELLITE_CATALOG, type FilterGroup } from "@/lib/satellite-catalog";
 
 // three.js touches window/canvas — must be client-only, no SSR
@@ -127,6 +128,17 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
   useEffect(() => {
     if (viewMode !== "3d") setFlyMode(false);
   }, [viewMode]);
+
+  // "Next Pass Alert" watcher — checks saved alerts once a second and fires
+  // a real browser Notification when a pass arrives, regardless of which
+  // Quick Actions card (if any) happens to be open. See lib/pass-alerts.ts
+  // for the honest limitation: this only works while the app is open in a
+  // tab, since there's no server/push component behind it.
+  useEffect(() => {
+    checkDuePassAlerts();
+    const id = setInterval(() => checkDuePassAlerts(), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (selectedId === null) setFlyMode(false);
