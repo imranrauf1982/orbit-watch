@@ -21,6 +21,7 @@ import AboutModal from "./AboutModal";
 import SupportModal from "./SupportModal";
 import Footer from "./Footer";
 import OnboardingTutorial from "./OnboardingTutorial";
+import QuickActions from "./QuickActions";
 import {
   getSimClockSnapshot,
   subscribeSimClock,
@@ -266,8 +267,29 @@ export default function Hud({
       {/* Header */}
       <header className="pointer-events-auto flex flex-wrap items-start justify-between gap-x-4 gap-y-3 p-4 sm:p-6">
         <div className="min-w-0">
-          <h1 className="font-display text-xl sm:text-2xl font-bold tracking-tight text-ink">
-            ORBIT WATCH
+          <h1 className="flex items-center gap-2 font-display text-xl sm:text-2xl font-bold tracking-tight">
+            <span
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-orbit/40 text-orbit shrink-0"
+              style={{ boxShadow: "0 0 18px -2px rgba(79,216,235,0.55)" }}
+              aria-hidden
+            >
+              <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+                <circle cx="12" cy="12" r="3.2" stroke="currentColor" strokeWidth="1.6" />
+                <ellipse
+                  cx="12"
+                  cy="12"
+                  rx="9.5"
+                  ry="4"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  transform="rotate(-24 12 12)"
+                />
+              </svg>
+            </span>
+            <span className="text-ink">ORBIT</span>{" "}
+            <span className="text-orbit" style={{ textShadow: "0 0 22px rgba(79,216,235,0.45)" }}>
+              WATCH
+            </span>
           </h1>
           <p className="mt-0.5 text-xs sm:text-sm text-muted font-body">
             Live positions from real orbital element data
@@ -275,7 +297,7 @@ export default function Hud({
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2 max-w-full">
           {/* 3D / Map / Sky view toggle */}
-          <div className="flex rounded-md border border-panelBorder bg-panel/80 backdrop-blur overflow-hidden text-[11px] font-mono">
+          <div className="flex rounded-md border border-panelBorder bg-panel/80 backdrop-blur overflow-hidden text-[11px] font-mono shadow-[0_4px_20px_-6px_rgba(0,0,0,0.6)]">
             <button
               onClick={() => onViewModeChange("3d")}
               className={`px-3 py-1.5 transition-colors ${
@@ -306,7 +328,7 @@ export default function Hud({
           </div>
 
           {viewMode === "3d" && (
-            <div className="flex rounded-md border border-panelBorder bg-panel/80 backdrop-blur overflow-hidden text-[11px] font-mono">
+            <div className="flex rounded-md border border-panelBorder bg-panel/80 backdrop-blur overflow-hidden text-[11px] font-mono shadow-[0_4px_20px_-6px_rgba(0,0,0,0.6)]">
               <button
                 onClick={() => toggleSimPaused()}
                 className={`px-2.5 py-1.5 transition-colors ${
@@ -386,13 +408,15 @@ export default function Hud({
         </div>
       </header>
 
+      <QuickActions />
+
       <div className="flex-1" />
 
       <Footer onAbout={() => setAboutOpen(true)} onSupport={() => setSupportOpen(true)} />
 
       {/* Satellite list — sidebar on desktop, sheet on mobile */}
       <div
-        className={`pointer-events-auto fixed sm:absolute right-0 top-0 sm:top-20 h-full sm:h-auto sm:max-h-[70vh] w-full sm:w-72 sm:rounded-l-lg border-l border-panelBorder bg-panel/95 backdrop-blur transition-transform duration-300 sm:translate-x-0 ${
+        className={`pointer-events-auto fixed sm:absolute right-0 top-0 sm:top-20 h-full sm:h-auto sm:max-h-[70vh] w-full sm:w-72 sm:rounded-l-lg border-l border-panelBorder bg-panel/95 backdrop-blur transition-transform duration-300 sm:translate-x-0 shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)] ${
           listOpen ? "translate-x-0" : "translate-x-full sm:translate-x-0"
         } flex flex-col`}
       >
