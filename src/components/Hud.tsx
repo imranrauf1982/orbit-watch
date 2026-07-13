@@ -183,7 +183,7 @@ export default function Hud({
   const filterGroups: FilterGroup[] = ["featured", "starlink", "stations", "all"];
 
   return (
-    <div className="pointer-events-none absolute inset-0 flex flex-col">
+    <div className="pointer-events-none absolute inset-0 z-[2000] flex flex-col">
       {/* Header */}
       <header className="pointer-events-auto flex flex-wrap items-start justify-between gap-x-4 gap-y-3 p-4 sm:p-6">
         <div className="min-w-0">
