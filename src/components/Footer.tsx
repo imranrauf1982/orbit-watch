@@ -33,10 +33,9 @@ export default function Footer({ onAbout, onSupport, raised = false }: Props) {
 
   return (
     <footer
-      className={`pointer-events-auto hidden sm:flex items-center gap-3 self-center mb-3 rounded-full border border-panelBorder bg-panel/80 backdrop-blur px-4 py-1.5 text-[11px] font-mono text-muted shadow-[0_4px_24px_-6px_rgba(0,0,0,0.6)] transition-opacity duration-200 ${
-        raised ? "opacity-0 pointer-events-none" : "opacity-100"
+      className={`pointer-events-auto hidden sm:flex items-center gap-3 mb-3 rounded-full border border-panelBorder bg-panel/80 backdrop-blur px-4 py-1.5 text-[11px] font-mono text-muted shadow-[0_4px_24px_-6px_rgba(0,0,0,0.6)] transition-all duration-300 ${
+        raised ? "self-end mr-4 sm:mr-6" : "self-center"
       }`}
-      aria-hidden={raised}
     >
       <span className="flex items-center gap-1.5">
         <span className="h-1.5 w-1.5 rounded-full bg-signal animate-pulse" />
