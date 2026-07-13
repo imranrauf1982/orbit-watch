@@ -10,7 +10,7 @@ export const EARTH_RADIUS = 2.4;
 // Same convention as geodeticToVector3 in lib/orbit.ts: u = 0.5 + lon/360,
 // Greenwich meridian at texture center — keeps satellite ground tracks
 // aligned with the real continents rendered here.
-function latLonToDirection(lat: number, lon: number): THREE.Vector3 {
+export function latLonToDirection(lat: number, lon: number): THREE.Vector3 {
   const latRad = (lat * Math.PI) / 180;
   const lonRad = (lon * Math.PI) / 180;
   return new THREE.Vector3(
@@ -78,9 +78,16 @@ export default function Earth() {
   const lastSunUpdate = useRef(0);
 
   useFrame((state, delta) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 0.008; // slow ambient drift
-    }
+    // NOTE: the core textured sphere must NOT auto-rotate. Satellite
+    // positions, the "Where Am I?" line, and continent labels are all
+    // placed with lib/orbit.ts's geodeticToVector3, which assumes the
+    // Greenwich meridian sits at a fixed spot in scene space (texture u =
+    // 0.5 + lon/360, no rotation applied). This mesh previously carried an
+    // "ambient drift" spin here — harmless-looking, but it silently rotated
+    // the rendered continents away from every computed lat/lon position a
+    // little more every frame, so ground tracks (and "what's above me")
+    // would drift out of alignment with the real geography the longer a
+    // session ran. Left un-rotated, everything stays correctly aligned.
     if (cloudsRef.current) {
       cloudsRef.current.rotation.y += delta * 0.012; // clouds drift slightly faster
     }
