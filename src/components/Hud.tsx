@@ -48,6 +48,9 @@ type Props = {
   onShowDotsChange: (show: boolean) => void;
   showOrbitPaths: boolean;
   onShowOrbitPathsChange: (show: boolean) => void;
+  flyMode: boolean;
+  onToggleFlyMode: (next: boolean) => void;
+  onShowLocateLine: (id: number) => void;
 };
 
 type ListItem = {
@@ -79,6 +82,9 @@ export default function Hud({
   onShowDotsChange,
   showOrbitPaths,
   onShowOrbitPathsChange,
+  flyMode,
+  onToggleFlyMode,
+  onShowLocateLine,
 }: Props) {
   const [query, setQuery] = useState("");
   const [listOpen, setListOpen] = useState(false);
@@ -408,7 +414,18 @@ export default function Hud({
         </div>
       </header>
 
-      <QuickActions />
+      <QuickActions
+        satellites={satellites}
+        selectedId={selectedId}
+        onSelect={onSelect}
+        location={location}
+        locationStatus={locationStatus}
+        onRequestLocation={onRequestLocation}
+        onManualLocation={onManualLocation}
+        flyMode={flyMode}
+        onToggleFlyMode={onToggleFlyMode}
+        onShowLocateLine={onShowLocateLine}
+      />
 
       <div className="flex-1" />
 
