@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { TleResult } from "@/lib/fetch-tle";
+import { getSimTime, subscribeSimClock } from "@/lib/sim-clock";
 
 export type CloudSnapshot = {
   ids: number[];
@@ -42,7 +43,7 @@ export function useSatelliteCloud(
       const msg = event.data;
       if (msg.type === "ready") {
         idsRef.current = msg.ids;
-        worker.postMessage({ type: "tick", time: Date.now() });
+        worker.postMessage({ type: "tick", time: getSimTime().getTime() });
       } else if (msg.type === "positions") {
         setSnapshot({
           ids: idsRef.current,
@@ -68,10 +69,18 @@ export function useSatelliteCloud(
   // Tick on an interval — not every frame.
   useEffect(() => {
     const id = setInterval(() => {
-      workerRef.current?.postMessage({ type: "tick", time: Date.now() });
+      workerRef.current?.postMessage({ type: "tick", time: getSimTime().getTime() });
     }, updateIntervalMs);
     return () => clearInterval(id);
   }, [updateIntervalMs]);
+
+  // Retick immediately when playback speed/pause changes, so the cloud
+  // doesn't wait up to `updateIntervalMs` to reflect the new rate.
+  useEffect(() => {
+    return subscribeSimClock(() => {
+      workerRef.current?.postMessage({ type: "tick", time: getSimTime().getTime() });
+    });
+  }, []);
 
   return snapshot;
 }
