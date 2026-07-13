@@ -412,7 +412,11 @@ export default function Hud({
 
       <div className="flex-1" />
 
-      <Footer onAbout={() => setAboutOpen(true)} onSupport={() => setSupportOpen(true)} />
+      <Footer
+        onAbout={() => setAboutOpen(true)}
+        onSupport={() => setSupportOpen(true)}
+        raised={Boolean(selectedEntry && selectedTle)}
+      />
 
       {/* Satellite list — sidebar on desktop, sheet on mobile */}
       <div
