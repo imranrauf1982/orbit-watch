@@ -2,27 +2,31 @@ export type CatalogEntry = {
   id: number; // NORAD catalog number
   name: string;
   category: "station" | "telescope" | "constellation" | "weather" | "science";
+  // Optional: filename (no extension) of a real photo in /public/satellites/.
+  // If present and /public/satellites/<imageSlug>.png loads successfully,
+  // the 3D marker renders as that photo instead of the procedural model.
+  imageSlug?: string;
 };
 
 // A hand-picked set of recognizable, actively tracked objects.
 // Kept small on purpose: fast to fetch, fast to render, no dead weight.
 export const SATELLITE_CATALOG: CatalogEntry[] = [
-  { id: 25544, name: "ISS (ZARYA)", category: "station" },
-  { id: 20580, name: "Hubble Space Telescope", category: "telescope" },
-  { id: 48274, name: "Tiangong (CSS)", category: "station" },
-  { id: 43013, name: "NOAA-20", category: "weather" },
-  { id: 33591, name: "NOAA-19", category: "weather" },
-  { id: 25994, name: "Terra", category: "science" },
-  { id: 27424, name: "Aqua", category: "science" },
-  { id: 39084, name: "Landsat 8", category: "science" },
-  { id: 49260, name: "Landsat 9", category: "science" },
-  { id: 44713, name: "Starlink-1007", category: "constellation" },
-  { id: 43600, name: "Iridium NEXT 106", category: "constellation" },
-  { id: 41765, name: "GOES-16", category: "weather" },
-  { id: 43226, name: "GOES-17", category: "weather" },
-  { id: 25338, name: "NOAA-15", category: "weather" },
-  { id: 28654, name: "NOAA-18", category: "weather" },
-  { id: 37849, name: "Suomi NPP", category: "science" },
+  { id: 25544, name: "ISS (ZARYA)", category: "station", imageSlug: "iss" },
+  { id: 20580, name: "Hubble Space Telescope", category: "telescope", imageSlug: "hubble" },
+  { id: 48274, name: "Tiangong (CSS)", category: "station", imageSlug: "tiangong" },
+  { id: 43013, name: "NOAA-20", category: "weather", imageSlug: "noaa-20" },
+  { id: 33591, name: "NOAA-19", category: "weather", imageSlug: "noaa-19" },
+  { id: 25994, name: "Terra", category: "science", imageSlug: "terra" },
+  { id: 27424, name: "Aqua", category: "science", imageSlug: "aqua" },
+  { id: 39084, name: "Landsat 8", category: "science", imageSlug: "landsat-8" },
+  { id: 49260, name: "Landsat 9", category: "science", imageSlug: "landsat-9" },
+  { id: 44713, name: "Starlink-1007", category: "constellation", imageSlug: "starlink" },
+  { id: 43600, name: "Iridium NEXT 106", category: "constellation", imageSlug: "iridium" },
+  { id: 41765, name: "GOES-16", category: "weather", imageSlug: "goes-16" },
+  { id: 43226, name: "GOES-17", category: "weather", imageSlug: "goes-17" },
+  { id: 25338, name: "NOAA-15", category: "weather", imageSlug: "noaa-15" },
+  { id: 28654, name: "NOAA-18", category: "weather", imageSlug: "noaa-18" },
+  { id: 37849, name: "Suomi NPP", category: "science", imageSlug: "suomi-npp" },
 ];
 
 // Entries fall out silently if Celestrak has no current TLE for the ID
@@ -44,6 +48,20 @@ export const CATEGORY_COLOR: Record<CatalogEntry["category"], string> = {
   weather: "#FFB84D",
   science: "#7CE38B",
 };
+
+/**
+ * Fallback photo slug for any satellite that isn't in the curated 16 (i.e.
+ * anything selected from the mass point cloud or search). We obviously
+ * can't have a unique photo per satellite for a 14,000-object catalog, but
+ * a real, category-appropriate photo still beats the cartoon fallback —
+ * these three cover "looks like a station," "looks like a Starlink-style
+ * flat-panel satellite," and "looks like a generic science/weather bus."
+ */
+export function genericImageSlug(category: CatalogEntry["category"]): string {
+  if (category === "station") return "generic-station";
+  if (category === "constellation") return "generic-constellation";
+  return "generic-satellite";
+}
 
 // A fast lookup Set of the featured/curated NORAD IDs — used everywhere we
 // need to split "detailed model" satellites from the "mass point cloud".
