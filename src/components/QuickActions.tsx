@@ -5,10 +5,11 @@ import * as satellite from "satellite.js";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { ObserverLocation, LocationStatus } from "@/lib/use-location";
 import { SATELLITE_CATALOG } from "@/lib/satellite-catalog";
-import { computeWhereAmI, type WhereAmIResult } from "@/lib/where-am-i";
+import { computeWhereAmINow, computeClosestApproach, type WhereAmIResult } from "@/lib/where-am-i";
 import { findWhatsAboveMe, type OverheadResult } from "@/lib/whats-above";
 import { computePasses, azimuthToCompass, type PassPrediction } from "@/lib/passes";
 import { estimateBrightness } from "@/lib/brightness";
+import { getPassAlerts, setPassAlert } from "@/lib/pass-alerts";
 import {
   isFavorite,
   toggleFavorite,
@@ -390,7 +391,9 @@ export default function QuickActions({
 }
 
 /* ------------------------------------------------------------------ */
-/* Shared modal chrome — same overlay pattern as AboutModal/SupportModal */
+/* Shared modal chrome — full-screen, blocking. Used only for the "pick a
+   satellite first" prompt, where blocking is the right call: it's a
+   required step before an action can continue at all. */
 /* ------------------------------------------------------------------ */
 
 function ModalShell({
@@ -422,6 +425,53 @@ function ModalShell({
           </button>
         </div>
         {children}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Result card chrome — docked beside the Quick Actions list, aside the
+   globe, instead of a full-screen overlay. Deliberately NOT a blocking
+   modal:
+     - it never covers the 3D scene, so the observer line / satellite /
+       globe it's describing stays visible right next to it
+     - it has no full-screen backdrop capturing clicks, so the Quick
+       Actions buttons underneath stay reachable — clicking a different
+       action swaps this card immediately instead of requiring a close
+       (or a page refresh) first
+     - sized so its content never gets clipped (a fixed max-height with
+       its own internal scroll, rather than relying on viewport-relative
+       sizing that could crop content on shorter screens) */
+/* ------------------------------------------------------------------ */
+
+function ActionCard({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className="pointer-events-auto fixed left-6 top-24 z-[2100] w-[calc(100vw-3rem)] max-w-[19rem] sm:left-[17.5rem] sm:w-80 animate-panel-in"
+      role="dialog"
+      aria-label={title}
+    >
+      <div className="flex max-h-[min(30rem,70vh)] flex-col rounded-lg border border-panelBorder bg-panel/95 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-panelBorder px-4 py-3">
+          <h2 className="min-w-0 truncate font-display font-bold text-ink text-sm">{title}</h2>
+          <button
+            onClick={onClose}
+            className="shrink-0 text-muted hover:text-ink text-[11px] font-mono"
+            aria-label="Close"
+          >
+            CLOSE
+          </button>
+        </div>
+        <div className="overflow-y-auto p-4">{children}</div>
       </div>
     </div>
   );
@@ -523,18 +573,51 @@ function WhereAmIModal({
   onManualLocation: (lat: number, lon: number) => void;
   onClose: () => void;
 }) {
-  const result: WhereAmIResult | null = useMemo(() => {
-    if (!selectedSat || !location) return null;
+  const satrec = useMemo(() => {
+    if (!selectedSat) return null;
     try {
-      const satrec = satellite.twoline2satrec(selectedSat.line1, selectedSat.line2);
-      return computeWhereAmI(satrec, location.lat, location.lon);
+      return satellite.twoline2satrec(selectedSat.line1, selectedSat.line2);
     } catch {
       return null;
     }
-  }, [selectedSat, location]);
+  }, [selectedSat]);
+
+  // Live-updating: this is meant to read like satellite telemetry, not a
+  // snapshot from the moment the button was clicked. The cheap "distance
+  // right now" part refreshes every second; the more expensive closest-
+  // approach scan (a ~720-step horizon search) only re-runs every 20s —
+  // frequent enough to stay accurate, cheap enough not to burn CPU
+  // continuously while the card is left open.
+  const [result, setResult] = useState<WhereAmIResult | null>(null);
+  useEffect(() => {
+    if (!satrec || !location) {
+      setResult(null);
+      return;
+    }
+    let closestApproach: WhereAmIResult["closestApproach"] = null;
+    let lastFullScan = 0;
+
+    const tick = () => {
+      const now = computeWhereAmINow(satrec, location.lat, location.lon);
+      if (!now) {
+        setResult(null);
+        return;
+      }
+      const elapsed = Date.now() - lastFullScan;
+      if (elapsed > 20000) {
+        closestApproach = computeClosestApproach(satrec, location.lat, location.lon);
+        lastFullScan = Date.now();
+      }
+      setResult({ ...now, closestApproach });
+    };
+
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [satrec, location]);
 
   return (
-    <ModalShell title={`WHERE AM I — ${satelliteName ?? "SATELLITE"}`} onClose={onClose}>
+    <ActionCard title={`WHERE AM I — ${satelliteName ?? "SATELLITE"}`} onClose={onClose}>
       {!location ? (
         <LocationPrompt
           locationStatus={locationStatus}
@@ -549,12 +632,15 @@ function WhereAmIModal({
       ) : (
         <div>
           <p className="text-[11px] text-muted font-body mb-3">
-            A line has been drawn on the 3D globe between your location and this satellite (fades
-            after a few seconds).
+            The globe has centered on the line between your location and this satellite (the line
+            fades after a few seconds — the marker on the globe stays).
           </p>
           <dl className="grid grid-cols-2 gap-y-2 gap-x-3 font-mono text-xs">
             <dt className="text-muted">DISTANCE TO YOU</dt>
-            <dd className="tabular text-signal text-right">{fmt(result.distanceKm, 0)} km</dd>
+            <dd className="tabular text-signal text-right">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-signal mr-1.5 animate-pulse" />
+              {fmt(result.distanceKm, 0)} km
+            </dd>
 
             <dt className="text-muted">ALTITUDE</dt>
             <dd className="tabular text-orbit text-right">{fmt(result.altitudeKm, 0)} km</dd>
@@ -573,11 +659,11 @@ function WhereAmIModal({
             )}
           </dl>
           <p className="text-[10px] text-muted font-mono mt-3">
-            Closest approach is estimated over the next 6 hours from now.
+            Updating live · closest approach estimated over the next 6 hours from now.
           </p>
         </div>
       )}
-    </ModalShell>
+    </ActionCard>
   );
 }
 
@@ -606,11 +692,13 @@ function NextPassModal({
 }) {
   const [passes, setPasses] = useState<PassPrediction[] | null>(null);
   const [computing, setComputing] = useState(false);
-  const [alertSetKey, setAlertSetKey] = useState<string | null>(null);
+  const [alertKeys, setAlertKeys] = useState<Set<string>>(new Set());
+  const [permission, setPermission] = useState<NotificationPermission | "unsupported" | null>(
+    null
+  );
 
   useEffect(() => {
     setPasses(null);
-    setAlertSetKey(null);
     if (!selectedSat || !location) return;
     let cancelled = false;
     setComputing(true);
@@ -630,33 +718,37 @@ function NextPassModal({
     };
   }, [selectedSat, location]);
 
-  const handleSetAlert = (pass: PassPrediction) => {
-    if (typeof window === "undefined" || satelliteId === null) return;
-    const key = "orbitwatch_pass_alerts_v1";
-    try {
-      const raw = window.localStorage.getItem(key);
-      const list = raw ? JSON.parse(raw) : [];
-      list.push({
-        satelliteId,
-        satelliteName,
-        passTime: pass.startTime.toISOString(),
-        maxElevationDeg: pass.maxElevationDeg,
-        savedAt: new Date().toISOString(),
-      });
-      window.localStorage.setItem(key, JSON.stringify(list));
-      console.info(`[NextPassAlert] Alert saved for ${satelliteName} at ${pass.startTime}`);
-    } catch {
-      /* storage full/unavailable — the visible confirmation below still shows */
-    }
-    setAlertSetKey(pass.startTime.toISOString());
+  // Reflect which passes for THIS satellite already have an alert saved
+  // (e.g. from a previous visit), so "SET ALERT" doesn't offer to
+  // duplicate one that's already pending.
+  useEffect(() => {
+    if (satelliteId === null) return;
+    const existing = getPassAlerts().filter((a) => a.satelliteId === satelliteId);
+    setAlertKeys(new Set(existing.map((a) => a.passTime)));
+  }, [satelliteId]);
+
+  const handleSetAlert = async (pass: PassPrediction) => {
+    if (satelliteId === null) return;
+    const passTime = pass.startTime.toISOString();
+    const result = await setPassAlert({
+      satelliteId,
+      satelliteName,
+      passTime,
+      maxElevationDeg: pass.maxElevationDeg,
+      savedAt: new Date().toISOString(),
+    });
+    setPermission(result);
+    setAlertKeys((prev) => new Set(prev).add(passTime));
   };
 
-  const first = passes && passes.length > 0 ? passes[0] : null;
   const category = SATELLITE_CATALOG.find((c) => c.id === satelliteId)?.category ?? "science";
-  const brightness = first ? estimateBrightness(category, first.maxElevationDeg) : null;
+  // Up to the next 5 passes, so "which of the next ones are actually
+  // worth watching" has more than one data point to compare.
+  const upcoming = passes ? passes.slice(0, 5) : [];
+  const anyVisible = upcoming.some((p) => p.visible);
 
   return (
-    <ModalShell title={`NEXT PASS — ${satelliteName ?? "SATELLITE"}`} onClose={onClose}>
+    <ActionCard title={`NEXT PASS — ${satelliteName ?? "SATELLITE"}`} onClose={onClose}>
       {!location ? (
         <LocationPrompt
           locationStatus={locationStatus}
@@ -667,54 +759,75 @@ function NextPassModal({
         <p className="text-xs text-muted font-body py-4 text-center animate-pulse">
           Scanning the next few days of orbits…
         </p>
-      ) : !first ? (
+      ) : upcoming.length === 0 ? (
         <p className="text-xs text-muted font-body py-4 text-center">
           No passes over the horizon in the next few days from your location.
         </p>
       ) : (
         <div className="space-y-3">
-          <dl className="grid grid-cols-2 gap-y-2 gap-x-3 font-mono text-xs">
-            <dt className="text-muted">PASS TIME</dt>
-            <dd className="tabular text-ink text-right">{fmtTime(first.startTime)}</dd>
+          <p className="text-[11px] text-muted font-body">
+            {anyVisible
+              ? "Passes marked VISIBLE are dark-sky, sunlit-satellite — worth going outside for. Daylight passes happen but won't be visible to the eye."
+              : "None of these upcoming passes are naked-eye visible (all daylight) — the satellite is still overhead, just not lit against a dark sky."}
+          </p>
+          <ul className="space-y-2">
+            {upcoming.map((pass) => {
+              const brightness = estimateBrightness(category, pass.maxElevationDeg);
+              const key = pass.startTime.toISOString();
+              const alertSet = alertKeys.has(key);
+              return (
+                <li
+                  key={key}
+                  className={`rounded-md border px-3 py-2 ${
+                    pass.visible ? "border-signal/40 bg-signal/[0.05]" : "border-panelBorder bg-void/40"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="font-mono text-xs text-ink">{fmtTime(pass.startTime)}</span>
+                    <span
+                      className={`font-mono text-[10px] px-1.5 py-0.5 rounded ${
+                        pass.visible
+                          ? "text-signal bg-signal/15"
+                          : "text-muted bg-panel border border-panelBorder"
+                      }`}
+                    >
+                      {pass.visible ? `VISIBLE · ${brightness.label.toUpperCase()}` : "DAYLIGHT"}
+                    </span>
+                  </div>
+                  <dl className="grid grid-cols-3 gap-x-2 font-mono text-[10.5px] text-muted mb-2">
+                    <dd className="text-ink">{Math.round(pass.durationSec / 60)} min</dd>
+                    <dd className="text-orbit text-center">{fmt(pass.maxElevationDeg, 0)}° up</dd>
+                    <dd className="text-ink text-right">
+                      {azimuthToCompass(pass.startAzimuthDeg)}→{azimuthToCompass(pass.endAzimuthDeg)}
+                    </dd>
+                  </dl>
+                  {alertSet ? (
+                    <p className="text-[10.5px] text-signal font-mono">✓ Alert set for this pass</p>
+                  ) : (
+                    <button
+                      onClick={() => handleSetAlert(pass)}
+                      className="w-full rounded border border-signal/60 bg-signal/10 px-2 py-1 text-[10.5px] font-mono text-signal hover:bg-signal/20 transition-colors"
+                    >
+                      SET ALERT
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
 
-            <dt className="text-muted">DURATION</dt>
-            <dd className="tabular text-ink text-right">
-              {Math.round(first.durationSec / 60)} min
-            </dd>
-
-            <dt className="text-muted">MAX ELEVATION</dt>
-            <dd className="tabular text-orbit text-right">{fmt(first.maxElevationDeg, 0)}°</dd>
-
-            <dt className="text-muted">DIRECTION</dt>
-            <dd className="tabular text-ink text-right">
-              {azimuthToCompass(first.startAzimuthDeg)} → {azimuthToCompass(first.endAzimuthDeg)}
-            </dd>
-
-            {brightness && (
-              <>
-                <dt className="text-muted">BRIGHTNESS</dt>
-                <dd className="tabular text-signal text-right">
-                  {first.visible ? brightness.label : "Daylight"}
-                </dd>
-              </>
-            )}
-          </dl>
-
-          {alertSetKey === first.startTime.toISOString() ? (
-            <p className="text-[11px] text-signal font-mono">
-              Alert saved locally for this pass.
+          {permission && (
+            <p className="text-[10px] text-muted font-mono">
+              {permission === "granted"
+                ? "You'll get a system notification when the pass starts, as long as Orbit Watch stays open in a browser tab."
+                : permission === "unsupported"
+                ? "Your browser doesn't support notifications — the alert is saved, but you'll need to check back here manually."
+                : "Notifications are blocked — the alert is saved locally, but you won't get a system popup. Enable notifications for this site to change that."}
             </p>
-          ) : (
-            <button
-              onClick={() => handleSetAlert(first)}
-              className="w-full rounded-md border border-signal/60 bg-signal/10 px-3 py-1.5 text-xs font-mono text-signal hover:bg-signal/20 transition-colors"
-            >
-              SET ALERT
-            </button>
           )}
         </div>
       )}
-    </ModalShell>
+    </ActionCard>
   );
 }
 
@@ -745,18 +858,25 @@ function WhatsAboveModal({
     setResult(undefined);
     if (!location) return;
     let cancelled = false;
-    const id = setTimeout(() => {
+    const update = () => {
       if (cancelled) return;
       setResult(findWhatsAboveMe(satellites, location.lat, location.lon));
-    }, 30);
+    };
+    const initial = setTimeout(update, 30);
+    // Live-updating: re-scans once a second so this stays correct as the
+    // sky changes (the overhead object rises/sets, another takes over as
+    // "highest") for as long as the card stays open, instead of freezing
+    // on whatever was true the moment the button was clicked.
+    const interval = setInterval(update, 2000);
     return () => {
       cancelled = true;
-      clearTimeout(id);
+      clearTimeout(initial);
+      clearInterval(interval);
     };
   }, [satellites, location]);
 
   return (
-    <ModalShell title="WHAT'S ABOVE ME?" onClose={onClose}>
+    <ActionCard title="WHAT'S ABOVE ME?" onClose={onClose}>
       {!location ? (
         <LocationPrompt
           locationStatus={locationStatus}
@@ -778,7 +898,10 @@ function WhatsAboveModal({
             <dd className="tabular text-ink text-right truncate">{result.name}</dd>
 
             <dt className="text-muted">ELEVATION</dt>
-            <dd className="tabular text-orbit text-right">{fmt(result.elevationDeg, 0)}°</dd>
+            <dd className="tabular text-orbit text-right">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-orbit mr-1.5 animate-pulse" />
+              {fmt(result.elevationDeg, 0)}°
+            </dd>
 
             <dt className="text-muted">DISTANCE</dt>
             <dd className="tabular text-signal text-right">{fmt(result.distanceKm, 0)} km</dd>
@@ -789,18 +912,16 @@ function WhatsAboveModal({
             <dt className="text-muted">VELOCITY</dt>
             <dd className="tabular text-ink text-right">{fmt(result.velocityKmS, 2)} km/s</dd>
           </dl>
+          <p className="text-[10px] text-muted font-mono">Updating live</p>
           <button
-            onClick={() => {
-              onHighlight(result.id);
-              onClose();
-            }}
+            onClick={() => onHighlight(result.id)}
             className="w-full rounded-md border border-orbit/60 bg-orbit/10 px-3 py-1.5 text-xs font-mono text-orbit hover:bg-orbit/20 transition-colors"
           >
             HIGHLIGHT ON GLOBE
           </button>
         </div>
       )}
-    </ModalShell>
+    </ActionCard>
   );
 }
 
@@ -885,7 +1006,7 @@ function FavoritesModal({
   const selectedIsFavorite = selectedId !== null && isFavorite(selectedId);
 
   return (
-    <ModalShell title="MY FAVORITES" onClose={onClose}>
+    <ActionCard title="MY FAVORITES" onClose={onClose}>
       {selectedId !== null && (
         <div className="mb-3 pb-3 border-b border-panelBorder flex items-center justify-between gap-2">
           <p className="text-xs text-ink font-body truncate">
@@ -915,6 +1036,6 @@ function FavoritesModal({
           ))}
         </ul>
       )}
-    </ModalShell>
+    </ActionCard>
   );
 }
