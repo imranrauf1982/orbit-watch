@@ -18,6 +18,15 @@ type Props = {
   isSelected: boolean;
   onSelect: (id: number, state: LiveState | null) => void;
   showOrbitPath?: boolean;
+  // While riding along in "Fly With Satellite", the camera sits much closer
+  // to the satellite than in the normal orbit view. drei's <Html
+  // distanceFactor> scales its element up the closer the camera gets — at
+  // the old, much tighter chase distance this blew the floating name/stats
+  // tag up to an enormous, clipped-off-screen size (the "very zoomed, can't
+  // show full" bug). The chase camera has since been pulled back, but this
+  // tag is also redundant during fly mode (the exit-fly-mode HUD already
+  // shows what's selected), so it's suppressed here as a second safeguard.
+  flyMode?: boolean;
 };
 
 /**
@@ -158,6 +167,7 @@ export default function SatelliteMarker({
   isSelected,
   onSelect,
   showOrbitPath = false,
+  flyMode = false,
 }: Props) {
   const satrec = useMemo(() => satellite.twoline2satrec(line1, line2), [line1, line2]);
   const groupRef = useRef<THREE.Group>(null);
@@ -283,13 +293,22 @@ export default function SatelliteMarker({
         {/* Floating info tag that follows the satellite in 3D space, offset
             to the side (not centered on top of it) so the model itself
             stays visible instead of being covered by its own label. */}
-        {isSelected && label && (
+        {isSelected && label && !flyMode && (
           <Html position={[0, 0.06, 0]} distanceFactor={6} zIndexRange={[10, 0]}>
             <div
               className="pointer-events-none whitespace-nowrap rounded-md border border-panelBorder bg-panel/90 px-2 py-1 text-center font-mono backdrop-blur"
-              style={{ fontSize: "10px", lineHeight: 1.3, transform: "translate(14px, -130%)" }}
+              style={{
+                fontSize: "10px",
+                lineHeight: 1.3,
+                transform: "translate(14px, -130%)",
+                // Bounds the box's own width so a long satellite name can't
+                // make it wider than necessary — the actual fix for the
+                // scale-runaway bug is suppressing this tag in fly mode
+                // (above) and keeping the chase camera at a sane distance.
+                maxWidth: "220px",
+              }}
             >
-              <div className="font-bold text-ink">{entry.name}</div>
+              <div className="font-bold text-ink truncate">{entry.name}</div>
               <div className="text-muted">
                 {label.altitudeKm.toFixed(0)} km · {label.velocityKmS.toFixed(2)} km/s
               </div>
