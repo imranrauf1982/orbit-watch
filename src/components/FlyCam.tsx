@@ -15,8 +15,22 @@ type Props = {
   controlsRef: React.RefObject<any>;
 };
 
-const CHASE_DISTANCE = 0.9; // scene units out from the satellite, along the outward-from-Earth vector
+// Scene units out from the satellite, along the outward-from-Earth vector.
+// Real LEO satellites sit barely above the surface at this globe's scale
+// (EARTH_RADIUS = 2.4, orbit altitude adds only ~0.1-0.2 units) — chasing
+// from just 0.9 units away put the camera almost touching the surface, so
+// all you could see was an extreme close-up of texture with no sense of
+// the globe or which continent was below. Pulled back to roughly the
+// planet's own radius, the whole curved horizon and nearby continents stay
+// in frame while still clearly "riding along" with the satellite.
+const CHASE_DISTANCE = 2.6;
 const FOLLOW_LERP = 0.08; // smoothing factor — lower = smoother/slower catch-up
+// How much of the look-at target is pulled toward Earth's center (vs. the
+// satellite itself). 0 = stare straight at the satellite (old behavior,
+// mostly empty space); 1 = stare straight down at the globe. A blend keeps
+// the satellite marker in the upper part of the frame while the globe and
+// its geography fill the rest, like a real chase/orbit cam.
+const NADIR_BLEND = 0.55;
 
 /**
  * "Fly With Satellite" chase cam. While active, continuously repositions
@@ -66,13 +80,18 @@ export default function FlyCam({ active, satelliteId, satellites, controlsRef }:
     const [x, y, z] = geodeticToVector3(state.lat, state.lon, state.altitudeKm, EARTH_RADIUS);
     const satPos = new THREE.Vector3(x, y, z);
     const outward = satPos.clone().normalize();
-    const chasePos = satPos.clone().add(outward.multiplyScalar(CHASE_DISTANCE));
+    const chasePos = satPos.clone().add(outward.clone().multiplyScalar(CHASE_DISTANCE));
+
+    // Look at a point between the satellite and Earth's center, rather than
+    // straight at the tiny satellite model — that's what actually puts the
+    // globe (and the continents scrolling underneath) in view.
+    const lookTarget = satPos.clone().lerp(new THREE.Vector3(0, 0, 0), NADIR_BLEND);
 
     camera.position.lerp(chasePos, FOLLOW_LERP);
-    camera.lookAt(satPos);
+    camera.lookAt(lookTarget);
 
     if (controlsRef.current) {
-      controlsRef.current.target.copy(satPos);
+      controlsRef.current.target.copy(lookTarget);
       controlsRef.current.update?.();
     }
   });
