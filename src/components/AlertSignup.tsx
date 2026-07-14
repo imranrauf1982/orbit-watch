@@ -54,12 +54,12 @@ export default function AlertSignup({ satelliteId, satelliteName }: Props) {
           onChange={(e) => setEmail(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder="you@example.com"
-          className="min-w-0 flex-1 rounded-md bg-void border border-panelBorder px-2.5 py-1.5 text-xs text-ink placeholder:text-muted font-body focus:border-signal outline-none"
+          className="min-w-0 flex-1 rounded-xl bg-void border border-panelBorder px-2.5 py-1.5 text-xs text-ink placeholder:text-muted font-body focus:border-signal outline-none"
         />
         <button
           onClick={submit}
           disabled={state === "sending"}
-          className="rounded-md border border-signal/60 bg-signal/10 px-2.5 py-1.5 text-[11px] font-mono text-signal hover:bg-signal/20 disabled:opacity-50 shrink-0"
+          className="rounded-xl border border-signal/40 bg-signal/10 px-2.5 py-1.5 text-[11px] font-mono text-signal hover:bg-signal/20 disabled:opacity-50 shrink-0"
         >
           {state === "sending" ? "…" : "NOTIFY ME"}
         </button>
