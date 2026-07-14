@@ -36,12 +36,12 @@ export default function LocationSearch({ onPick }: Props) {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && runSearch()}
           placeholder="Search city or zip…"
-          className="min-w-0 flex-1 rounded-xl bg-void border border-panelBorder px-2.5 py-1.5 text-xs text-ink placeholder:text-muted font-body focus:border-signal outline-none"
+          className="min-w-0 flex-1 rounded-xl bg-void border border-white/5 px-2.5 py-1.5 text-xs text-ink placeholder:text-muted font-body focus:border-signal outline-none"
         />
         <button
           onClick={runSearch}
           disabled={loading}
-          className="rounded-xl border border-panelBorder bg-panel px-2.5 py-1.5 text-[11px] font-mono text-ink hover:border-signal/40 disabled:opacity-50 shrink-0"
+          className="rounded-xl border border-white/5 bg-white/[0.03] hover:bg-white/[0.08] px-2.5 py-1.5 text-[11px] font-mono text-ink hover:border-signal/40 disabled:opacity-50 shrink-0"
         >
           {loading ? "…" : "GO"}
         </button>
@@ -50,7 +50,7 @@ export default function LocationSearch({ onPick }: Props) {
       {error && <p className="mt-1.5 text-[11px] text-warn font-mono">{error}</p>}
 
       {results && results.length > 0 && (
-        <ul className="mt-1.5 divide-y divide-panelBorder border border-panelBorder rounded-xl overflow-hidden">
+        <ul className="mt-1.5 divide-y divide-white/5 border border-white/5 rounded-xl overflow-hidden">
           {results.map((r, i) => (
             <li key={i}>
               <button
