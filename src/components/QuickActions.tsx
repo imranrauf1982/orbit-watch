@@ -273,7 +273,7 @@ export default function QuickActions({
   return (
     <>
       <div
-        className="hidden sm:flex pointer-events-auto absolute left-6 top-24 w-64 flex-col gap-2 rounded-lg border border-panelBorder bg-panel/80 p-3 backdrop-blur-md shadow-[0_0_30px_-12px_rgba(79,216,235,0.25)] animate-panel-in"
+        className="hidden sm:flex pointer-events-auto absolute left-6 top-24 w-64 flex-col gap-2 rounded-xl border border-panelBorder bg-panel/80 p-3 backdrop-blur-md shadow-[0_0_30px_-12px_rgba(79,216,235,0.25)] animate-panel-in"
         aria-label="Quick actions"
       >
         <p className="px-1 pb-1 text-[10px] font-mono uppercase tracking-wider text-muted">
@@ -287,14 +287,14 @@ export default function QuickActions({
                 key={a.id}
                 onClick={() => handleAction(a.id)}
                 aria-pressed={isActiveFly}
-                className={`group flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-all hover:border-signal/50 hover:bg-signal/[0.06] hover:shadow-[0_0_16px_-6px_rgba(255,106,61,0.4)] active:scale-[0.98] ${
+                className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all hover:border-signal/50 hover:bg-signal/[0.06] hover:shadow-[0_0_16px_-6px_rgba(255,106,61,0.4)] active:scale-[0.98] ${
                   isActiveFly
-                    ? "border-signal/60 bg-signal/[0.08]"
+                    ? "border-signal/40 bg-signal/[0.08]"
                     : "border-panelBorder/80 bg-void/50"
                 }`}
               >
                 <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-panel border border-panelBorder/80 ${a.accent} transition-colors group-hover:border-current/40`}
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-panel border border-panelBorder/80 ${a.accent} transition-all duration-300 ease-out group-hover:border-current/40`}
                 >
                   {a.icon}
                 </span>
@@ -423,7 +423,7 @@ function ModalShell({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-lg border border-panelBorder bg-panel p-5 max-h-[85vh] overflow-y-auto"
+        className="w-full max-w-md rounded-xl border border-panelBorder bg-panel p-5 max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-3">
@@ -472,7 +472,7 @@ function ActionCard({
       role="dialog"
       aria-label={title}
     >
-      <div className="flex max-h-[min(30rem,70vh)] flex-col rounded-lg border border-panelBorder bg-panel/95 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md">
+      <div className="flex max-h-[min(30rem,70vh)] flex-col rounded-xl border border-panelBorder bg-panel/95 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md">
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-panelBorder px-4 py-3">
           <h2 className="min-w-0 truncate font-display font-bold text-ink text-sm">{title}</h2>
           <button
@@ -506,7 +506,7 @@ function LocationPrompt({
       </p>
       <button
         onClick={onRequestLocation}
-        className="rounded-md border border-signal/60 bg-signal/10 px-3 py-1.5 text-xs font-mono text-signal hover:bg-signal/20 transition-colors"
+        className="rounded-xl border border-signal/40 bg-signal/10 px-3 py-1.5 text-xs font-mono text-signal hover:bg-signal/20 transition-all duration-300 ease-out"
       >
         {locationStatus === "requesting" ? "LOCATING…" : "USE MY LOCATION"}
       </button>
@@ -547,12 +547,12 @@ function SatellitePickerModal({
       {catalog.length === 0 ? (
         <p className="text-xs text-muted font-body py-4 text-center">Still loading satellites…</p>
       ) : (
-        <ul className="divide-y divide-panelBorder border border-panelBorder rounded-md overflow-hidden max-h-72 overflow-y-auto">
+        <ul className="divide-y divide-panelBorder border border-panelBorder rounded-xl overflow-hidden max-h-72 overflow-y-auto">
           {catalog.map((c) => (
             <li key={c.id}>
               <button
                 onClick={() => onPick(c.id)}
-                className="w-full text-left px-3 py-2 text-xs text-ink hover:bg-white/5 font-body transition-colors"
+                className="w-full text-left px-3 py-2 text-xs text-ink hover:bg-white/5 font-body transition-all duration-300 ease-out"
               >
                 {c.name}
               </button>
@@ -820,14 +820,14 @@ function NextPassModal({
               return (
                 <li
                   key={key}
-                  className={`rounded-md border px-3 py-2 ${
+                  className={`rounded-xl border px-3 py-2 ${
                     pass.visible ? "border-signal/40 bg-signal/[0.05]" : "border-panelBorder bg-void/40"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2 mb-1.5">
                     <span className="font-mono text-xs text-ink">{fmtTime(pass.startTime)}</span>
                     <span
-                      className={`font-mono text-[10px] px-1.5 py-0.5 rounded ${
+                      className={`font-mono text-[10px] px-1.5 py-0.5 rounded-md ${
                         pass.visible
                           ? "text-signal bg-signal/15"
                           : "text-muted bg-panel border border-panelBorder"
@@ -848,7 +848,7 @@ function NextPassModal({
                   ) : (
                     <button
                       onClick={() => handleSetAlert(pass)}
-                      className="w-full rounded border border-signal/60 bg-signal/10 px-2 py-1 text-[10.5px] font-mono text-signal hover:bg-signal/20 transition-colors"
+                      className="w-full rounded-md border border-signal/40 bg-signal/10 px-2 py-1 text-[10.5px] font-mono text-signal hover:bg-signal/20 transition-all duration-300 ease-out"
                     >
                       SET ALERT
                     </button>
@@ -962,7 +962,7 @@ function WhatsAboveModal({
           </p>
           <button
             onClick={onCheckNextPass}
-            className="w-full rounded-md border border-warn/60 bg-warn/10 px-3 py-1.5 text-xs font-mono text-warn hover:bg-warn/20 transition-colors"
+            className="w-full rounded-xl border border-warn/60 bg-warn/10 px-3 py-1.5 text-xs font-mono text-warn hover:bg-warn/20 transition-all duration-300 ease-out"
           >
             CHECK NEXT PASS ALERT INSTEAD
           </button>
@@ -993,7 +993,7 @@ function WhatsAboveModal({
           </p>
           <button
             onClick={() => onHighlight(result.id)}
-            className="w-full rounded-md border border-orbit/60 bg-orbit/10 px-3 py-1.5 text-xs font-mono text-orbit hover:bg-orbit/20 transition-colors"
+            className="w-full rounded-xl border border-orbit/60 bg-orbit/10 px-3 py-1.5 text-xs font-mono text-orbit hover:bg-orbit/20 transition-all duration-300 ease-out"
           >
             HIGHLIGHT ON GLOBE
           </button>
@@ -1046,7 +1046,7 @@ function FavoriteRow({
         <button
           onClick={() => onJumpTo(id)}
           disabled={!sat}
-          className="rounded-md border border-panelBorder px-2 py-1 text-[10px] font-mono text-ink hover:border-signal/60 disabled:opacity-40 transition-colors"
+          className="rounded-xl border border-panelBorder px-2 py-1 text-[10px] font-mono text-ink hover:border-signal/40 disabled:opacity-40 transition-all duration-300 ease-out"
         >
           SELECT
         </button>
@@ -1092,9 +1092,9 @@ function FavoritesModal({
           </p>
           <button
             onClick={() => toggleFavorite(selectedId)}
-            className={`shrink-0 rounded-md border px-2.5 py-1.5 text-[11px] font-mono transition-colors ${
+            className={`shrink-0 rounded-xl border px-2.5 py-1.5 text-[11px] font-mono transition-all duration-300 ease-out ${
               selectedIsFavorite
-                ? "border-signal/60 bg-signal/20 text-signal"
+                ? "border-signal/40 bg-gradient-to-r from-signal/15 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.15)]"
                 : "border-panelBorder text-muted hover:text-ink"
             }`}
           >
@@ -1108,7 +1108,7 @@ function FavoritesModal({
           No favorites yet — select a satellite and star it to save it here.
         </p>
       ) : (
-        <ul className="divide-y divide-panelBorder border border-panelBorder rounded-md overflow-hidden">
+        <ul className="divide-y divide-panelBorder border border-panelBorder rounded-xl overflow-hidden">
           {favoriteIds.map((id) => (
             <FavoriteRow key={id} id={id} satellites={satellites} onJumpTo={onJumpTo} />
           ))}
