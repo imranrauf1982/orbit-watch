@@ -7,7 +7,7 @@ export default function AboutModal({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-xl border border-panelBorder bg-panel p-5"
+        className="w-full max-w-md rounded-xl border border-white/5 bg-space-900/80 backdrop-blur-xl p-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-3">
