@@ -158,7 +158,7 @@ export default function SatellitePanel({
             onClick={() => setTab(key)}
             className={`py-2 border-b-2 transition-all duration-300 ease-out ${
               tab === key
-                ? "border-signal text-ink"
+                ? "border-premiumGold text-ink"
                 : "border-transparent text-muted hover:text-ink"
             }`}
           >
@@ -225,7 +225,7 @@ export default function SatellitePanel({
                 </p>
                 <button
                   onClick={onRequestLocation}
-                  className="rounded-xl border border-signal/40 bg-signal/10 px-3 py-1.5 text-xs font-mono text-signal hover:bg-signal/20 transition-all duration-300 ease-out"
+                  className="rounded-xl border border-premiumGold/50 bg-premiumGold/10 px-3 py-1.5 text-xs font-mono text-premiumGold hover:bg-premiumGold/20 transition-all duration-300 ease-out"
                 >
                   {locationStatus === "requesting" ? "LOCATING…" : "USE MY LOCATION"}
                 </button>
