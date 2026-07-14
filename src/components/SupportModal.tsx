@@ -33,7 +33,7 @@ export default function SupportModal({ onClose }: { onClose: () => void }) {
               href="https://www.buymeacoffee.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full text-center rounded-xl border border-signal/40 bg-signal/10 px-3 py-2 text-xs font-mono text-signal hover:bg-signal/20 transition-all duration-300 ease-out"
+              className="w-full text-center rounded-xl border border-premiumGold/50 bg-premiumGold/10 px-3 py-2 text-xs font-mono text-premiumGold hover:bg-premiumGold/20 transition-all duration-300 ease-out"
             >
               ☕ BUY ME A COFFEE
             </a>
