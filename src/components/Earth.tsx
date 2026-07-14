@@ -78,16 +78,21 @@ export default function Earth() {
   const lastSunUpdate = useRef(0);
 
   useFrame((state, delta) => {
-    // NOTE: the core textured sphere must NOT auto-rotate. Satellite
-    // positions, the "Where Am I?" line, and continent labels are all
-    // placed with lib/orbit.ts's geodeticToVector3, which assumes the
-    // Greenwich meridian sits at a fixed spot in scene space (texture u =
-    // 0.5 + lon/360, no rotation applied). This mesh previously carried an
-    // "ambient drift" spin here — harmless-looking, but it silently rotated
-    // the rendered continents away from every computed lat/lon position a
-    // little more every frame, so ground tracks (and "what's above me")
-    // would drift out of alignment with the real geography the longer a
-    // session ran. Left un-rotated, everything stays correctly aligned.
+    // This mesh no longer rotates itself. Rotation now happens one level up
+    // — <WorldSpin> in Scene.tsx wraps Earth *and* every satellite, the
+    // continent labels, and the "Where Am I?" line in a single rotating
+    // group, driven by the sim clock at Earth's real sidereal rate. An
+    // earlier version spun this group directly, on its own schedule tied to
+    // real animation frame-time — completely disconnected from both the
+    // satellites' motion (which follows the sim-speed multiplier) and from
+    // the raw lat/lon math (lib/orbit.ts's geodeticToVector3) that positions
+    // them. That caused two separate problems: at higher sim speeds the
+    // satellites would race ahead of a barely-moving globe, and over a long
+    // session the rendered continents would slowly rotate out of alignment
+    // with computed satellite ground-tracks. A single shared rotation,
+    // applied once to everything together, can't drift out of sync with
+    // itself and always matches the satellites' own clock. See
+    // lib/earth-spin.ts.
     if (cloudsRef.current) {
       cloudsRef.current.rotation.y += delta * 0.012; // clouds drift slightly faster
     }
