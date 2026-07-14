@@ -1,22 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
-const display = Space_Grotesk({
+// Premium humanist sans — powers all headings, body copy, labels, and
+// button text. Kept as one family (mapped to --font-sans, with --font-display
+// and --font-body aliased to it in tailwind.config.ts) so every existing
+// font-display / font-body className in the app upgrades automatically.
+const sansFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-display",
-  weight: ["500", "700"],
+  variable: "--font-sans",
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
-const body = IBM_Plex_Sans({
-  subsets: ["latin"],
-  variable: "--font-body",
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
-
+// Numeric/coordinate streams (lat/lon, UTC, velocity, etc.) stay monospace
+// for readability — untouched by the visual refresh.
 const mono = IBM_Plex_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
@@ -80,8 +79,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
-      <body className="bg-void text-ink font-body antialiased">
+    <html lang="en" className={`${sansFont.variable} ${mono.variable} font-sans antialiased`}>
+      <body className="bg-void text-ink antialiased">
         <ServiceWorkerRegister />
         {children}
       </body>
