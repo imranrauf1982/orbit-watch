@@ -14,6 +14,7 @@ import LocateLine from "./LocateLine";
 import ContinentLabels from "./ContinentLabels";
 import { propagate, geodeticToVector3 } from "@/lib/orbit";
 import { getSimTime } from "@/lib/sim-clock";
+import { getEarthSpinAngle, applyEarthSpin } from "@/lib/earth-spin";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { LiveState } from "@/lib/orbit";
 import type { ObserverLocation } from "@/lib/use-location";
@@ -71,13 +72,15 @@ function LocateFocus({
     } catch {
       return;
     }
-    const state = propagate(satrec, getSimTime());
+    const simTime = getSimTime();
+    const state = propagate(satrec, simTime);
     if (!state) return;
+    const spinAngle = getEarthSpinAngle(simTime);
 
     const [sx, sy, sz] = geodeticToVector3(state.lat, state.lon, state.altitudeKm, EARTH_RADIUS);
-    const satDir = new THREE.Vector3(sx, sy, sz).normalize();
+    const satDir = applyEarthSpin(new THREE.Vector3(sx, sy, sz), spinAngle).normalize();
     const [ox, oy, oz] = geodeticToVector3(location.lat, location.lon, 0, EARTH_RADIUS);
-    const obsDir = new THREE.Vector3(ox, oy, oz).normalize();
+    const obsDir = applyEarthSpin(new THREE.Vector3(ox, oy, oz), spinAngle).normalize();
 
     // Average direction between the two points, so both the observer marker
     // and the satellite land in view together rather than one going
@@ -105,6 +108,31 @@ function LocateFocus({
   });
 
   return null;
+}
+
+/**
+ * Rotates Earth's texture, every satellite, the continent labels, and the
+ * "Where Am I?" line together, as one rigid group, at Earth's real sidereal
+ * rate — scaled by whatever the sim-speed control (1x/10x/.../3600x) is set
+ * to, via getSimTime(). This replaces an earlier version that rotated only
+ * the Earth mesh, on its own arbitrary schedule tied to real animation
+ * frame-time rather than the sim clock: at higher sim speeds the satellites
+ * (which do use the sim clock) would race far ahead of the slowly-crawling
+ * globe, and at 1x the two had no consistent relationship at all. Rotating
+ * everything as one group, driven by the same clock the satellites use,
+ * keeps the globe and every orbit visibly moving together in the correct
+ * ~16:1 ratio (one Earth rotation per ~16 LEO orbits) at every speed
+ * setting, and they can never drift apart from each other since it's a
+ * single transform applied once, not two independent ones.
+ */
+function WorldSpin({ children }: { children: React.ReactNode }) {
+  const groupRef = useRef<THREE.Group>(null);
+  useFrame(() => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y = getEarthSpinAngle(getSimTime());
+    }
+  });
+  return <group ref={groupRef}>{children}</group>;
 }
 
 export default function Scene({
@@ -162,46 +190,50 @@ export default function Scene({
 
       <Suspense fallback={null}>
         <Stars radius={80} depth={40} count={2500} factor={2} saturation={0} fade speed={0.4} />
-        <Earth />
-        <ContinentLabels dim={flyMode} />
-        {detailed.map((sat) => {
-          const entry =
-            SATELLITE_CATALOG.find((c) => c.id === sat.id) ?? {
-              id: sat.id,
-              name: sat.name,
-              category:
-                bulkObjectGroup(sat.name, sat.id) === "station"
-                  ? ("station" as const)
-                  : bulkObjectGroup(sat.name, sat.id) === "starlink"
-                  ? ("constellation" as const)
-                  : ("science" as const),
-            };
-          return (
-            <SatelliteMarker
-              key={sat.id}
-              entry={entry}
-              line1={sat.line1}
-              line2={sat.line2}
-              isSelected={selectedId === sat.id}
-              onSelect={onSelect}
-              showOrbitPath={showOrbitPaths && (selectedId === sat.id || FEATURED_IDS.has(sat.id))}
-              flyMode={flyMode}
-            />
-          );
-        })}
-        {filter !== "featured" && showDots && <SatelliteCloud satellites={mass} onSelect={onSelect} />}
+        <WorldSpin>
+          <Earth />
+          <ContinentLabels dim={flyMode} />
+          {detailed.map((sat) => {
+            const entry =
+              SATELLITE_CATALOG.find((c) => c.id === sat.id) ?? {
+                id: sat.id,
+                name: sat.name,
+                category:
+                  bulkObjectGroup(sat.name, sat.id) === "station"
+                    ? ("station" as const)
+                    : bulkObjectGroup(sat.name, sat.id) === "starlink"
+                    ? ("constellation" as const)
+                    : ("science" as const),
+              };
+            return (
+              <SatelliteMarker
+                key={sat.id}
+                entry={entry}
+                line1={sat.line1}
+                line2={sat.line2}
+                isSelected={selectedId === sat.id}
+                onSelect={onSelect}
+                showOrbitPath={showOrbitPaths && (selectedId === sat.id || FEATURED_IDS.has(sat.id))}
+                flyMode={flyMode}
+              />
+            );
+          })}
+          {filter !== "featured" && showDots && (
+            <SatelliteCloud satellites={mass} onSelect={onSelect} />
+          )}
 
-        {/* "Where Am I?" — temporary line from the observer's location to
-            the tracked satellite. Self-clears; parent controls lifetime. */}
-        {locateLine && location && (
-          <LocateLine
-            key={locateLine.key}
-            satelliteId={locateLine.id}
-            satellites={satellites}
-            observerLat={location.lat}
-            observerLon={location.lon}
-          />
-        )}
+          {/* "Where Am I?" — temporary line from the observer's location to
+              the tracked satellite. Self-clears; parent controls lifetime. */}
+          {locateLine && location && (
+            <LocateLine
+              key={locateLine.key}
+              satelliteId={locateLine.id}
+              satellites={satellites}
+              observerLat={location.lat}
+              observerLon={location.lon}
+            />
+          )}
+        </WorldSpin>
       </Suspense>
 
       {debug && <Stats className="!left-auto !right-2 !top-2" />}
