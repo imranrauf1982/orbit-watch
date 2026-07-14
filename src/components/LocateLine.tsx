@@ -15,6 +15,32 @@ type Props = {
   observerLon: number;
 };
 
+// three.js's built-in LineDashedMaterial has no offset uniform in this
+// version — its fragment shader only tests `mod(vLineDistance, totalSize)
+// > dashSize`, with nothing to animate. This is the same test, plus a
+// `dashOffset` uniform we control, so the pattern can actually flow.
+const DASH_VERTEX = /* glsl */ `
+  attribute float lineDistance;
+  varying float vLineDistance;
+  void main() {
+    vLineDistance = lineDistance;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const DASH_FRAGMENT = /* glsl */ `
+  uniform vec3 color;
+  uniform float opacity;
+  uniform float dashSize;
+  uniform float gapSize;
+  uniform float dashOffset;
+  varying float vLineDistance;
+  void main() {
+    if (mod(vLineDistance + dashOffset, dashSize + gapSize) > dashSize) discard;
+    gl_FragColor = vec4(color, opacity);
+  }
+`;
+
 /**
  * Temporary visual line drawn between the observer's location (on the
  * globe surface) and the currently tracked satellite — powers the "Where
@@ -23,7 +49,6 @@ type Props = {
  */
 export default function LocateLine({ satelliteId, satellites, observerLat, observerLon }: Props) {
   const lineRef = useRef<THREE.Line>(null);
-  const materialRef = useRef<THREE.LineDashedMaterial>(null);
   const positions = useRef(new Float32Array(6));
 
   const satrec = useMemo(() => {
@@ -39,6 +64,17 @@ export default function LocateLine({ satelliteId, satellites, observerLat, obser
   const observerPos = useMemo(
     () => geodeticToVector3(observerLat, observerLon, 0, EARTH_RADIUS),
     [observerLat, observerLon]
+  );
+
+  const dashUniforms = useMemo(
+    () => ({
+      color: { value: new THREE.Color("#FFB84D") },
+      opacity: { value: 0.85 },
+      dashSize: { value: 0.06 },
+      gapSize: { value: 0.04 },
+      dashOffset: { value: 0 },
+    }),
+    []
   );
 
   // Geometry needs its position attribute created once, then updated in place.
@@ -66,35 +102,30 @@ export default function LocateLine({ satelliteId, satellites, observerLat, obser
     const attr = geom.getAttribute("position") as THREE.BufferAttribute | undefined;
     if (attr) attr.needsUpdate = true;
 
-    // LineDashedMaterial's dash pattern is driven by each vertex's
-    // cumulative "lineDistance" value, which THREE only computes once,
-    // from the geometry as it existed at that moment. Since both
+    // Feeds our shader's `lineDistance` attribute — computeLineDistances()
+    // is a generic THREE.Line method (not tied to any particular
+    // material), so it works fine alongside a custom ShaderMaterial. Both
     // endpoints of this line move every frame (the satellite orbits, and
-    // Earth's rotation is folded into WorldSpin above us), that cached
-    // distance goes stale immediately — recompute it every frame, right
-    // after the position update, or the dashes freeze/distort as the line
-    // changes length.
+    // Earth's rotation is folded into WorldSpin above us), so this has to
+    // be recomputed every frame or the dash pattern goes stale/distorts as
+    // the line changes length.
     lineRef.current.computeLineDistances();
 
     // Flowing animation: slide the dash pattern along the line over time.
     // delta-based so the flow speed stays consistent regardless of frame
     // rate. Tune 0.15 to taste — higher is a faster "current".
-    if (materialRef.current) {
-      materialRef.current.dashOffset -= delta * 0.15;
-    }
+    dashUniforms.dashOffset.value -= delta * 0.15;
   });
 
   return (
     <group>
       <line ref={lineRef as any}>
         <bufferGeometry />
-        <lineDashedMaterial
-          ref={materialRef}
-          color="#FFB84D"
-          dashSize={0.06}
-          gapSize={0.04}
+        <shaderMaterial
           transparent
-          opacity={0.85}
+          uniforms={dashUniforms}
+          vertexShader={DASH_VERTEX}
+          fragmentShader={DASH_FRAGMENT}
         />
       </line>
       {/* Small marker pinning the observer's location on the globe */}
