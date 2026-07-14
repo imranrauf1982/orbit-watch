@@ -51,6 +51,7 @@ type Props = {
   flyMode: boolean;
   onToggleFlyMode: (next: boolean) => void;
   onShowLocateLine: (id: number) => void;
+  onHideLocateLine: () => void;
 };
 
 type ListItem = {
@@ -85,6 +86,7 @@ export default function Hud({
   flyMode,
   onToggleFlyMode,
   onShowLocateLine,
+  onHideLocateLine,
 }: Props) {
   const [query, setQuery] = useState("");
   const [listOpen, setListOpen] = useState(false);
@@ -425,6 +427,7 @@ export default function Hud({
         flyMode={flyMode}
         onToggleFlyMode={onToggleFlyMode}
         onShowLocateLine={onShowLocateLine}
+        onHideLocateLine={onHideLocateLine}
       />
 
       <div className="flex-1" />
@@ -503,7 +506,11 @@ export default function Hud({
             {!showDots && filter !== "featured" && " · dots hidden"}
           </p>
         </div>
-        <ul ref={scrollRef} className="overflow-y-auto flex-1 relative">
+        <ul
+          ref={scrollRef}
+          className="overflow-y-auto flex-1 relative"
+          style={{ transform: "translateZ(0)" }}
+        >
           <li style={{ height: available.length * ROW_HEIGHT }} className="relative">
             {visibleRows.map((entry, i) => {
               const index = startIndex + i;
@@ -514,8 +521,12 @@ export default function Hud({
                     onSelect(entry.id);
                     setListOpen(false);
                   }}
-                  style={{ top: index * ROW_HEIGHT, height: ROW_HEIGHT }}
-                  className={`absolute left-0 right-0 text-left px-3 flex items-center gap-2.5 border-b border-panelBorder hover:bg-white/5 transition-colors ${
+                  style={{
+                    transform: `translateY(${index * ROW_HEIGHT}px)`,
+                    height: ROW_HEIGHT,
+                    willChange: "transform",
+                  }}
+                  className={`absolute left-0 right-0 top-0 text-left px-3 flex items-center gap-2.5 border-b border-panelBorder hover:bg-white/5 transition-colors ${
                     selectedId === entry.id ? "bg-white/5" : ""
                   }`}
                 >
