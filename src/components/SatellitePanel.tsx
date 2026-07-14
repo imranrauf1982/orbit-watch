@@ -105,7 +105,7 @@ export default function SatellitePanel({
   const color = CATEGORY_COLOR[entry.category];
 
   return (
-    <div className="pointer-events-auto absolute bottom-0 left-0 right-0 sm:right-auto sm:bottom-6 sm:left-6 sm:w-96 border-t sm:border sm:rounded-lg border-panelBorder bg-panel/95 backdrop-blur flex flex-col max-h-[75vh] sm:max-h-[32rem] animate-panel-in shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)]">
+    <div className="pointer-events-auto absolute bottom-0 left-0 right-0 sm:right-auto sm:bottom-6 sm:left-6 sm:w-96 border-t sm:border sm:rounded-xl border-panelBorder bg-panel/95 backdrop-blur-xl flex flex-col max-h-[75vh] sm:max-h-[32rem] animate-panel-in shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)]">
       {/* Header */}
       <div className="flex items-center justify-between p-4 pb-2">
         <div className="flex items-center gap-2 min-w-0">
@@ -156,7 +156,7 @@ export default function SatellitePanel({
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`py-2 border-b-2 transition-colors ${
+            className={`py-2 border-b-2 transition-all duration-300 ease-out ${
               tab === key
                 ? "border-signal text-ink"
                 : "border-transparent text-muted hover:text-ink"
@@ -225,7 +225,7 @@ export default function SatellitePanel({
                 </p>
                 <button
                   onClick={onRequestLocation}
-                  className="rounded-md border border-signal/60 bg-signal/10 px-3 py-1.5 text-xs font-mono text-signal hover:bg-signal/20 transition-colors"
+                  className="rounded-xl border border-signal/40 bg-signal/10 px-3 py-1.5 text-xs font-mono text-signal hover:bg-signal/20 transition-all duration-300 ease-out"
                 >
                   {locationStatus === "requesting" ? "LOCATING…" : "USE MY LOCATION"}
                 </button>
@@ -283,7 +283,7 @@ export default function SatellitePanel({
                             </td>
                             <td className="px-1 py-2 text-right whitespace-nowrap">
                               <span
-                                className={`inline-block text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                                className={`inline-block text-[10px] font-mono px-1.5 py-0.5 rounded-md ${
                                   p.visible ? "bg-signal/15 text-signal" : "bg-panelBorder text-muted"
                                 }`}
                                 title={p.visible ? brightness.hint : "Satellite is in daylight — hard to see"}
