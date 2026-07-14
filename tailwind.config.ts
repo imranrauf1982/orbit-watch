@@ -10,24 +10,27 @@ const config: Config = {
     extend: {
       colors: {
         void: "#05070D",
-        // Panel base recolored slightly warmer + used with Tailwind opacity
-        // modifiers (bg-panel/60, /80, /90…) throughout the app — this one
-        // change is what turns every existing panel into a glass surface.
+        // Panel base — used with Tailwind opacity modifiers (bg-panel/60,
+        // /80, /90…) throughout the app.
         panel: "#121318",
-        // Thin, elegant glass hairline instead of a solid retro border.
-        // Kept as the same "panelBorder" utility (rather than swapped for
-        // border-white/5 everywhere) so the high-contrast mode override in
-        // globals.css, which targets .border-panelBorder, keeps working.
-        panelBorder: "rgba(255,255,255,0.08)",
+        // FIX: this used to be an rgba(...) string, which breaks Tailwind's
+        // own opacity modifiers (e.g. border-panelBorder/80 silently fails
+        // to apply any alpha on top of an already-rgba base color — that's
+        // why some borders weren't rendering as intended). Solid hex again,
+        // low-contrast so it still reads as a thin hairline against the
+        // panel background.
+        panelBorder: "#20242C",
         signal: "#FF6A3D",
         orbit: "#4FD8EB",
         ink: "#E8ECF3",
         muted: "#8A93A6",
         warn: "#FFB84D",
-        // New premium dark-space palette, available for future use.
-        spaceDeep: "#090A0C",
-        spacePanel: "#121318",
-        premiumGold: "#D4AF37",
+        // Literal glass-space palette for panels/cards, per spec.
+        space: {
+          950: "#090A0C", // deep obsidian background
+          900: "#121318", // sleek panel background
+          800: "#1A1D24", // subtle hover/card borders
+        },
       },
       fontFamily: {
         // Single premium humanist sans, aliased under every family name the
