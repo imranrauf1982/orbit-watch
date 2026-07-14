@@ -5,6 +5,8 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import * as satellite from "satellite.js";
 import { propagate, geodeticToVector3 } from "@/lib/orbit";
+import { getSimTime } from "@/lib/sim-clock";
+import { getEarthSpinAngle, applyEarthSpin } from "@/lib/earth-spin";
 import { EARTH_RADIUS } from "./Earth";
 
 type Props = {
@@ -54,11 +56,19 @@ export default function CameraFocus({ selectedId, satellites, controlsRef }: Pro
 
   useEffect(() => {
     if (!satrec) return;
-    const state = propagate(satrec, new Date());
+    // Was `new Date()` — wrong wall-clock time when the sim is paused or
+    // sped up. The satellite (inside WorldSpin) is positioned using
+    // getSimTime(); this must match or the camera aims at where the
+    // satellite *was* rather than where it's actually rendered.
+    const simTime = getSimTime();
+    const state = propagate(satrec, simTime);
     if (!state) return;
 
     const [x, y, z] = geodeticToVector3(state.lat, state.lon, state.altitudeKm, EARTH_RADIUS);
-    const direction = new THREE.Vector3(x, y, z).normalize();
+    const direction = applyEarthSpin(
+      new THREE.Vector3(x, y, z),
+      getEarthSpinAngle(simTime)
+    ).normalize();
     const distance = camera.position.length();
 
     anim.current = {
