@@ -309,7 +309,7 @@ export default function Hud({
             <button
               onClick={() => onViewModeChange("3d")}
               className={`px-3 py-1.5 transition-all duration-300 ease-out ${
-                viewMode === "3d" ? "bg-gradient-to-r from-signal/15 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.15)]" : "text-muted hover:text-ink"
+                viewMode === "3d" ? "bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]" : "text-muted hover:text-ink"
               }`}
               aria-pressed={viewMode === "3d"}
             >
@@ -318,7 +318,7 @@ export default function Hud({
             <button
               onClick={() => onViewModeChange("map")}
               className={`px-3 py-1.5 border-l border-panelBorder transition-all duration-300 ease-out ${
-                viewMode === "map" ? "bg-gradient-to-r from-signal/15 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.15)]" : "text-muted hover:text-ink"
+                viewMode === "map" ? "bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]" : "text-muted hover:text-ink"
               }`}
               aria-pressed={viewMode === "map"}
             >
@@ -327,7 +327,7 @@ export default function Hud({
             <button
               onClick={() => onViewModeChange("sky")}
               className={`px-3 py-1.5 border-l border-panelBorder transition-all duration-300 ease-out ${
-                viewMode === "sky" ? "bg-gradient-to-r from-signal/15 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.15)]" : "text-muted hover:text-ink"
+                viewMode === "sky" ? "bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]" : "text-muted hover:text-ink"
               }`}
               aria-pressed={viewMode === "sky"}
             >
@@ -340,7 +340,7 @@ export default function Hud({
               <button
                 onClick={() => toggleSimPaused()}
                 className={`px-2.5 py-1.5 transition-all duration-300 ease-out ${
-                  simClock.paused ? "bg-gradient-to-r from-signal/15 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.15)]" : "text-muted hover:text-ink"
+                  simClock.paused ? "bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]" : "text-muted hover:text-ink"
                 }`}
                 title="Pause/resume simulated time (Space)"
                 aria-pressed={simClock.paused}
@@ -353,7 +353,7 @@ export default function Hud({
                   onClick={() => setSimSpeed(s)}
                   className={`px-2 py-1.5 border-l border-panelBorder transition-all duration-300 ease-out ${
                     !simClock.paused && simClock.speed === s
-                      ? "bg-gradient-to-r from-signal/15 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.15)]"
+                      ? "bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]"
                       : "text-muted hover:text-ink"
                   }`}
                   title={`Run simulation at ${s}x speed`}
@@ -369,7 +369,7 @@ export default function Hud({
               onClick={() => setHighContrast((v) => !v)}
               className={`rounded-xl border h-8 px-2.5 flex items-center justify-center text-[11px] font-mono backdrop-blur-xl transition-all duration-300 ease-out ${
                 highContrast
-                  ? "border-signal/40 bg-gradient-to-r from-signal/15 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.15)]"
+                  ? "border-premiumGold/50 bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]"
                   : "border-panelBorder bg-panel/80 text-muted hover:text-ink"
               }`}
               aria-pressed={highContrast}
@@ -459,7 +459,7 @@ export default function Hud({
                 onClick={() => onFilterChange(g)}
                 className={`rounded-md px-2 py-1 text-[10px] font-mono border transition-all duration-300 ease-out ${
                   filter === g
-                    ? "border-signal/40 bg-gradient-to-r from-signal/15 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.15)]"
+                    ? "border-premiumGold/50 bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]"
                     : "border-panelBorder text-muted hover:text-ink"
                 }`}
                 aria-pressed={filter === g}
@@ -474,7 +474,7 @@ export default function Hud({
               className={`w-full rounded-md px-2 py-1.5 text-[10px] font-mono border transition-all duration-300 ease-out flex items-center justify-center gap-1.5 ${
                 showDots
                   ? "border-panelBorder text-muted hover:text-ink"
-                  : "border-signal/40 bg-gradient-to-r from-signal/15 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.15)]"
+                  : "border-premiumGold/50 bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]"
               }`}
               aria-pressed={!showDots}
               title="Toggle the background satellite dots on or off"
@@ -491,7 +491,7 @@ export default function Hud({
               onClick={() => onShowOrbitPathsChange(!showOrbitPaths)}
               className={`w-full rounded-md px-2 py-1.5 text-[10px] font-mono border transition-all duration-300 ease-out flex items-center justify-center gap-1.5 ${
                 showOrbitPaths
-                  ? "border-signal/40 bg-gradient-to-r from-signal/15 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.15)]"
+                  ? "border-premiumGold/50 bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]"
                   : "border-panelBorder text-muted hover:text-ink"
               }`}
               aria-pressed={showOrbitPaths}
