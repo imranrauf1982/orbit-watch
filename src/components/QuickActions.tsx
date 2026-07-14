@@ -273,7 +273,7 @@ export default function QuickActions({
   return (
     <>
       <div
-        className="hidden sm:flex pointer-events-auto absolute left-6 top-24 w-64 flex-col gap-2 rounded-xl border border-panelBorder bg-panel/80 p-3 backdrop-blur-md shadow-[0_0_30px_-12px_rgba(79,216,235,0.25)] animate-panel-in"
+        className="hidden sm:flex pointer-events-auto absolute left-6 top-24 w-64 flex-col gap-2 rounded-xl border border-white/5 bg-space-900/60 p-3 backdrop-blur-xl shadow-[0_0_30px_-12px_rgba(79,216,235,0.25)] animate-panel-in"
         aria-label="Quick actions"
       >
         <p className="px-1 pb-1 text-[10px] font-mono uppercase tracking-wider text-muted">
@@ -289,12 +289,12 @@ export default function QuickActions({
                 aria-pressed={isActiveFly}
                 className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all hover:border-signal/50 hover:bg-signal/[0.06] hover:shadow-[0_0_16px_-6px_rgba(255,106,61,0.4)] active:scale-[0.98] ${
                   isActiveFly
-                    ? "border-premiumGold/50 bg-premiumGold/10 shadow-[0_0_20px_-8px_rgba(212,175,55,0.35)]"
-                    : "border-panelBorder/80 bg-void/50"
+                    ? "border-signal/40 bg-signal/10 shadow-[0_0_16px_-6px_rgba(255,106,61,0.35)]"
+                    : "border-white/5 bg-void/50"
                 }`}
               >
                 <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-panel border border-panelBorder/80 ${a.accent} transition-all duration-300 ease-out group-hover:border-current/40`}
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-space-800/60 border border-white/5 ${a.accent} transition-all duration-300 ease-out group-hover:border-current/40`}
                 >
                   {a.icon}
                 </span>
@@ -423,7 +423,7 @@ function ModalShell({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-xl border border-panelBorder bg-panel p-5 max-h-[85vh] overflow-y-auto"
+        className="w-full max-w-md rounded-xl border border-white/5 bg-space-900/80 backdrop-blur-xl p-5 max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-3">
@@ -472,8 +472,8 @@ function ActionCard({
       role="dialog"
       aria-label={title}
     >
-      <div className="flex max-h-[min(30rem,70vh)] flex-col rounded-xl border border-panelBorder bg-panel/95 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md">
-        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-panelBorder px-4 py-3">
+      <div className="flex max-h-[min(30rem,70vh)] flex-col rounded-xl border border-white/5 bg-space-900/70 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/5 px-4 py-3">
           <h2 className="min-w-0 truncate font-display font-bold text-ink text-sm">{title}</h2>
           <button
             onClick={onClose}
@@ -506,7 +506,7 @@ function LocationPrompt({
       </p>
       <button
         onClick={onRequestLocation}
-        className="rounded-xl border border-premiumGold/50 bg-premiumGold/10 px-3 py-1.5 text-xs font-mono text-premiumGold hover:bg-premiumGold/20 transition-all duration-300 ease-out"
+        className="rounded-xl border border-signal/40 bg-signal/10 px-3 py-1.5 text-xs font-mono text-signal hover:bg-signal/20 transition-all duration-300 ease-out"
       >
         {locationStatus === "requesting" ? "LOCATING…" : "USE MY LOCATION"}
       </button>
@@ -547,7 +547,7 @@ function SatellitePickerModal({
       {catalog.length === 0 ? (
         <p className="text-xs text-muted font-body py-4 text-center">Still loading satellites…</p>
       ) : (
-        <ul className="divide-y divide-panelBorder border border-panelBorder rounded-xl overflow-hidden max-h-72 overflow-y-auto">
+        <ul className="divide-y divide-white/5 border border-white/5 rounded-xl overflow-hidden max-h-72 overflow-y-auto">
           {catalog.map((c) => (
             <li key={c.id}>
               <button
@@ -821,7 +821,7 @@ function NextPassModal({
                 <li
                   key={key}
                   className={`rounded-xl border px-3 py-2 ${
-                    pass.visible ? "border-signal/40 bg-signal/[0.05]" : "border-panelBorder bg-void/40"
+                    pass.visible ? "border-signal/40 bg-signal/[0.05]" : "border-white/5 bg-void/40"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -830,7 +830,7 @@ function NextPassModal({
                       className={`font-mono text-[10px] px-1.5 py-0.5 rounded-md ${
                         pass.visible
                           ? "text-signal bg-signal/15"
-                          : "text-muted bg-panel border border-panelBorder"
+                          : "text-muted bg-space-800/60 border border-white/5"
                       }`}
                     >
                       {pass.visible ? `VISIBLE · ${brightness.label.toUpperCase()}` : "DAYLIGHT"}
@@ -848,7 +848,7 @@ function NextPassModal({
                   ) : (
                     <button
                       onClick={() => handleSetAlert(pass)}
-                      className="w-full rounded-md border border-premiumGold/50 bg-premiumGold/10 px-2 py-1 text-[10.5px] font-mono text-premiumGold hover:bg-premiumGold/20 transition-all duration-300 ease-out"
+                      className="w-full rounded-md border border-signal/40 bg-signal/10 px-2 py-1 text-[10.5px] font-mono text-signal hover:bg-signal/20 transition-all duration-300 ease-out"
                     >
                       SET ALERT
                     </button>
@@ -1046,7 +1046,7 @@ function FavoriteRow({
         <button
           onClick={() => onJumpTo(id)}
           disabled={!sat}
-          className="rounded-xl border border-panelBorder px-2 py-1 text-[10px] font-mono text-ink hover:border-signal/40 disabled:opacity-40 transition-all duration-300 ease-out"
+          className="rounded-xl border border-white/5 bg-white/[0.03] hover:bg-white/[0.08] px-2 py-1 text-[10px] font-mono text-ink hover:border-signal/40 disabled:opacity-40 transition-all duration-300 ease-out"
         >
           SELECT
         </button>
@@ -1086,7 +1086,7 @@ function FavoritesModal({
   return (
     <ActionCard title="MY FAVORITES" onClose={onClose}>
       {selectedId !== null && (
-        <div className="mb-3 pb-3 border-b border-panelBorder flex items-center justify-between gap-2">
+        <div className="mb-3 pb-3 border-b border-white/5 flex items-center justify-between gap-2">
           <p className="text-xs text-ink font-body truncate">
             Currently selected: <span className="text-muted">{selectedName ?? selectedId}</span>
           </p>
@@ -1094,8 +1094,8 @@ function FavoritesModal({
             onClick={() => toggleFavorite(selectedId)}
             className={`shrink-0 rounded-xl border px-2.5 py-1.5 text-[11px] font-mono transition-all duration-300 ease-out ${
               selectedIsFavorite
-                ? "border-premiumGold/50 bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]"
-                : "border-panelBorder text-muted hover:text-ink"
+                ? "border-signal/40 bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]"
+                : "border-white/5 bg-white/[0.03] hover:bg-white/[0.08] text-muted hover:text-ink"
             }`}
           >
             {selectedIsFavorite ? "★ SAVED" : "☆ SAVE"}
@@ -1108,7 +1108,7 @@ function FavoritesModal({
           No favorites yet — select a satellite and star it to save it here.
         </p>
       ) : (
-        <ul className="divide-y divide-panelBorder border border-panelBorder rounded-xl overflow-hidden">
+        <ul className="divide-y divide-white/5 border border-white/5 rounded-xl overflow-hidden">
           {favoriteIds.map((id) => (
             <FavoriteRow key={id} id={id} satellites={satellites} onJumpTo={onJumpTo} />
           ))}
