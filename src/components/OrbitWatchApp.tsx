@@ -8,6 +8,7 @@ import type { TleResult } from "@/lib/fetch-tle";
 import type { LiveState } from "@/lib/orbit";
 import { useLocation } from "@/lib/use-location";
 import { checkDuePassAlerts } from "@/lib/pass-alerts";
+import { preloadSatelliteIcons } from "@/lib/satellite-icon-preload";
 import { SATELLITE_CATALOG, type FilterGroup } from "@/lib/satellite-catalog";
 
 // three.js touches window/canvas — must be client-only, no SSR
@@ -40,6 +41,14 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
   // curated set, it's usually already arrived.
   const [satellites, setSatellites] = useState<TleResult[]>(initialSatellites);
   const [catalogStatus, setCatalogStatus] = useState<CatalogStatus>("loading");
+
+  // Warms the browser's cache with every known satellite icon PNG up
+  // front, so individual 3D markers resolve their own texture load almost
+  // instantly instead of briefly showing the cartoon fallback first. See
+  // lib/satellite-icon-preload.ts.
+  useEffect(() => {
+    preloadSatelliteIcons();
+  }, []);
 
   const TLE_CACHE_KEY = "orbitwatch_tle_cache_v1";
 
@@ -144,20 +153,29 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
     if (selectedId === null) setFlyMode(false);
   }, [selectedId]);
 
-  // Auto-clear the locate line a few seconds after it's shown — it's meant
-  // to be a temporary visual callout, not a persistent overlay.
-  useEffect(() => {
-    if (!locateLine) return;
-    const timer = setTimeout(() => setLocateLine(null), 9000);
-    return () => clearTimeout(timer);
-  }, [locateLine]);
+  // The "Where Am I?" / "What's Above Me?" line's lifetime is owned by
+  // whichever of those two cards is currently open — see
+  // handleShowLocateLine/handleHideLocateLine, called from QuickActions —
+  // rather than a fixed timer. It used to auto-clear itself 9 seconds after
+  // being shown regardless of whether the card was still open, which read
+  // as the line randomly vanishing mid-use.
 
   const handleToggleFlyMode = useCallback((next: boolean) => {
     setFlyMode(next);
   }, []);
 
   const handleShowLocateLine = useCallback((id: number) => {
-    setLocateLine({ id, key: Date.now() });
+    setLocateLine((prev) => {
+      // Same satellite already showing — leave the existing line/key alone
+      // so it doesn't remount (and re-trigger the camera swing) on every
+      // 1-2s live-update tick from the Where Am I / What's Above Me cards.
+      if (prev && prev.id === id) return prev;
+      return { id, key: Date.now() };
+    });
+  }, []);
+
+  const handleHideLocateLine = useCallback(() => {
+    setLocateLine(null);
   }, []);
 
   const handleViewModeChange = useCallback((mode: ViewMode) => {
@@ -266,6 +284,7 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
         flyMode={flyMode}
         onToggleFlyMode={handleToggleFlyMode}
         onShowLocateLine={handleShowLocateLine}
+        onHideLocateLine={handleHideLocateLine}
       />
 
       {/* Small, always-reachable exit button for the "Fly With Satellite"
