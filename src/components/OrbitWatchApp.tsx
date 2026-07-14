@@ -293,7 +293,7 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
       {flyMode && (
         <button
           onClick={() => setFlyMode(false)}
-          className="pointer-events-auto fixed top-4 left-1/2 -translate-x-1/2 z-[2100] rounded-md border border-signal/60 bg-panel/95 px-4 py-2 text-[11px] font-mono text-signal backdrop-blur shadow-[0_4px_20px_-6px_rgba(0,0,0,0.7)] hover:bg-signal/10 transition-colors"
+          className="pointer-events-auto fixed top-4 left-1/2 -translate-x-1/2 z-[2100] rounded-xl border border-signal/40 bg-panel/95 px-4 py-2 text-[11px] font-mono text-signal backdrop-blur-xl shadow-[0_4px_20px_-6px_rgba(0,0,0,0.7)] hover:bg-signal/10 transition-all duration-300 ease-out"
         >
           EXIT FLY MODE
         </button>
