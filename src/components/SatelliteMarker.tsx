@@ -29,19 +29,29 @@ type Props = {
   flyMode?: boolean;
 };
 
+type PhotoState =
+  | { status: "pending" }
+  | { status: "loaded"; texture: THREE.Texture; aspect: number }
+  | { status: "error" };
+
 /**
  * Loads /satellites/<slug>.png if present, without ever throwing or
- * blocking render. If the file doesn't exist yet (most slugs won't, until
- * real photos are added to /public/satellites/), this just quietly resolves
- * to null and the caller falls back to the procedural model — so nothing
- * breaks for satellites that don't have a photo yet.
+ * blocking render. Returns a distinct "pending" state (rather than
+ * collapsing "still loading" and "failed to load" into the same falsy
+ * value) so the caller can wait for a real result instead of immediately
+ * rendering the cartoon fallback and then swapping — which is what used to
+ * cause a visible flash of the wrong (cartoon) icon for a beat right after
+ * the page loaded, before the real photo finished fetching.
  */
 function useOptionalSatellitePhoto(slug: string | undefined) {
-  const [result, setResult] = useState<{ texture: THREE.Texture; aspect: number } | null>(null);
+  const [state, setState] = useState<PhotoState>({ status: "pending" });
 
   useEffect(() => {
-    setResult(null);
-    if (!slug) return;
+    setState({ status: "pending" });
+    if (!slug) {
+      setState({ status: "error" });
+      return;
+    }
     let cancelled = false;
     const loader = new THREE.TextureLoader();
     loader.load(
@@ -50,11 +60,12 @@ function useOptionalSatellitePhoto(slug: string | undefined) {
         if (cancelled) return;
         tex.colorSpace = THREE.SRGBColorSpace;
         const aspect = tex.image ? tex.image.width / tex.image.height : 1;
-        setResult({ texture: tex, aspect });
+        setState({ status: "loaded", texture: tex, aspect });
       },
       undefined,
       () => {
-        /* 404 or decode failure — stay null, fall back to procedural model */
+        if (cancelled) return;
+        setState({ status: "error" });
       }
     );
     return () => {
@@ -62,7 +73,7 @@ function useOptionalSatellitePhoto(slug: string | undefined) {
     };
   }, [slug]);
 
-  return result;
+  return state;
 }
 
 /** A real photo of the satellite, always facing the camera, sized to
@@ -160,6 +171,22 @@ function SatelliteModel({ color, targetScale }: { color: string; targetScale: nu
   );
 }
 
+/** Minimal placeholder shown only while a real photo is still loading (now
+ * a near-instant window in practice, thanks to preloadSatelliteIcons() —
+ * see lib/satellite-icon-preload.ts). Deliberately not the full cartoon
+ * model: a plain soft dot doesn't read as "a specific — and wrong — kind of
+ * satellite" the way the winged procedural model did during that flash. */
+function SatellitePending({ color, targetScale }: { color: string; targetScale: number }) {
+  return (
+    <group scale={targetScale}>
+      <mesh>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshBasicMaterial color={color} transparent opacity={0.55} />
+      </mesh>
+    </group>
+  );
+}
+
 export default function SatelliteMarker({
   entry,
   line1,
@@ -176,7 +203,7 @@ export default function SatelliteMarker({
   const [label, setLabel] = useState<LiveState | null>(null);
   const lastTelemetryPush = useRef(0);
   const color = CATEGORY_COLOR[entry.category];
-  const photo = useOptionalSatellitePhoto(entry.imageSlug ?? genericImageSlug(entry.category));
+  const photoState = useOptionalSatellitePhoto(entry.imageSlug ?? genericImageSlug(entry.category));
 
   // Precompute a short trailing arc (~10 min behind) once per satrec; cheap and static-ish.
   const trailPositions = useMemo(() => {
@@ -277,8 +304,14 @@ export default function SatelliteMarker({
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
 
-        {photo ? (
-          <SatellitePhoto texture={photo.texture} aspect={photo.aspect} targetScale={modelScale} />
+        {photoState.status === "loaded" ? (
+          <SatellitePhoto
+            texture={photoState.texture}
+            aspect={photoState.aspect}
+            targetScale={modelScale}
+          />
+        ) : photoState.status === "pending" ? (
+          <SatellitePending color={color} targetScale={modelScale} />
         ) : (
           <SatelliteModel color={color} targetScale={modelScale} />
         )}
