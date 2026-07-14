@@ -49,7 +49,10 @@ const DASH_FRAGMENT = /* glsl */ `
  */
 export default function LocateLine({ satelliteId, satellites, observerLat, observerLon }: Props) {
   const lineRef = useRef<THREE.Line>(null);
+  const pulseRef = useRef<THREE.Mesh>(null);
   const positions = useRef(new Float32Array(6));
+  // Reused each frame instead of allocating a new Vector3 60x/sec.
+  const pulsePos = useRef(new THREE.Vector3());
 
   const satrec = useMemo(() => {
     const sat = satellites.find((s) => s.id === satelliteId);
@@ -64,6 +67,10 @@ export default function LocateLine({ satelliteId, satellites, observerLat, obser
   const observerPos = useMemo(
     () => geodeticToVector3(observerLat, observerLon, 0, EARTH_RADIUS),
     [observerLat, observerLon]
+  );
+  const observerVec = useMemo(
+    () => new THREE.Vector3(observerPos[0], observerPos[1], observerPos[2]),
+    [observerPos]
   );
 
   const dashUniforms = useMemo(
@@ -84,11 +91,21 @@ export default function LocateLine({ satelliteId, satellites, observerLat, obser
     geom.setAttribute("position", new THREE.BufferAttribute(positions.current, 3));
   }, []);
 
-  useFrame((_, delta) => {
+  // How long one full sweep (your location → satellite → back) takes, in
+  // seconds — this is what actually reads as "live" rather than a static
+  // line, independent of the subtler flowing-dash pattern below.
+  const PULSE_DURATION_SEC = 2.2;
+
+  useFrame((state, delta) => {
     if (!satrec || !lineRef.current) return;
-    const state = propagate(satrec, getSimTime());
-    if (!state) return;
-    const [sx, sy, sz] = geodeticToVector3(state.lat, state.lon, state.altitudeKm, EARTH_RADIUS);
+    const satState = propagate(satrec, getSimTime());
+    if (!satState) return;
+    const [sx, sy, sz] = geodeticToVector3(
+      satState.lat,
+      satState.lon,
+      satState.altitudeKm,
+      EARTH_RADIUS
+    );
 
     const arr = positions.current;
     arr[0] = observerPos[0];
@@ -115,6 +132,20 @@ export default function LocateLine({ satelliteId, satellites, observerLat, obser
     // delta-based so the flow speed stays consistent regardless of frame
     // rate. Tune 0.15 to taste — higher is a faster "current".
     dashUniforms.dashOffset.value -= delta * 0.15;
+
+    // Traveling pulse: a bright dot that sweeps between the satellite and
+    // your saved location and back, on a continuous ping-pong (triangle
+    // wave) so it never visibly jumps — it always ends its trip exactly at
+    // your location marker, then heads back out to the satellite. This is
+    // the part that's actually meant to read as "live" at a glance, since
+    // the dashed flow alone is subtle from a zoomed-out view.
+    if (pulseRef.current) {
+      const elapsed = state.clock.getElapsedTime();
+      const cycle = (elapsed % PULSE_DURATION_SEC) / PULSE_DURATION_SEC; // 0..1
+      const t = cycle < 0.5 ? cycle * 2 : 2 - cycle * 2; // 0 -> 1 -> 0, no snap-back
+      pulsePos.current.set(sx, sy, sz).lerp(observerVec, t);
+      pulseRef.current.position.copy(pulsePos.current);
+    }
   });
 
   return (
@@ -128,6 +159,11 @@ export default function LocateLine({ satelliteId, satellites, observerLat, obser
           fragmentShader={DASH_FRAGMENT}
         />
       </line>
+      {/* Traveling pulse — the clearly-moving part of this effect. */}
+      <mesh ref={pulseRef}>
+        <sphereGeometry args={[0.045, 12, 12]} />
+        <meshBasicMaterial color="#FFDD99" transparent opacity={0.95} blending={THREE.AdditiveBlending} />
+      </mesh>
       {/* Small marker pinning the observer's location on the globe */}
       <mesh position={observerPos as unknown as [number, number, number]}>
         <sphereGeometry args={[0.035, 12, 12]} />
