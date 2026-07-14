@@ -7,6 +7,7 @@ import * as satellite from "satellite.js";
 import { propagate, geodeticToVector3 } from "@/lib/orbit";
 import { EARTH_RADIUS } from "./Earth";
 import { getSimTime } from "@/lib/sim-clock";
+import { getEarthSpinAngle, applyEarthSpin } from "@/lib/earth-spin";
 
 type Props = {
   active: boolean;
@@ -74,11 +75,18 @@ export default function FlyCam({ active, satelliteId, satellites, controlsRef }:
 
   useFrame(() => {
     if (!active || !satrec) return;
-    const state = propagate(satrec, getSimTime());
+    const simTime = getSimTime();
+    const state = propagate(satrec, simTime);
     if (!state) return;
 
     const [x, y, z] = geodeticToVector3(state.lat, state.lon, state.altitudeKm, EARTH_RADIUS);
-    const satPos = new THREE.Vector3(x, y, z);
+    // The satellite itself renders inside <WorldSpin>, which rotates the
+    // whole globe+satellites assembly at Earth's real sidereal rate (see
+    // lib/earth-spin.ts). This camera lives outside that group, in plain
+    // world space, so it has to apply the same rotation to know where the
+    // satellite actually is right now — otherwise the chase cam would
+    // steadily fall behind (or race ahead of) the globe's own spin.
+    const satPos = applyEarthSpin(new THREE.Vector3(x, y, z), getEarthSpinAngle(simTime));
     const outward = satPos.clone().normalize();
     const chasePos = satPos.clone().add(outward.clone().multiplyScalar(CHASE_DISTANCE));
 
