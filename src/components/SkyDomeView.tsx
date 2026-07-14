@@ -146,7 +146,7 @@ export default function SkyDomeView({
   if (!location) {
     return (
       <div className="h-full w-full bg-void flex items-center justify-center p-6">
-        <div className="max-w-xs w-full rounded-lg border border-panelBorder bg-panel/90 backdrop-blur p-5 text-center">
+        <div className="max-w-xs w-full rounded-xl border border-panelBorder bg-panel/90 backdrop-blur-xl p-5 text-center">
           <p className="text-sm text-ink font-body mb-1">Sky view needs your location</p>
           <p className="text-xs text-muted font-body mb-4">
             It plots what's actually overhead right now, so it needs to know where "up" is for you.
@@ -154,7 +154,7 @@ export default function SkyDomeView({
           <button
             onClick={onRequestLocation}
             disabled={locationStatus === "requesting"}
-            className="w-full rounded-md border border-signal/60 bg-signal/20 text-signal px-3 py-2 text-xs font-mono hover:bg-signal/30 disabled:opacity-50 transition-colors"
+            className="w-full rounded-xl border border-signal/40 bg-gradient-to-r from-signal/15 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.15)] px-3 py-2 text-xs font-mono hover:bg-signal/30 disabled:opacity-50 transition-all duration-300 ease-out"
           >
             {locationStatus === "requesting" ? "LOCATING…" : "USE MY LOCATION"}
           </button>
