@@ -8,6 +8,7 @@ import { propagate, geodeticToVector3 } from "@/lib/orbit";
 import { EARTH_RADIUS } from "./Earth";
 import { getSimTime } from "@/lib/sim-clock";
 import { getEarthSpinAngle, applyEarthSpin } from "@/lib/earth-spin";
+import { DEFAULT_CAMERA_POSITION } from "./CameraFocus";
 
 type Props = {
   active: boolean;
@@ -39,12 +40,14 @@ const NADIR_BLEND = 0.55;
  * outward-from-Earth direction) and keeps it in frame, so it reads as
  * riding along in orbit. The parent <Scene> disables OrbitControls (and
  * widens its min/max distance) while this is active so the two don't fight
- * over the camera transform; this component restores the pre-flight camera
- * position on exit.
+ * over the camera transform; this component resets the camera to the
+ * globe's normal default view on exit (see DEFAULT_CAMERA_POSITION in
+ * CameraFocus.tsx), so leaving Fly Mode reliably lands back at the normal
+ * zoom level rather than wherever the camera happened to be beforehand.
  */
 export default function FlyCam({ active, satelliteId, satellites, controlsRef }: Props) {
   const { camera } = useThree();
-  const restoreState = useRef<{ position: THREE.Vector3 } | null>(null);
+  const wasActive = useRef(false);
 
   const satrec = useMemo(() => {
     if (!active || satelliteId === null) return null;
@@ -57,19 +60,25 @@ export default function FlyCam({ active, satelliteId, satellites, controlsRef }:
     }
   }, [active, satelliteId, satellites]);
 
-  // Snapshot the camera on entering fly mode; restore it on exit so normal
-  // view (OrbitControls' expected min/max distance framing) isn't left
-  // sitting somewhere odd relative to Earth.
+  // Resets to the globe's normal default view on exit — not a snapshot of
+  // wherever the camera happened to be right before flying. A snapshot
+  // sounds more "faithful," but if the camera was already zoomed in from
+  // an earlier action (e.g. a prior selection focus) before Fly Mode
+  // started, restoring that snapshot would leave the view zoomed in too,
+  // which is exactly the "stuck zoomed in after leaving the feature" bug
+  // this replaces. Always landing on the same known-good default is what
+  // actually reads as "back to normal."
   useEffect(() => {
     if (active) {
-      restoreState.current = { position: camera.position.clone() };
-    } else if (restoreState.current) {
-      camera.position.copy(restoreState.current.position);
-      camera.lookAt(0, 0, 0);
-      controlsRef.current?.target?.set(0, 0, 0);
-      controlsRef.current?.update?.();
-      restoreState.current = null;
+      wasActive.current = true;
+      return;
     }
+    if (!wasActive.current) return; // never actually flew — nothing to reset
+    wasActive.current = false;
+    camera.position.copy(DEFAULT_CAMERA_POSITION);
+    camera.lookAt(0, 0, 0);
+    controlsRef.current?.target?.set(0, 0, 0);
+    controlsRef.current?.update?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
