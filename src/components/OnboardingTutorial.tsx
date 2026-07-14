@@ -31,7 +31,7 @@ export default function OnboardingTutorial({ onClose }: { onClose: () => void })
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-xl border border-panelBorder bg-panel p-5 animate-panel-in"
+        className="w-full max-w-sm rounded-xl border border-white/5 bg-space-900/80 backdrop-blur-xl p-5 animate-panel-in"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-3">
@@ -58,7 +58,7 @@ export default function OnboardingTutorial({ onClose }: { onClose: () => void })
           </div>
           <button
             onClick={() => (last ? onClose() : setStep((s) => s + 1))}
-            className="rounded-xl border border-premiumGold/50 bg-premiumGold/10 px-3 py-1.5 text-[11px] font-mono text-premiumGold hover:bg-premiumGold/20 transition-all duration-300 ease-out"
+            className="rounded-xl border border-signal/40 bg-signal/10 px-3 py-1.5 text-[11px] font-mono text-signal hover:bg-signal/20 transition-all duration-300 ease-out"
           >
             {last ? "GOT IT" : "NEXT"}
           </button>
