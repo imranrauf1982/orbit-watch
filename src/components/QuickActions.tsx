@@ -289,7 +289,7 @@ export default function QuickActions({
                 aria-pressed={isActiveFly}
                 className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all hover:border-signal/50 hover:bg-signal/[0.06] hover:shadow-[0_0_16px_-6px_rgba(255,106,61,0.4)] active:scale-[0.98] ${
                   isActiveFly
-                    ? "border-signal/40 bg-signal/[0.08]"
+                    ? "border-premiumGold/50 bg-premiumGold/10 shadow-[0_0_20px_-8px_rgba(212,175,55,0.35)]"
                     : "border-panelBorder/80 bg-void/50"
                 }`}
               >
@@ -506,7 +506,7 @@ function LocationPrompt({
       </p>
       <button
         onClick={onRequestLocation}
-        className="rounded-xl border border-signal/40 bg-signal/10 px-3 py-1.5 text-xs font-mono text-signal hover:bg-signal/20 transition-all duration-300 ease-out"
+        className="rounded-xl border border-premiumGold/50 bg-premiumGold/10 px-3 py-1.5 text-xs font-mono text-premiumGold hover:bg-premiumGold/20 transition-all duration-300 ease-out"
       >
         {locationStatus === "requesting" ? "LOCATING…" : "USE MY LOCATION"}
       </button>
@@ -848,7 +848,7 @@ function NextPassModal({
                   ) : (
                     <button
                       onClick={() => handleSetAlert(pass)}
-                      className="w-full rounded-md border border-signal/40 bg-signal/10 px-2 py-1 text-[10.5px] font-mono text-signal hover:bg-signal/20 transition-all duration-300 ease-out"
+                      className="w-full rounded-md border border-premiumGold/50 bg-premiumGold/10 px-2 py-1 text-[10.5px] font-mono text-premiumGold hover:bg-premiumGold/20 transition-all duration-300 ease-out"
                     >
                       SET ALERT
                     </button>
@@ -1094,7 +1094,7 @@ function FavoritesModal({
             onClick={() => toggleFavorite(selectedId)}
             className={`shrink-0 rounded-xl border px-2.5 py-1.5 text-[11px] font-mono transition-all duration-300 ease-out ${
               selectedIsFavorite
-                ? "border-signal/40 bg-gradient-to-r from-signal/15 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.15)]"
+                ? "border-premiumGold/50 bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]"
                 : "border-panelBorder text-muted hover:text-ink"
             }`}
           >
