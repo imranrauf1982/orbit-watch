@@ -666,6 +666,11 @@ function WhereAmIModal({
             stays visible for as long as this card is open.
           </p>
           <dl className="grid grid-cols-2 gap-y-2 gap-x-3 font-mono text-xs">
+            <dt className="text-muted">YOUR LOCATION</dt>
+            <dd className="tabular text-ink text-right">
+              {fmt(location.lat, 2)}°, {fmt(location.lon, 2)}°
+            </dd>
+
             <dt className="text-muted">DISTANCE TO YOU</dt>
             <dd className="tabular text-signal text-right">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-signal mr-1.5 animate-pulse" />
@@ -689,8 +694,15 @@ function WhereAmIModal({
             )}
           </dl>
           <p className="text-[10px] text-muted font-mono mt-3">
-            Updating live · closest approach estimated over the next 6 hours from now.
+            Updating live · closest approach estimated over the next 6 hours from now · switching
+            satellites keeps this same saved location and just recalculates against it.
           </p>
+          <details className="mt-2">
+            <summary className="cursor-pointer text-[10.5px] text-muted font-mono hover:text-ink">
+              Not your location?
+            </summary>
+            <LocationSearch onPick={onManualLocation} />
+          </details>
         </div>
       )}
     </ActionCard>
