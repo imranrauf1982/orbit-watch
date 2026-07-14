@@ -329,7 +329,7 @@ export default function SatelliteMarker({
         {isSelected && label && !flyMode && (
           <Html position={[0, 0.06, 0]} distanceFactor={6} zIndexRange={[10, 0]}>
             <div
-              className="pointer-events-none whitespace-nowrap rounded-xl border border-panelBorder bg-panel/90 px-2 py-1 text-center font-mono backdrop-blur-xl"
+              className="pointer-events-none whitespace-nowrap rounded-xl border border-white/5 bg-space-900/70 px-2 py-1 text-center font-mono backdrop-blur-xl"
               style={{
                 fontSize: "10px",
                 lineHeight: 1.3,
