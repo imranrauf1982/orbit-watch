@@ -48,6 +48,19 @@ body {
 .high-contrast .bg-panel\/95 {
   background-color: #10131c !important;
 }
+/* Same coverage for the glassmorphic panel/border classes introduced in the
+   visual refresh — most panels moved from bg-panel/border-panelBorder to
+   bg-space-900/border-white/5, so the CONTRAST toggle needs to reach those
+   too or it silently stops affecting most of the UI. */
+.high-contrast .bg-space-900\/60,
+.high-contrast .bg-space-900\/70,
+.high-contrast .bg-space-900\/80 {
+  background-color: #10131c !important;
+}
+.high-contrast .border-white\/5,
+.high-contrast .border-white\/10 {
+  border-color: #8b96b3 !important;
+}
 .high-contrast :focus-visible {
   outline-width: 3px;
 }
