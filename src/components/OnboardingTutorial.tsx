@@ -58,7 +58,7 @@ export default function OnboardingTutorial({ onClose }: { onClose: () => void })
           </div>
           <button
             onClick={() => (last ? onClose() : setStep((s) => s + 1))}
-            className="rounded-xl border border-signal/40 bg-signal/10 px-3 py-1.5 text-[11px] font-mono text-signal hover:bg-signal/20 transition-all duration-300 ease-out"
+            className="rounded-xl border border-premiumGold/50 bg-premiumGold/10 px-3 py-1.5 text-[11px] font-mono text-premiumGold hover:bg-premiumGold/20 transition-all duration-300 ease-out"
           >
             {last ? "GOT IT" : "NEXT"}
           </button>
