@@ -305,11 +305,11 @@ export default function Hud({
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2 max-w-full">
           {/* 3D / Map / Sky view toggle */}
-          <div className="flex rounded-xl border border-panelBorder bg-panel/80 backdrop-blur-xl overflow-hidden text-[11px] font-mono shadow-[0_4px_20px_-6px_rgba(0,0,0,0.6)]">
+          <div className="flex rounded-xl border border-white/5 bg-space-900/60 backdrop-blur-xl overflow-hidden text-[11px] font-mono shadow-[0_4px_20px_-6px_rgba(0,0,0,0.6)]">
             <button
               onClick={() => onViewModeChange("3d")}
               className={`px-3 py-1.5 transition-all duration-300 ease-out ${
-                viewMode === "3d" ? "bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]" : "text-muted hover:text-ink"
+                viewMode === "3d" ? "bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]" : "text-muted hover:text-ink"
               }`}
               aria-pressed={viewMode === "3d"}
             >
@@ -317,8 +317,8 @@ export default function Hud({
             </button>
             <button
               onClick={() => onViewModeChange("map")}
-              className={`px-3 py-1.5 border-l border-panelBorder transition-all duration-300 ease-out ${
-                viewMode === "map" ? "bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]" : "text-muted hover:text-ink"
+              className={`px-3 py-1.5 border-l border-white/5 transition-all duration-300 ease-out ${
+                viewMode === "map" ? "bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]" : "text-muted hover:text-ink"
               }`}
               aria-pressed={viewMode === "map"}
             >
@@ -326,8 +326,8 @@ export default function Hud({
             </button>
             <button
               onClick={() => onViewModeChange("sky")}
-              className={`px-3 py-1.5 border-l border-panelBorder transition-all duration-300 ease-out ${
-                viewMode === "sky" ? "bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]" : "text-muted hover:text-ink"
+              className={`px-3 py-1.5 border-l border-white/5 transition-all duration-300 ease-out ${
+                viewMode === "sky" ? "bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]" : "text-muted hover:text-ink"
               }`}
               aria-pressed={viewMode === "sky"}
             >
@@ -336,11 +336,11 @@ export default function Hud({
           </div>
 
           {viewMode === "3d" && (
-            <div className="flex rounded-xl border border-panelBorder bg-panel/80 backdrop-blur-xl overflow-hidden text-[11px] font-mono shadow-[0_4px_20px_-6px_rgba(0,0,0,0.6)]">
+            <div className="flex rounded-xl border border-white/5 bg-space-900/60 backdrop-blur-xl overflow-hidden text-[11px] font-mono shadow-[0_4px_20px_-6px_rgba(0,0,0,0.6)]">
               <button
                 onClick={() => toggleSimPaused()}
                 className={`px-2.5 py-1.5 transition-all duration-300 ease-out ${
-                  simClock.paused ? "bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]" : "text-muted hover:text-ink"
+                  simClock.paused ? "bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]" : "text-muted hover:text-ink"
                 }`}
                 title="Pause/resume simulated time (Space)"
                 aria-pressed={simClock.paused}
@@ -351,9 +351,9 @@ export default function Hud({
                 <button
                   key={s}
                   onClick={() => setSimSpeed(s)}
-                  className={`px-2 py-1.5 border-l border-panelBorder transition-all duration-300 ease-out ${
+                  className={`px-2 py-1.5 border-l border-white/5 transition-all duration-300 ease-out ${
                     !simClock.paused && simClock.speed === s
-                      ? "bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                      ? "bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]"
                       : "text-muted hover:text-ink"
                   }`}
                   title={`Run simulation at ${s}x speed`}
@@ -369,8 +369,8 @@ export default function Hud({
               onClick={() => setHighContrast((v) => !v)}
               className={`rounded-xl border h-8 px-2.5 flex items-center justify-center text-[11px] font-mono backdrop-blur-xl transition-all duration-300 ease-out ${
                 highContrast
-                  ? "border-premiumGold/50 bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]"
-                  : "border-panelBorder bg-panel/80 text-muted hover:text-ink"
+                  ? "border-signal/40 bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]"
+                  : "border-white/5 bg-space-900/60 text-muted hover:text-ink"
               }`}
               aria-pressed={highContrast}
               title="Toggle high-contrast mode (C)"
@@ -382,7 +382,7 @@ export default function Hud({
             </button>
             <button
               onClick={() => setTutorialOpen(true)}
-              className="rounded-xl border border-panelBorder bg-panel/80 h-8 px-2.5 flex items-center justify-center text-[11px] font-mono text-muted hover:text-ink backdrop-blur-xl transition-all duration-300 ease-out"
+              className="rounded-xl border border-white/5 bg-space-900/60 h-8 px-2.5 flex items-center justify-center text-[11px] font-mono text-muted hover:text-ink backdrop-blur-xl transition-all duration-300 ease-out"
               aria-label="Help & keyboard shortcuts"
               title="Help & keyboard shortcuts (?)"
             >
@@ -390,7 +390,7 @@ export default function Hud({
             </button>
             <button
               onClick={() => setSupportOpen(true)}
-              className="rounded-xl border border-panelBorder bg-panel/80 h-8 px-2.5 flex items-center justify-center gap-1 text-[11px] font-mono text-signal hover:text-ink backdrop-blur-xl transition-all duration-300 ease-out"
+              className="rounded-xl border border-white/5 bg-space-900/60 h-8 px-2.5 flex items-center justify-center gap-1 text-[11px] font-mono text-signal hover:text-ink backdrop-blur-xl transition-all duration-300 ease-out"
               aria-label="Support Orbit Watch"
               title="Support Orbit Watch"
             >
@@ -399,7 +399,7 @@ export default function Hud({
             </button>
             <button
               onClick={() => setAboutOpen(true)}
-              className="rounded-xl border border-panelBorder bg-panel/80 h-8 px-2.5 flex items-center justify-center text-[11px] font-mono text-muted hover:text-ink backdrop-blur-xl transition-all duration-300 ease-out"
+              className="rounded-xl border border-white/5 bg-space-900/60 h-8 px-2.5 flex items-center justify-center text-[11px] font-mono text-muted hover:text-ink backdrop-blur-xl transition-all duration-300 ease-out"
               aria-label="About Orbit Watch"
               title="About & data sources"
             >
@@ -407,7 +407,7 @@ export default function Hud({
             </button>
             <button
               onClick={() => setListOpen((v) => !v)}
-              className="sm:hidden rounded-xl border border-panelBorder bg-panel/80 h-8 px-3 flex items-center justify-center text-[11px] font-mono text-ink backdrop-blur-xl transition-all duration-300 ease-out"
+              className="sm:hidden rounded-xl border border-white/5 bg-space-900/60 h-8 px-3 flex items-center justify-center text-[11px] font-mono text-ink backdrop-blur-xl transition-all duration-300 ease-out"
               aria-expanded={listOpen}
             >
               {listOpen ? "CLOSE" : "TARGETS"}
@@ -440,17 +440,17 @@ export default function Hud({
 
       {/* Satellite list — sidebar on desktop, sheet on mobile */}
       <div
-        className={`pointer-events-auto fixed sm:absolute right-0 top-0 sm:top-20 h-full sm:h-auto sm:max-h-[70vh] w-full sm:w-72 sm:rounded-l-xl border-l border-panelBorder bg-panel/95 backdrop-blur-xl transition-transform duration-300 sm:translate-x-0 shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)] ${
+        className={`pointer-events-auto fixed sm:absolute right-0 top-0 sm:top-20 h-full sm:h-auto sm:max-h-[70vh] w-full sm:w-72 sm:rounded-l-xl border-l border-white/5 bg-space-900/60 backdrop-blur-xl transition-transform duration-300 sm:translate-x-0 shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)] ${
           listOpen ? "translate-x-0" : "translate-x-full sm:translate-x-0"
         } flex flex-col`}
       >
-        <div className="p-3 border-b border-panelBorder space-y-2">
+        <div className="p-3 border-b border-white/5 space-y-2">
           <input
             ref={searchInputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search satellite…"
-            className="w-full rounded-xl bg-void border border-panelBorder px-3 py-2 text-sm text-ink placeholder:text-muted font-body focus:border-signal outline-none"
+            className="w-full rounded-xl bg-void border border-white/5 px-3 py-2 text-sm text-ink placeholder:text-muted font-body focus:border-signal outline-none"
           />
           <div className="flex flex-wrap gap-1">
             {filterGroups.map((g) => (
@@ -459,8 +459,8 @@ export default function Hud({
                 onClick={() => onFilterChange(g)}
                 className={`rounded-md px-2 py-1 text-[10px] font-mono border transition-all duration-300 ease-out ${
                   filter === g
-                    ? "border-premiumGold/50 bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]"
-                    : "border-panelBorder text-muted hover:text-ink"
+                    ? "border-signal/40 bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]"
+                    : "border-white/5 bg-white/[0.03] hover:bg-white/[0.08] text-muted hover:text-ink"
                 }`}
                 aria-pressed={filter === g}
               >
@@ -473,8 +473,8 @@ export default function Hud({
               onClick={() => onShowDotsChange(!showDots)}
               className={`w-full rounded-md px-2 py-1.5 text-[10px] font-mono border transition-all duration-300 ease-out flex items-center justify-center gap-1.5 ${
                 showDots
-                  ? "border-panelBorder text-muted hover:text-ink"
-                  : "border-premiumGold/50 bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                  ? "border-white/5 bg-white/[0.03] hover:bg-white/[0.08] text-muted hover:text-ink"
+                  : "border-signal/40 bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]"
               }`}
               aria-pressed={!showDots}
               title="Toggle the background satellite dots on or off"
@@ -491,8 +491,8 @@ export default function Hud({
               onClick={() => onShowOrbitPathsChange(!showOrbitPaths)}
               className={`w-full rounded-md px-2 py-1.5 text-[10px] font-mono border transition-all duration-300 ease-out flex items-center justify-center gap-1.5 ${
                 showOrbitPaths
-                  ? "border-premiumGold/50 bg-gradient-to-r from-premiumGold/25 to-premiumGold/10 text-premiumGold shadow-[0_0_20px_rgba(212,175,55,0.3)]"
-                  : "border-panelBorder text-muted hover:text-ink"
+                  ? "border-signal/40 bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]"
+                  : "border-white/5 bg-white/[0.03] hover:bg-white/[0.08] text-muted hover:text-ink"
               }`}
               aria-pressed={showOrbitPaths}
               title="Toggle full orbital paths for featured satellites"
@@ -526,7 +526,7 @@ export default function Hud({
                     height: ROW_HEIGHT,
                     willChange: "transform",
                   }}
-                  className={`absolute left-0 right-0 top-0 text-left px-3 flex items-center gap-2.5 border-b border-panelBorder hover:bg-white/5 transition-all duration-300 ease-out ${
+                  className={`absolute left-0 right-0 top-0 text-left px-3 flex items-center gap-2.5 border-b border-white/5 hover:bg-white/5 transition-all duration-300 ease-out ${
                     selectedId === entry.id ? "bg-white/5" : ""
                   }`}
                 >
