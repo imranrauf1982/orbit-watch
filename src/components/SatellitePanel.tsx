@@ -66,10 +66,19 @@ export default function SatellitePanel({
   const satrec = useMemo(() => satellite.twoline2satrec(line1, line2), [line1, line2]);
   const elements = useMemo(() => getOrbitalElements(satrec), [satrec]);
 
-  // Reset cached passes whenever the selected satellite changes
+  // Reset cached passes whenever the selected satellite OR the observer's
+  // location changes. This used to only key off `entry.id`, so if you
+  // switched location (e.g. via the "Not your location?" search inside
+  // this same panel, or the Quick Actions location prompt) while a
+  // satellite's passes were already cached, the pass list — and the
+  // "your location" it was calculated for — silently kept showing results
+  // for the *old* location until you switched to a different satellite.
+  // That's what made it look like different Quick Actions / satellites
+  // were using different remembered locations, when really one card was
+  // just stuck on stale data.
   useEffect(() => {
     setPasses(null);
-  }, [entry.id]);
+  }, [entry.id, location?.lat, location?.lon]);
 
   useEffect(() => {
     if (tab !== "passes" || !location || passes) return;
