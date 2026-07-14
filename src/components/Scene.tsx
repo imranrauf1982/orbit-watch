@@ -265,7 +265,21 @@ export default function Scene({
         ref={controlsRef}
         enabled={!flyMode}
         enablePan={false}
-        minDistance={flyMode ? 0.3 : 3.2}
+        // EARTH_RADIUS (2.4 scene units) maps to the real 6,371 km Earth
+        // radius — see lib/orbit.ts's geodeticToVector3, scale =
+        // EARTH_RADIUS / 6371. So minDistance isn't itself a km value; it's
+        // camera distance from the globe's *center* in scene units.
+        //   2.75 units → (2.75 / 2.4) * 6371 ≈ 7,300 km from center
+        //              → roughly 930 km altitude above the surface —
+        //                close enough to feel dramatic next to LEO
+        //                satellites (ISS ~400 km, most Earth-science sats
+        //                ~700 km) while staying safely outside the cloud
+        //                shell (2.4 * 1.012) and atmosphere glow shell
+        //                (2.4 * 1.045) so neither renders oddly from
+        //                inside. The previous 3.2 capped altitude at
+        //                ~2,124 km — farther out than most of the
+        //                satellites being tracked.
+        minDistance={flyMode ? 0.3 : 2.75}
         maxDistance={flyMode ? 20 : 14}
         rotateSpeed={0.5}
         zoomSpeed={0.7}
