@@ -17,6 +17,12 @@ type Props = {
 
 const DURATION_SEC = 0.9;
 
+// The globe's normal, default viewing position — same values the camera is
+// set to once on mount below. Exported so other camera controllers (namely
+// FlyCam, on exiting "Fly With Satellite") can return to this exact same
+// default rather than duplicating the literal or guessing at it.
+export const DEFAULT_CAMERA_POSITION = new THREE.Vector3(0, 2, 7);
+
 /**
  * When the selected satellite changes, smoothly rotates the camera around
  * Earth so the satellite ends up facing the viewer, instead of leaving it
@@ -37,7 +43,7 @@ export default function CameraFocus({ selectedId, satellites, controlsRef }: Pro
   // "focus on selection" animation ran, which is why selecting a satellite
   // looked like it moved but never actually settled on facing it.
   useEffect(() => {
-    camera.position.set(0, 2, 7);
+    camera.position.copy(DEFAULT_CAMERA_POSITION);
     camera.lookAt(0, 0, 0);
     controlsRef.current?.update?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
