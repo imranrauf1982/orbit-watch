@@ -105,7 +105,7 @@ export default function SatellitePanel({
   const color = CATEGORY_COLOR[entry.category];
 
   return (
-    <div className="pointer-events-auto absolute bottom-0 left-0 right-0 sm:right-auto sm:bottom-6 sm:left-6 sm:w-96 border-t sm:border sm:rounded-xl border-panelBorder bg-panel/95 backdrop-blur-xl flex flex-col max-h-[75vh] sm:max-h-[32rem] animate-panel-in shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)]">
+    <div className="pointer-events-auto absolute bottom-0 left-0 right-0 sm:right-auto sm:bottom-6 sm:left-6 sm:w-96 border-t sm:border sm:rounded-xl border-white/5 bg-space-900/60 backdrop-blur-xl flex flex-col max-h-[75vh] sm:max-h-[32rem] animate-panel-in shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)]">
       {/* Header */}
       <div className="flex items-center justify-between p-4 pb-2">
         <div className="flex items-center gap-2 min-w-0">
@@ -145,7 +145,7 @@ export default function SatellitePanel({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-panelBorder px-4 gap-4 text-[11px] font-mono">
+      <div className="flex border-b border-white/5 px-4 gap-4 text-[11px] font-mono">
         {(
           [
             ["telemetry", "LIVE"],
@@ -158,7 +158,7 @@ export default function SatellitePanel({
             onClick={() => setTab(key)}
             className={`py-2 border-b-2 transition-all duration-300 ease-out ${
               tab === key
-                ? "border-premiumGold text-ink"
+                ? "border-signal text-ink"
                 : "border-transparent text-muted hover:text-ink"
             }`}
           >
@@ -225,7 +225,7 @@ export default function SatellitePanel({
                 </p>
                 <button
                   onClick={onRequestLocation}
-                  className="rounded-xl border border-premiumGold/50 bg-premiumGold/10 px-3 py-1.5 text-xs font-mono text-premiumGold hover:bg-premiumGold/20 transition-all duration-300 ease-out"
+                  className="rounded-xl border border-signal/40 bg-signal/10 px-3 py-1.5 text-xs font-mono text-signal hover:bg-signal/20 transition-all duration-300 ease-out"
                 >
                   {locationStatus === "requesting" ? "LOCATING…" : "USE MY LOCATION"}
                 </button>
@@ -259,7 +259,7 @@ export default function SatellitePanel({
                         <th className="px-1 pb-1.5 font-medium text-right">Vis.</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-panelBorder">
+                    <tbody className="divide-y divide-white/5">
                       {passes.slice(0, 8).map((p, i) => {
                         const brightness = estimateBrightness(entry.category, p.maxElevationDeg);
                         return (
@@ -298,7 +298,7 @@ export default function SatellitePanel({
                   </table>
                 </div>
                 <AlertSignup satelliteId={entry.id} satelliteName={entry.name} />
-                <div className="mt-3 pt-3 border-t border-panelBorder">
+                <div className="mt-3 pt-3 border-t border-white/5">
                   <p className="text-[11px] text-muted font-body mb-1">Not your location?</p>
                   <LocationSearch onPick={onManualLocation} />
                 </div>
@@ -308,7 +308,7 @@ export default function SatellitePanel({
                 <p className="text-xs text-muted font-body py-4 text-center">
                   No passes over the horizon in the next few days from your location.
                 </p>
-                <div className="pt-1 border-t border-panelBorder">
+                <div className="pt-1 border-t border-white/5">
                   <p className="text-[11px] text-muted font-body mb-1 mt-2">Try another location:</p>
                   <LocationSearch onPick={onManualLocation} />
                 </div>
