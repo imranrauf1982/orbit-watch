@@ -41,6 +41,7 @@ type Props = {
   flyMode: boolean;
   onToggleFlyMode: (next: boolean) => void;
   onShowLocateLine: (id: number) => void;
+  onHideLocateLine: () => void;
 };
 
 type ModalKind = "where-am-i" | "next-pass" | "whats-above" | "favorites" | null;
@@ -158,6 +159,7 @@ export default function QuickActions({
   flyMode,
   onToggleFlyMode,
   onShowLocateLine,
+  onHideLocateLine,
 }: Props) {
   const [activeModal, setActiveModal] = useState<ModalKind>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
@@ -223,7 +225,6 @@ export default function QuickActions({
           setPendingAction("where-am-i");
           return;
         }
-        onShowLocateLine(selectedId);
         setActiveModal("where-am-i");
         break;
       case "fly-with-satellite":
@@ -260,7 +261,6 @@ export default function QuickActions({
   const handlePickForPending = (id: number) => {
     onSelect(id);
     if (pendingAction === "where-am-i") {
-      onShowLocateLine(id);
       setActiveModal("where-am-i");
     } else if (pendingAction === "fly") {
       onToggleFlyMode(true);
@@ -336,12 +336,15 @@ export default function QuickActions({
       {/* --- Where Am I? --- */}
       {activeModal === "where-am-i" && (
         <WhereAmIModal
+          satelliteId={selectedId}
           satelliteName={selectedName}
           selectedSat={selectedSat}
           location={location}
           locationStatus={locationStatus}
           onRequestLocation={onRequestLocation}
           onManualLocation={onManualLocation}
+          onShowLocateLine={onShowLocateLine}
+          onHideLocateLine={onHideLocateLine}
           onClose={() => setActiveModal(null)}
         />
       )}
@@ -369,6 +372,15 @@ export default function QuickActions({
           onRequestLocation={onRequestLocation}
           onManualLocation={onManualLocation}
           onHighlight={(id) => onSelect(id)}
+          onShowLocateLine={onShowLocateLine}
+          onHideLocateLine={onHideLocateLine}
+          onCheckNextPass={() => {
+            if (selectedId === null) {
+              setPendingAction("next-pass");
+            } else {
+              setActiveModal("next-pass");
+            }
+          }}
           onClose={() => setActiveModal(null)}
         />
       )}
@@ -557,22 +569,40 @@ function SatellitePickerModal({
 /* ------------------------------------------------------------------ */
 
 function WhereAmIModal({
+  satelliteId,
   satelliteName,
   selectedSat,
   location,
   locationStatus,
   onRequestLocation,
   onManualLocation,
+  onShowLocateLine,
+  onHideLocateLine,
   onClose,
 }: {
+  satelliteId: number | null;
   satelliteName: string | null;
   selectedSat: TleResult | null;
   location: ObserverLocation | null;
   locationStatus: LocationStatus;
   onRequestLocation: () => void;
   onManualLocation: (lat: number, lon: number) => void;
+  onShowLocateLine: (id: number) => void;
+  onHideLocateLine: () => void;
   onClose: () => void;
 }) {
+  // Owns the observer-to-satellite line on the globe for exactly as long as
+  // this card is open: shown as soon as there's a satellite to draw it to,
+  // and explicitly hidden on close (or if the satellite changes) — rather
+  // than the old fixed 9-second timer, which cleared the line whether or
+  // not the card — and the person still looking at it — was still open.
+  useEffect(() => {
+    if (satelliteId === null) return;
+    onShowLocateLine(satelliteId);
+    return () => onHideLocateLine();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [satelliteId]);
+
   const satrec = useMemo(() => {
     if (!selectedSat) return null;
     try {
@@ -632,8 +662,8 @@ function WhereAmIModal({
       ) : (
         <div>
           <p className="text-[11px] text-muted font-body mb-3">
-            The globe has centered on the line between your location and this satellite (the line
-            fades after a few seconds — the marker on the globe stays).
+            The globe has centered on the line between your location and this satellite — it
+            stays visible for as long as this card is open.
           </p>
           <dl className="grid grid-cols-2 gap-y-2 gap-x-3 font-mono text-xs">
             <dt className="text-muted">DISTANCE TO YOU</dt>
@@ -842,6 +872,9 @@ function WhatsAboveModal({
   onRequestLocation,
   onManualLocation,
   onHighlight,
+  onShowLocateLine,
+  onHideLocateLine,
+  onCheckNextPass,
   onClose,
 }: {
   satellites: TleResult[];
@@ -850,6 +883,9 @@ function WhatsAboveModal({
   onRequestLocation: () => void;
   onManualLocation: (lat: number, lon: number) => void;
   onHighlight: (id: number) => void;
+  onShowLocateLine: (id: number) => void;
+  onHideLocateLine: () => void;
+  onCheckNextPass: () => void;
   onClose: () => void;
 }) {
   const [result, setResult] = useState<OverheadResult | null | undefined>(undefined);
@@ -875,6 +911,21 @@ function WhatsAboveModal({
     };
   }, [satellites, location]);
 
+  // Draws the same observer-to-object line "Where Am I?" uses, kept in
+  // sync with whichever satellite is currently the highest overhead — and
+  // switches automatically if that changes while the card stays open (the
+  // live re-scan above can hand back a different object). Cleared on close
+  // or whenever there's nothing overhead to point at.
+  useEffect(() => {
+    if (!result) {
+      onHideLocateLine();
+      return;
+    }
+    onShowLocateLine(result.id);
+    return () => onHideLocateLine();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result?.id]);
+
   return (
     <ActionCard title="WHAT'S ABOVE ME?" onClose={onClose}>
       {!location ? (
@@ -888,9 +939,22 @@ function WhatsAboveModal({
           Scanning the sky above you…
         </p>
       ) : result === null ? (
-        <p className="text-xs text-muted font-body py-4 text-center">
-          Nothing currently tracked is above the horizon from your location.
-        </p>
+        <div className="py-2 text-center space-y-3">
+          <p className="text-xs text-ink font-body">
+            Nothing tracked is above your horizon right now.
+          </p>
+          <p className="text-[11px] text-muted font-body">
+            This app only tracks a curated set of satellites and stations, not the full sky, so
+            gaps like this are expected — try again in a few minutes as things rise and set, or
+            get notified the moment something specific will be overhead.
+          </p>
+          <button
+            onClick={onCheckNextPass}
+            className="w-full rounded-md border border-warn/60 bg-warn/10 px-3 py-1.5 text-xs font-mono text-warn hover:bg-warn/20 transition-colors"
+          >
+            CHECK NEXT PASS ALERT INSTEAD
+          </button>
+        </div>
       ) : (
         <div className="space-y-3">
           <dl className="grid grid-cols-2 gap-y-2 gap-x-3 font-mono text-xs">
@@ -912,7 +976,9 @@ function WhatsAboveModal({
             <dt className="text-muted">VELOCITY</dt>
             <dd className="tabular text-ink text-right">{fmt(result.velocityKmS, 2)} km/s</dd>
           </dl>
-          <p className="text-[10px] text-muted font-mono">Updating live</p>
+          <p className="text-[10px] text-muted font-mono">
+            Updating live · line to your location stays until you close this card
+          </p>
           <button
             onClick={() => onHighlight(result.id)}
             className="w-full rounded-md border border-orbit/60 bg-orbit/10 px-3 py-1.5 text-xs font-mono text-orbit hover:bg-orbit/20 transition-colors"
