@@ -53,14 +53,23 @@ export const CATEGORY_COLOR: Record<CatalogEntry["category"], string> = {
  * Fallback photo slug for any satellite that isn't in the curated 16 (i.e.
  * anything selected from the mass point cloud or search). We obviously
  * can't have a unique photo per satellite for a 14,000-object catalog, but
- * a real, category-appropriate photo still beats the cartoon fallback —
- * these three cover "looks like a station," "looks like a Starlink-style
- * flat-panel satellite," and "looks like a generic science/weather bus."
+ * a real, category-appropriate photo still beats the cartoon fallback.
+ *
+ * These used to point at "generic-station"/"generic-constellation"/
+ * "generic-satellite" — files that were never actually added to
+ * /public/satellites/. Every satellite outside the curated 16 (e.g.
+ * OneWeb, random Starlinks selected from search) silently 404'd on that
+ * nonexistent file and fell back to the cartoon procedural model. Pointing
+ * these at photos that actually ship in that folder fixes it — an
+ * ISS-style photo for stations, a Starlink-style flat-panel photo for
+ * constellation objects, and a generic science-bus photo (Terra) for
+ * everything else is a closer visual match than the cartoon fallback, even
+ * when it isn't the exact satellite.
  */
 export function genericImageSlug(category: CatalogEntry["category"]): string {
-  if (category === "station") return "generic-station";
-  if (category === "constellation") return "generic-constellation";
-  return "generic-satellite";
+  if (category === "station") return "iss";
+  if (category === "constellation") return "starlink";
+  return "terra";
 }
 
 // A fast lookup Set of the featured/curated NORAD IDs — used everywhere we
