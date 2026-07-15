@@ -11,7 +11,7 @@ export default function AboutModal({ onClose }: { onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display font-bold text-ink text-sm">ABOUT ORBIT WATCH</h2>
+          <h2 className="font-display font-bold text-ink text-sm">ABOUT ORBIT MAP</h2>
           <button
             onClick={onClose}
             className="text-muted hover:text-ink text-[11px] font-mono"
@@ -23,7 +23,7 @@ export default function AboutModal({ onClose }: { onClose: () => void }) {
 
         <div className="space-y-4 text-xs font-body text-muted leading-relaxed">
           <p>
-            Orbit Watch renders live satellite positions in 3D by propagating real orbital
+            OrbitMap renders live satellite positions in 3D by propagating real orbital
             element sets (TLEs) with SGP4 — the same model used by mission operators — right
             in your browser.
           </p>
