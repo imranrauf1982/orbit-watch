@@ -27,7 +27,7 @@ const SITE_DESCRIPTION =
   "Track the ISS, Hubble, Tiangong, and more in a live 3D orbital map. Real-time positions from public TLE data, plus visible-pass predictions for your exact location — free, no signup.";
 
 export const metadata: Metadata = {
-  title: "Orbit Watch — Live ISS & Satellite Tracker | Real-Time 3D Orbital Map",
+  title: "OrbitMap — Live ISS & Satellite Tracker | Real-Time 3D Orbital Map",
   description: SITE_DESCRIPTION,
   keywords: [
     "ISS tracker",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     "orbital map",
     "satellite visibility",
   ],
-  metadataBase: new URL("https://example.com"),
+  metadataBase: new URL("https://www.orbitmap.space"),
   manifest: "/site.webmanifest",
   icons: {
     icon: [
@@ -52,17 +52,18 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Orbit Watch",
+    title: "OrbitMap",
   },
   openGraph: {
-    title: "Orbit Watch — Live ISS & Satellite Tracker",
+    title: "OrbitMap — Live ISS & Satellite Tracker",
     description: SITE_DESCRIPTION,
     type: "website",
-    siteName: "Orbit Watch",
+    siteName: "OrbitMap",
+    url: "https://www.orbitmap.space",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Orbit Watch — Live ISS & Satellite Tracker",
+    title: "OrbitMap — Live ISS & Satellite Tracker",
     description: SITE_DESCRIPTION,
   },
 };
