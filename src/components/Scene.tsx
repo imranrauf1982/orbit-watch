@@ -99,11 +99,25 @@ function LocateFocus({
     // along this same ray no matter how the camera was aimed — which is
     // exactly what made "What's Above Me?" look like the line pointed at
     // nothing, only "finding" the object if the person happened to zoom out
-    // manually. Now we zoom out just enough to fit the satellite (with a
-    // little margin), clamped to the same max zoom OrbitControls allows —
+    // manually.
+    //
+    // A *fixed* margin above the satellite's own distance (not a
+    // proportional one) is what makes it read as "close/overhead" rather
+    // than "small and far away" — a proportional margin grows right along
+    // with altitude, so a GEO satellite would push the camera (and
+    // therefore everything else) proportionally farther out too. Keeping
+    // the camera-to-satellite gap fixed and small means the satellite stays
+    // large/prominent in frame no matter its real altitude, while Earth and
+    // the location line remain visible behind it — clamped to the same max
+    // zoom OrbitControls allows, and never zoomed *in* past whatever
+    // distance the person already had.
     // and never zoom *in* past whatever distance the person already had.
     const currentDistance = camera.position.length();
-    const distance = Math.min(Math.max(currentDistance, satRadius * 1.15), MAX_CAMERA_DISTANCE);
+    const CLOSE_UP_MARGIN = 1.3; // scene units of "breathing room" past the satellite
+    const distance = Math.min(
+      Math.max(currentDistance, satRadius + CLOSE_UP_MARGIN),
+      MAX_CAMERA_DISTANCE
+    );
 
     anim.current = {
       from: camera.position.clone(),
@@ -173,14 +187,19 @@ export default function Scene({
     setDebug(new URLSearchParams(window.location.search).get("debug") === "1");
   }, []);
 
-  // Detailed procedural models: the curated catalog, plus whatever's
-  // currently selected (so a mass-cloud pick "upgrades" to a real model).
+  // Detailed procedural models: the curated catalog, whatever's currently
+  // selected, and whatever the "Where Am I?"/"What's Above Me?" line is
+  // currently pointing at. That last one matters because those cards find
+  // satellites from the *entire* tracked set, not just the curated 16 —
+  // without this, the located object would only ever get a tiny point in
+  // the mass cloud (or nothing, if dots were hidden), leaving the line
+  // pointing at what looked like empty space.
   const detailed = useMemo(
     () =>
       satellites.filter(
-        (s) => FEATURED_IDS.has(s.id) || s.id === selectedId
+        (s) => FEATURED_IDS.has(s.id) || s.id === selectedId || s.id === locateLine?.id
       ),
-    [satellites, selectedId]
+    [satellites, selectedId, locateLine?.id]
   );
 
   // Everything else renders as an instanced point cloud (Phase 2).
@@ -228,7 +247,7 @@ export default function Scene({
                 entry={entry}
                 line1={sat.line1}
                 line2={sat.line2}
-                isSelected={selectedId === sat.id}
+                isSelected={selectedId === sat.id || locateLine?.id === sat.id}
                 onSelect={onSelect}
                 showOrbitPath={showOrbitPaths && (selectedId === sat.id || FEATURED_IDS.has(sat.id))}
                 flyMode={flyMode}
