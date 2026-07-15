@@ -42,7 +42,7 @@ function parseBulkTle(text: string): TleResult[] {
 async function fetchBulkOnce(useCache: boolean): Promise<TleResult[]> {
   const res = await fetch(BULK_URL, {
     // A real UA can't hurt against hosts that reject default/blank ones.
-    headers: { "User-Agent": "orbit-watch (contact: support@orbitwatch.app)" },
+    headers: { "User-Agent": "orbitmap (contact: support@orbitmap.space)" },
     ...(useCache ? { next: { revalidate: 3600 } } : { cache: "no-store" as const }),
   });
   if (!res.ok) {
