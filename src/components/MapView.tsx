@@ -44,10 +44,22 @@ function splitTrack(points: Array<[number, number]>): Array<Array<[number, numbe
   return segments;
 }
 
-function Recenter({ lat, lon, trigger }: { lat: number; lon: number; trigger: number }) {
+function Recenter({
+  lat,
+  lon,
+  trigger,
+}: {
+  lat: number | null;
+  lon: number | null;
+  trigger: number;
+}) {
   const map = useMap();
   const first = useRef(true);
   useEffect(() => {
+    // Nothing selected (yet) — don't touch the map, and don't consume the
+    // "first" flag, so the *next* real selection still gets treated as the
+    // first centering rather than a follow-up flyTo.
+    if (lat === null || lon === null) return;
     if (first.current) {
       map.setView([lat, lon], 2);
       first.current = false;
@@ -177,9 +189,11 @@ export default function MapView({ satellites, selectedId, onSelect, location, fi
           maxZoom={19}
         />
 
-        {selectedPos && (
-          <Recenter lat={selectedPos.lat} lon={selectedPos.lon} trigger={selectedId ?? 0} />
-        )}
+        <Recenter
+          lat={selectedPos ? selectedPos.lat : null}
+          lon={selectedPos ? selectedPos.lon : null}
+          trigger={selectedId ?? 0}
+        />
 
         {groundTrack.map((segment, i) => (
           <Polyline
