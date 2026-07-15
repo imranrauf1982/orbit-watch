@@ -44,6 +44,11 @@ function splitTrack(points: Array<[number, number]>): Array<Array<[number, numbe
   return segments;
 }
 
+// Level a satellite-spotting app actually wants when it snaps you to a
+// point: close enough to read city/country context, not a whole-continent
+// smear. flyTo() still respects a tighter zoom the user set manually.
+const FOCUS_ZOOM = 7;
+
 function Recenter({
   lat,
   lon,
@@ -61,11 +66,11 @@ function Recenter({
     // first centering rather than a follow-up flyTo.
     if (lat === null || lon === null) return;
     if (first.current) {
-      map.setView([lat, lon], 2);
+      map.setView([lat, lon], FOCUS_ZOOM);
       first.current = false;
       return;
     }
-    map.flyTo([lat, lon], Math.max(map.getZoom(), 2), { duration: 0.8 });
+    map.flyTo([lat, lon], Math.max(map.getZoom(), FOCUS_ZOOM), { duration: 0.8 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trigger]);
   return null;
