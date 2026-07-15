@@ -65,7 +65,7 @@ export default function Footer({ onAbout, onSupport, raised = false }: Props) {
       </button>
       <span className="text-panelBorder">·</span>
       <a
-        href="mailto:hello@orbitwatch.app?subject=Orbit%20Watch%20feedback"
+        href="mailto:hello@orbitmap.space?subject=OrbitMap%20feedback"
         className="hover:text-ink transition-all duration-300 ease-out"
       >
         Feedback
