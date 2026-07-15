@@ -10,11 +10,14 @@ import {
   FEATURED_IDS,
   bulkObjectGroup,
   bulkObjectColor,
+  genericImageSlug,
   type FilterGroup,
+  type CatalogEntry,
 } from "@/lib/satellite-catalog";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { ObserverLocation, LocationStatus } from "@/lib/use-location";
 import LocationSearch from "./LocationSearch";
+import SkyRealisticView from "./SkyRealisticView";
 
 type Props = {
   satellites: TleResult[];
@@ -55,6 +58,8 @@ type PlottedSatellite = {
   azimuthDeg: number;
   elevationDeg: number;
   featured: boolean;
+  category: CatalogEntry["category"] | null;
+  imageSlug: string;
 };
 
 export default function SkyDomeView({
@@ -123,6 +128,9 @@ export default function SkyDomeView({
       const look = getLookAngles(rec, location.lat, location.lon, date);
       if (!look || look.elevationDeg <= 0) continue;
       const entry = SATELLITE_CATALOG.find((c) => c.id === sat.id);
+      const group = bulkObjectGroup(sat.name, sat.id);
+      const fallbackCategory: CatalogEntry["category"] =
+        group === "station" ? "station" : group === "starlink" ? "constellation" : "science";
       results.push({
         id: sat.id,
         name: entry?.name ?? sat.name,
@@ -130,18 +138,29 @@ export default function SkyDomeView({
         azimuthDeg: look.azimuthDeg,
         elevationDeg: look.elevationDeg,
         featured: entry !== undefined,
+        category: entry?.category ?? null,
+        imageSlug: entry?.imageSlug ?? genericImageSlug(fallbackCategory),
       });
     }
     return results;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [candidateSatellites, satrecs, location, now]);
 
+  const [realisticId, setRealisticId] = useState<number | null>(null);
+
   const handlePick = (sat: PlottedSatellite) => {
     const rec = satrecs.get(sat.id);
     if (!rec) return;
     const state = propagate(rec, new Date());
     onSelect(sat.id, state);
+    setRealisticId(sat.id);
   };
+
+  const realisticTarget = useMemo(
+    () => plotted.find((p) => p.id === realisticId) ?? null,
+    [plotted, realisticId]
+  );
+  const realisticSatrec = realisticId !== null ? satrecs.get(realisticId) : undefined;
 
   if (!location) {
     return (
@@ -275,6 +294,19 @@ export default function SkyDomeView({
           );
         })}
       </svg>
+
+      {realisticTarget && realisticSatrec && location && (
+        <SkyRealisticView
+          satId={realisticTarget.id}
+          satName={realisticTarget.name}
+          category={realisticTarget.category}
+          imageSlug={realisticTarget.imageSlug}
+          color={realisticTarget.color}
+          satrec={realisticSatrec}
+          location={location}
+          onClose={() => setRealisticId(null)}
+        />
+      )}
     </div>
   );
 }
