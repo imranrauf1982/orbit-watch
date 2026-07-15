@@ -105,7 +105,7 @@ function ZoomButtons() {
   const btnClass =
     "pointer-events-auto h-8 w-8 flex items-center justify-center rounded-lg border border-white/10 bg-space-900/80 backdrop-blur-md text-ink font-mono text-base leading-none hover:bg-space-800/90 transition-colors";
   return (
-    <div className="absolute top-64 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+    <div className="absolute top-64 left-1/2 -translate-x-1/2 z-[1000] flex gap-2">
       <button onClick={() => map.zoomIn()} className={btnClass} aria-label="Zoom in">
         +
       </button>
