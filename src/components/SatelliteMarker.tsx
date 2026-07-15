@@ -25,13 +25,16 @@ type Props = {
   onSelect: (id: number, state: LiveState | null) => void;
   showOrbitPath?: boolean;
   // While riding along in "Fly With Satellite", the camera sits much closer
-  // to the satellite than in the normal orbit view. drei's <Html
-  // distanceFactor> scales its element up the closer the camera gets — at
-  // the old, much tighter chase distance this blew the floating name/stats
-  // tag up to an enormous, clipped-off-screen size (the "very zoomed, can't
-  // show full" bug). The chase camera has since been pulled back, but this
-  // tag is also redundant during fly mode (the exit-fly-mode HUD already
-  // shows what's selected), so it's suppressed here as a second safeguard.
+  // to the satellite than in the normal orbit view — and the same is now
+  // true any time "Where Am I?"/"What's Above Me?" or a direct selection
+  // pulls the camera in close to a distant (MEO/GEO) object. drei's <Html
+  // distanceFactor> scales its element inversely with camera distance
+  // (closer = bigger, simulating a real 3D object), which blew this tag up
+  // to a huge, off-screen-cropped size in exactly those close-up cases —
+  // removed below so the label always renders at a fixed, constant
+  // on-screen size regardless of zoom. This tag is also still redundant
+  // during fly mode specifically (the exit-fly-mode HUD already shows
+  // what's selected), so it stays suppressed there as belt-and-suspenders.
   flyMode?: boolean;
 };
 
@@ -344,7 +347,7 @@ export default function SatelliteMarker({
             to the side (not centered on top of it) so the model itself
             stays visible instead of being covered by its own label. */}
         {(isSelected || isHighlighted) && label && !flyMode && (
-          <Html position={[0, 0.06, 0]} distanceFactor={6} zIndexRange={[10, 0]}>
+          <Html position={[0, 0.06, 0]} zIndexRange={[10, 0]}>
             <div
               className="pointer-events-none whitespace-nowrap rounded-md border border-panelBorder bg-panel/90 px-1.5 py-0.5 text-center font-mono backdrop-blur"
               style={{
