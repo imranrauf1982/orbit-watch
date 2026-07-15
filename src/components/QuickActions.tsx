@@ -861,7 +861,7 @@ function NextPassModal({
           {permission && (
             <p className="text-[10px] text-muted font-mono">
               {permission === "granted"
-                ? "You'll get a system notification when the pass starts, as long as Orbit Watch stays open in a browser tab."
+                ? "You'll get a system notification when the pass starts, as long as OrbitMap stays open in a browser tab."
                 : permission === "unsupported"
                 ? "Your browser doesn't support notifications — the alert is saved, but you'll need to check back here manually."
                 : "Notifications are blocked — the alert is saved locally, but you won't get a system popup. Enable notifications for this site to change that."}
