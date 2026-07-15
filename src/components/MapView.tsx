@@ -15,6 +15,7 @@ import {
 } from "@/lib/satellite-catalog";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { ObserverLocation } from "@/lib/use-location";
+import { reverseGeocode } from "@/lib/geocode";
 
 type Props = {
   satellites: TleResult[];
@@ -76,8 +77,31 @@ function Recenter({
   return null;
 }
 
+// Default whole-world view, used both for the initial MapContainer state
+// and for the new "Back" button that returns to it.
+const WORLD_CENTER: [number, number] = [20, 0];
+const WORLD_ZOOM = 2;
+
+function ResetView({ trigger }: { trigger: number }) {
+  const map = useMap();
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (!mounted.current) {
+      // Skip on initial mount — trigger starts at 0 and shouldn't fly
+      // anywhere before the person has actually pressed Back.
+      mounted.current = true;
+      return;
+    }
+    map.flyTo(WORLD_CENTER, WORLD_ZOOM, { duration: 0.8 });
+  }, [trigger]);
+  return null;
+}
+
 export default function MapView({ satellites, selectedId, onSelect, location, filter, showDots }: Props) {
   const [tick, setTick] = useState(0);
+  const [resetTrigger, setResetTrigger] = useState(0);
+  const [placeLabel, setPlaceLabel] = useState<string | null>(null);
+  const [placeLoading, setPlaceLoading] = useState(false);
 
   // Mass sets update less often than the 3D view's worker cadence would
   // need in a browser main-thread loop — 2s keeps thousands of Leaflet
@@ -153,6 +177,31 @@ export default function MapView({ satellites, selectedId, onSelect, location, fi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positions, selectedId]);
 
+  // Nearest city/country label for the selected object's current subpoint.
+  // Runs once per selection change, not on every 2s position tick — a
+  // fresh lookup every tick would hammer Nominatim's free API for a label
+  // that's only ever off by a few km between ticks anyway.
+  useEffect(() => {
+    if (selectedId === null) {
+      setPlaceLabel(null);
+      setPlaceLoading(false);
+      return;
+    }
+    const pos = positions.get(selectedId);
+    if (!pos) return;
+    let cancelled = false;
+    setPlaceLoading(true);
+    reverseGeocode(pos.lat, pos.lon).then((label) => {
+      if (cancelled) return;
+      setPlaceLabel(label ?? "Over open ocean / no nearby city");
+      setPlaceLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId]);
+
   const groundTrack = useMemo(() => {
     if (selectedId === null) return [];
     const rec = satrecs.get(selectedId);
@@ -173,10 +222,10 @@ export default function MapView({ satellites, selectedId, onSelect, location, fi
       : "#4FD8EB";
 
   return (
-    <div className="h-full w-full bg-void">
+    <div className="h-full w-full bg-void relative">
       <MapContainer
-        center={[20, 0]}
-        zoom={2}
+        center={WORLD_CENTER}
+        zoom={WORLD_ZOOM}
         minZoom={2}
         worldCopyJump
         zoomControl={false}
@@ -199,6 +248,7 @@ export default function MapView({ satellites, selectedId, onSelect, location, fi
           lon={selectedPos ? selectedPos.lon : null}
           trigger={selectedId ?? 0}
         />
+        <ResetView trigger={resetTrigger} />
 
         {groundTrack.map((segment, i) => (
           <Polyline
@@ -257,6 +307,19 @@ export default function MapView({ satellites, selectedId, onSelect, location, fi
           </CircleMarker>
         )}
       </MapContainer>
+
+      {selectedId !== null && (
+        <div className="absolute top-3 left-3 z-[1000] rounded-lg border border-white/10 bg-space-900/80 backdrop-blur-md px-3 py-1.5 text-xs font-mono text-ink pointer-events-none">
+          {placeLoading ? "Locating nearest city…" : placeLabel}
+        </div>
+      )}
+
+      <button
+        onClick={() => setResetTrigger((t) => t + 1)}
+        className="absolute top-3 right-3 z-[1000] rounded-lg border border-white/10 bg-space-900/80 backdrop-blur-md px-3 py-1.5 text-xs font-mono text-ink hover:bg-space-800/90 transition-colors"
+      >
+        ← Back to World View
+      </button>
     </div>
   );
 }
