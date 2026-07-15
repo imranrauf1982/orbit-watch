@@ -247,7 +247,8 @@ export default function Scene({
                 entry={entry}
                 line1={sat.line1}
                 line2={sat.line2}
-                isSelected={selectedId === sat.id || locateLine?.id === sat.id}
+                isSelected={selectedId === sat.id}
+                isHighlighted={locateLine?.id === sat.id}
                 onSelect={onSelect}
                 showOrbitPath={showOrbitPaths && (selectedId === sat.id || FEATURED_IDS.has(sat.id))}
                 flyMode={flyMode}
