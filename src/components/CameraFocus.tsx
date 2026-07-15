@@ -96,8 +96,9 @@ export default function CameraFocus({ selectedId, satellites, controlsRef }: Pro
     const direction = rotated.normalize();
 
     const currentDistance = camera.position.length();
+    const CLOSE_UP_MARGIN = 1.3; // scene units of "breathing room" past the satellite
     const distance = Math.min(
-      Math.max(currentDistance, satRadius * 1.15),
+      Math.max(currentDistance, satRadius + CLOSE_UP_MARGIN),
       MAX_CAMERA_DISTANCE
     );
 
