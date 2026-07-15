@@ -23,13 +23,30 @@ const DURATION_SEC = 0.9;
 // default rather than duplicating the literal or guessing at it.
 export const DEFAULT_CAMERA_POSITION = new THREE.Vector3(0, 2, 7);
 
+// Keep in sync with the non-fly-mode `maxDistance` on <OrbitControls> in
+// Scene.tsx. Used to clamp how far out we're willing to pull the camera to
+// fit a high-altitude satellite in frame, so we never fight OrbitControls'
+// own limit right after this animation finishes.
+const MAX_CAMERA_DISTANCE = 14;
+
 /**
  * When the selected satellite changes, smoothly rotates the camera around
  * Earth so the satellite ends up facing the viewer, instead of leaving it
  * wherever it happened to be (including the far side of the globe, out of
- * sight). Distance/zoom from Earth is preserved — only the viewing angle
- * changes. Runs once per selection change, not continuously, so the user
- * can freely rotate away afterward without being fought by the camera.
+ * sight).
+ *
+ * Zoom distance is normally preserved — only the viewing angle changes —
+ * but with one important exception: if the satellite is farther from
+ * Earth's center than the camera's current distance (true for MEO/GEO
+ * objects like GPS/Galileo/geostationary satellites once you're zoomed in
+ * reasonably close), keeping the old distance would place the satellite
+ * literally *behind* the camera along that same ray, off-frame no matter
+ * which way it's facing — this is what made the "What's Above Me" locate
+ * line appear to shoot off into nothing instead of pointing at anything
+ * visible. In that case we zoom out just enough to fit the satellite (with
+ * a little margin), clamped to the same max zoom OrbitControls allows.
+ * Runs once per selection change, not continuously, so the user can freely
+ * rotate/zoom away afterward without being fought by the camera.
  */
 export default function CameraFocus({ selectedId, satellites, controlsRef }: Props) {
   const { camera } = useThree();
@@ -71,11 +88,17 @@ export default function CameraFocus({ selectedId, satellites, controlsRef }: Pro
     if (!state) return;
 
     const [x, y, z] = geodeticToVector3(state.lat, state.lon, state.altitudeKm, EARTH_RADIUS);
-    const direction = applyEarthSpin(
-      new THREE.Vector3(x, y, z),
-      getEarthSpinAngle(simTime)
-    ).normalize();
-    const distance = camera.position.length();
+    const rotated = applyEarthSpin(new THREE.Vector3(x, y, z), getEarthSpinAngle(simTime));
+    // Distance of the satellite itself from Earth's center, in scene units
+    // — needed *before* normalizing `rotated` into a pure direction.
+    const satRadius = rotated.length();
+    const direction = rotated.normalize();
+
+    const currentDistance = camera.position.length();
+    const distance = Math.min(
+      Math.max(currentDistance, satRadius * 1.15),
+      MAX_CAMERA_DISTANCE
+    );
 
     anim.current = {
       from: camera.position.clone(),
