@@ -6,7 +6,7 @@
  * arrived. This gives it a real (if honestly-scoped) mechanism:
  *
  *   - Requests browser Notification permission when an alert is set.
- *   - While Orbit Watch is open in a tab (this one or another), a single
+ *   - While OrbitMap is open in a tab (this one or another), a single
  *     interval (started from OrbitWatchApp) checks the saved alert list
  *     once a second and fires a real Notification at/after the pass start
  *     time, then removes it so it doesn't fire twice.
