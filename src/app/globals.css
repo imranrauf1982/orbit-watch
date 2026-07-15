@@ -114,3 +114,47 @@ body {
 .leaflet-tooltip-top:before {
   border-top-color: #1c2333 !important;
 }
+
+/* Realistic Sky View — drifting clouds, twinkling stars, floating object. */
+@keyframes cloudDrift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(220vmax);
+  }
+}
+@keyframes cloudDriftReverse {
+  from {
+    transform: translateX(220vmax);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.animate-star-twinkle {
+  animation-name: starTwinkle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+@keyframes starTwinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.animate-sky-float {
+  animation: skyFloat 4.5s ease-in-out infinite;
+}
+@keyframes skyFloat {
+  0%,
+  100% {
+    margin-top: 0px;
+  }
+  50% {
+    margin-top: -6px;
+  }
+}
