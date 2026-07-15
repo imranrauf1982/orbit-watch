@@ -222,7 +222,7 @@ export default function MapView({ satellites, selectedId, onSelect, location, fi
       : "#4FD8EB";
 
   return (
-    <div className="h-full w-full bg-void relative">
+    <div className="h-full w-full bg-void relative z-0">
       <MapContainer
         center={WORLD_CENTER}
         zoom={WORLD_ZOOM}
@@ -308,18 +308,20 @@ export default function MapView({ satellites, selectedId, onSelect, location, fi
         )}
       </MapContainer>
 
-      {selectedId !== null && (
-        <div className="absolute top-3 left-3 z-[1000] rounded-lg border border-white/10 bg-space-900/80 backdrop-blur-md px-3 py-1.5 text-xs font-mono text-ink pointer-events-none">
-          {placeLoading ? "Locating nearest city…" : placeLabel}
-        </div>
-      )}
+      <div className="absolute top-52 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 pointer-events-none">
+        {selectedId !== null && (
+          <div className="pointer-events-auto rounded-lg border border-white/10 bg-space-900/80 backdrop-blur-md px-3 py-1.5 text-xs font-mono text-ink whitespace-nowrap">
+            {placeLoading ? "Locating nearest city…" : placeLabel}
+          </div>
+        )}
 
-      <button
-        onClick={() => setResetTrigger((t) => t + 1)}
-        className="absolute top-3 right-3 z-[1000] rounded-lg border border-white/10 bg-space-900/80 backdrop-blur-md px-3 py-1.5 text-xs font-mono text-ink hover:bg-space-800/90 transition-colors"
-      >
-        ← Back to World View
-      </button>
+        <button
+          onClick={() => setResetTrigger((t) => t + 1)}
+          className="pointer-events-auto rounded-lg border border-white/10 bg-space-900/80 backdrop-blur-md px-3 py-1.5 text-xs font-mono text-ink hover:bg-space-800/90 transition-colors whitespace-nowrap"
+        >
+          ← Back to World View
+        </button>
+      </div>
     </div>
   );
 }
