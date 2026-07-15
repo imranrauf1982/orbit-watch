@@ -4,7 +4,7 @@ import { useState } from "react";
 
 const STEPS = [
   {
-    title: "WELCOME TO ORBIT WATCH",
+    title: "WELCOME TO ORBIT MAP",
     body: "A live 3D map of real satellites, built from public orbital data. Drag to rotate, scroll to zoom, click any satellite to see it up close.",
   },
   {
