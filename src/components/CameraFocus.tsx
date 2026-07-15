@@ -26,8 +26,9 @@ export const DEFAULT_CAMERA_POSITION = new THREE.Vector3(0, 2, 7);
 // Keep in sync with the non-fly-mode `maxDistance` on <OrbitControls> in
 // Scene.tsx. Used to clamp how far out we're willing to pull the camera to
 // fit a high-altitude satellite in frame, so we never fight OrbitControls'
-// own limit right after this animation finishes.
-const MAX_CAMERA_DISTANCE = 14;
+// own limit right after this animation finishes. Exported so LocateFocus
+// (Scene.tsx) can share the exact same limit for the same reason.
+export const MAX_CAMERA_DISTANCE = 14;
 
 /**
  * When the selected satellite changes, smoothly rotates the camera around
