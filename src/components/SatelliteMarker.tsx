@@ -316,20 +316,13 @@ export default function SatelliteMarker({
           <SatelliteModel color={color} targetScale={modelScale} />
         )}
 
-        {isSelected && (
-          <mesh>
-            <sphereGeometry args={[0.075, 12, 12]} />
-            <meshBasicMaterial color={color} transparent opacity={0.12} />
-          </mesh>
-        )}
-
         {/* Floating info tag that follows the satellite in 3D space, offset
             to the side (not centered on top of it) so the model itself
             stays visible instead of being covered by its own label. */}
         {isSelected && label && !flyMode && (
           <Html position={[0, 0.06, 0]} distanceFactor={6} zIndexRange={[10, 0]}>
             <div
-              className="pointer-events-none whitespace-nowrap rounded-xl border border-white/5 bg-space-900/70 px-2 py-1 text-center font-mono backdrop-blur-xl"
+              className="pointer-events-none whitespace-nowrap rounded-md border border-panelBorder bg-panel/90 px-2 py-1 text-center font-mono backdrop-blur"
               style={{
                 fontSize: "10px",
                 lineHeight: 1.3,
