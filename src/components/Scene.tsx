@@ -8,7 +8,7 @@ import * as satellite from "satellite.js";
 import Earth, { EARTH_RADIUS } from "./Earth";
 import SatelliteMarker from "./SatelliteMarker";
 import SatelliteCloud from "./SatelliteCloud";
-import CameraFocus from "./CameraFocus";
+import CameraFocus, { MAX_CAMERA_DISTANCE } from "./CameraFocus";
 import FlyCam from "./FlyCam";
 import LocateLine from "./LocateLine";
 import ContinentLabels from "./ContinentLabels";
@@ -78,7 +78,11 @@ function LocateFocus({
     const spinAngle = getEarthSpinAngle(simTime);
 
     const [sx, sy, sz] = geodeticToVector3(state.lat, state.lon, state.altitudeKm, EARTH_RADIUS);
-    const satDir = applyEarthSpin(new THREE.Vector3(sx, sy, sz), spinAngle).normalize();
+    const satRotated = applyEarthSpin(new THREE.Vector3(sx, sy, sz), spinAngle);
+    // Distance of the satellite from Earth's center, in scene units —
+    // needed *before* normalizing satRotated into a pure direction.
+    const satRadius = satRotated.length();
+    const satDir = satRotated.clone().normalize();
     const [ox, oy, oz] = geodeticToVector3(location.lat, location.lon, 0, EARTH_RADIUS);
     const obsDir = applyEarthSpin(new THREE.Vector3(ox, oy, oz), spinAngle).normalize();
 
@@ -86,7 +90,20 @@ function LocateFocus({
     // and the satellite land in view together rather than one going
     // off-screen behind the globe.
     const midDir = satDir.add(obsDir).normalize();
-    const distance = camera.position.length();
+
+    // This used to only ever preserve whatever distance the camera already
+    // happened to be at — fine when the satellite is near Earth (LEO), but
+    // for anything at MEO/GEO altitude (GPS, Galileo, GLONASS...) that
+    // distance is often *shorter* than the satellite's own distance from
+    // Earth's center. The satellite would then render behind the camera
+    // along this same ray no matter how the camera was aimed — which is
+    // exactly what made "What's Above Me?" look like the line pointed at
+    // nothing, only "finding" the object if the person happened to zoom out
+    // manually. Now we zoom out just enough to fit the satellite (with a
+    // little margin), clamped to the same max zoom OrbitControls allows —
+    // and never zoom *in* past whatever distance the person already had.
+    const currentDistance = camera.position.length();
+    const distance = Math.min(Math.max(currentDistance, satRadius * 1.15), MAX_CAMERA_DISTANCE);
 
     anim.current = {
       from: camera.position.clone(),
