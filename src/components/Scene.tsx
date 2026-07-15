@@ -12,6 +12,7 @@ import CameraFocus, { MAX_CAMERA_DISTANCE } from "./CameraFocus";
 import FlyCam from "./FlyCam";
 import LocateLine from "./LocateLine";
 import ContinentLabels from "./ContinentLabels";
+import CountryLabels from "./CountryLabels";
 import { propagate, geodeticToVector3 } from "@/lib/orbit";
 import { getSimTime } from "@/lib/sim-clock";
 import { getEarthSpinAngle, applyEarthSpin } from "@/lib/earth-spin";
@@ -229,6 +230,7 @@ export default function Scene({
         <WorldSpin>
           <Earth />
           <ContinentLabels dim={flyMode} />
+          <CountryLabels dim={flyMode} />
           {detailed.map((sat) => {
             const entry =
               SATELLITE_CATALOG.find((c) => c.id === sat.id) ?? {
