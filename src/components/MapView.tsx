@@ -97,6 +97,25 @@ function ResetView({ trigger }: { trigger: number }) {
   return null;
 }
 
+// Manual +/- zoom, placed in the same safe center gap as the other overlay
+// controls (built-in Leaflet ZoomControl defaults to a screen corner, which
+// on this full-bleed map sits underneath the side panels).
+function ZoomButtons() {
+  const map = useMap();
+  const btnClass =
+    "pointer-events-auto h-8 w-8 flex items-center justify-center rounded-lg border border-white/10 bg-space-900/80 backdrop-blur-md text-ink font-mono text-base leading-none hover:bg-space-800/90 transition-colors";
+  return (
+    <div className="absolute top-64 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+      <button onClick={() => map.zoomIn()} className={btnClass} aria-label="Zoom in">
+        +
+      </button>
+      <button onClick={() => map.zoomOut()} className={btnClass} aria-label="Zoom out">
+        −
+      </button>
+    </div>
+  );
+}
+
 export default function MapView({ satellites, selectedId, onSelect, location, filter, showDots }: Props) {
   const [tick, setTick] = useState(0);
   const [resetTrigger, setResetTrigger] = useState(0);
@@ -249,6 +268,7 @@ export default function MapView({ satellites, selectedId, onSelect, location, fi
           trigger={selectedId ?? 0}
         />
         <ResetView trigger={resetTrigger} />
+        <ZoomButtons />
 
         {groundTrack.map((segment, i) => (
           <Polyline
