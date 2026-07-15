@@ -296,7 +296,7 @@ export default function Hud({
             </span>
             <span className="text-ink">ORBIT</span>{" "}
             <span className="text-orbit" style={{ textShadow: "0 0 22px rgba(79,216,235,0.45)" }}>
-              WATCH
+              MAP
             </span>
           </h1>
           <p className="mt-0.5 text-xs sm:text-sm text-muted font-body">
@@ -391,8 +391,8 @@ export default function Hud({
             <button
               onClick={() => setSupportOpen(true)}
               className="rounded-xl border border-white/5 bg-space-900/60 h-8 px-2.5 flex items-center justify-center gap-1 text-[11px] font-mono text-signal hover:text-ink backdrop-blur-xl transition-all duration-300 ease-out"
-              aria-label="Support Orbit Watch"
-              title="Support Orbit Watch"
+              aria-label="Support OrbitMap"
+              title="Support OrbitMap"
             >
               <span aria-hidden>♥</span>
               <span className="hidden sm:inline">SUPPORT</span>
@@ -400,7 +400,7 @@ export default function Hud({
             <button
               onClick={() => setAboutOpen(true)}
               className="rounded-xl border border-white/5 bg-space-900/60 h-8 px-2.5 flex items-center justify-center text-[11px] font-mono text-muted hover:text-ink backdrop-blur-xl transition-all duration-300 ease-out"
-              aria-label="About Orbit Watch"
+              aria-label="About OrbitMap"
               title="About & data sources"
             >
               ABOUT
