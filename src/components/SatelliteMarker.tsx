@@ -16,6 +16,12 @@ type Props = {
   line1: string;
   line2: string;
   isSelected: boolean;
+  // True when this is the object the "Where Am I?"/"What's Above Me?" line
+  // is currently pointing at, but the person hasn't actually clicked it.
+  // Gets the same visual promotion (bigger scale + floating label) as a
+  // real selection, but deliberately does NOT call onSelect — see the
+  // useFrame block below for why that distinction matters.
+  isHighlighted?: boolean;
   onSelect: (id: number, state: LiveState | null) => void;
   showOrbitPath?: boolean;
   // While riding along in "Fly With Satellite", the camera sits much closer
@@ -192,6 +198,7 @@ export default function SatelliteMarker({
   line1,
   line2,
   isSelected,
+  isHighlighted = false,
   onSelect,
   showOrbitPath = false,
   flyMode = false,
@@ -266,10 +273,27 @@ export default function SatelliteMarker({
         onSelect(entry.id, state);
         setLabel(state);
       }
+    } else if (isHighlighted) {
+      // Deliberately does NOT call onSelect. A real selection re-fires
+      // onSelect on a loop (see above) so the parent's live telemetry
+      // panel stays in sync — but doing that here too would silently make
+      // "What's Above Me?" re-select this satellite every 0.5s just from
+      // being rendered, without the person ever clicking it. That churned
+      // `selectedId`, which re-triggers CameraFocus's focus-and-lock
+      // animation (camera.lookAt + controls.update() every frame while it
+      // runs), which fights any manual drag input the whole time the card
+      // is open — this was the actual cause of "can't rotate the globe
+      // while What's Above Me is open". This branch only updates the
+      // floating label, which is all the visual promotion should do.
+      const now = clock.getElapsedTime();
+      if (now - lastTelemetryPush.current > 0.5) {
+        lastTelemetryPush.current = now;
+        setLabel(state);
+      }
     }
   });
 
-  const modelScale = isSelected ? 1.7 : hovered ? 1.35 : 1;
+  const modelScale = isSelected || isHighlighted ? 1.7 : hovered ? 1.35 : 1;
 
   return (
     <group>
@@ -319,24 +343,30 @@ export default function SatelliteMarker({
         {/* Floating info tag that follows the satellite in 3D space, offset
             to the side (not centered on top of it) so the model itself
             stays visible instead of being covered by its own label. */}
-        {isSelected && label && !flyMode && (
+        {(isSelected || isHighlighted) && label && !flyMode && (
           <Html position={[0, 0.06, 0]} distanceFactor={6} zIndexRange={[10, 0]}>
             <div
-              className="pointer-events-none whitespace-nowrap rounded-md border border-panelBorder bg-panel/90 px-2 py-1 text-center font-mono backdrop-blur"
+              className="pointer-events-none whitespace-nowrap rounded-md border border-panelBorder bg-panel/90 px-1.5 py-0.5 text-center font-mono backdrop-blur"
               style={{
-                fontSize: "10px",
-                lineHeight: 1.3,
-                transform: "translate(14px, -130%)",
+                fontSize: "9px",
+                lineHeight: 1.25,
+                transform: "translate(12px, -125%)",
                 // Bounds the box's own width so a long satellite name can't
                 // make it wider than necessary — the actual fix for the
                 // scale-runaway bug is suppressing this tag in fly mode
                 // (above) and keeping the chase camera at a sane distance.
-                maxWidth: "220px",
+                // Kept deliberately compact (vs. the original 220px/10px)
+                // so it's less likely to land fully underneath the fixed
+                // Quick Actions / satellite-list panels when the located
+                // object ends up positioned behind them on screen.
+                maxWidth: "150px",
               }}
             >
-              <div className="font-bold text-ink truncate">{entry.name}</div>
+              <div className="font-bold text-ink truncate" style={{ fontSize: "10px" }}>
+                {entry.name}
+              </div>
               <div className="text-muted">
-                {label.altitudeKm.toFixed(0)} km · {label.velocityKmS.toFixed(2)} km/s
+                {label.altitudeKm.toFixed(0)}km · {label.velocityKmS.toFixed(1)}km/s
               </div>
             </div>
           </Html>
