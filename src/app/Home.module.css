@@ -335,7 +335,7 @@
   padding: 15px 30px;
   border-radius: 999px;
   background: linear-gradient(180deg, #eaf9fc 0%, #c6ecf3 100%);
-  color: #05141a;
+  color: #05141a !important;
   font-weight: 700;
   font-size: 15px;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4) inset, 0 12px 40px -10px rgba(79, 216, 235, 0.55);
@@ -424,10 +424,50 @@
   pointer-events: none;
 }
 
+.orbitSatellite {
+  position: absolute;
+  z-index: 2;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 10px rgba(79, 216, 235, 0.25));
+  pointer-events: none;
+  animation: floatSat 6s ease-in-out infinite;
+}
+
+.orbitSatellite1 {
+  top: 6%;
+  left: 12%;
+  width: clamp(34px, 5vw, 56px);
+  animation-delay: 0s;
+}
+
+.orbitSatellite2 {
+  top: 18%;
+  right: 10%;
+  width: clamp(28px, 4.2vw, 46px);
+  animation-delay: 1.4s;
+}
+
+.orbitSatellite3 {
+  bottom: 20%;
+  left: 6%;
+  width: clamp(24px, 3.6vw, 40px);
+  animation-delay: 2.8s;
+}
+
+@keyframes floatSat {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .stars,
   .starsFar,
-  .heroKickerDot {
+  .heroKickerDot,
+  .orbitSatellite {
     animation: none !important;
   }
 }
