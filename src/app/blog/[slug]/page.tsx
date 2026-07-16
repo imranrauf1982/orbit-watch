@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { renderBlogContent, estimateReadingTime } from '@/lib/blog/render-content'
+import { renderBlogContent, estimateReadingTime } from '@/lib/render-content'
 
 export const revalidate = 0
 
