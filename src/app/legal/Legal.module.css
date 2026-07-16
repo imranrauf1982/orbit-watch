@@ -1,0 +1,235 @@
+/* ------------------------------------------------------------------ */
+/* OrbitMap — shared long-form legal document styling                  */
+/* (Privacy Policy, Terms of Service). Matches the site's dark/cyan     */
+/* space theme but prioritizes readability for dense text.              */
+/* ------------------------------------------------------------------ */
+
+.page {
+  --bg-deep: #05070c;
+  --cyan: #4fd8eb;
+  --cyan-soft: #8fe7f2;
+  --glass-bg: rgba(18, 22, 34, 0.55);
+  --glass-border: rgba(143, 231, 242, 0.16);
+  --ink: #eef2fa;
+  --muted: #9aa4bd;
+  --radius-lg: 22px;
+  --font-display: "Space Grotesk", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  position: relative;
+  min-height: 100dvh;
+  width: 100%;
+  background: radial-gradient(ellipse 120% 60% at 50% 0%, #0d1420 0%, var(--bg-deep) 55%), var(--bg-deep);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.page * {
+  box-sizing: border-box;
+}
+
+.page a {
+  color: var(--cyan-soft);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.container {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: clamp(48px, 8vw, 88px) 20px 100px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted) !important;
+  text-decoration: none !important;
+  margin-bottom: 32px;
+}
+
+.backLink:hover {
+  color: var(--cyan-soft) !important;
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cyan-soft);
+  margin-bottom: 20px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(28px, 4.6vw, 42px);
+  line-height: 1.15;
+  margin: 0 0 12px;
+}
+
+.updated {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 40px;
+}
+
+.intro {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 0 0 44px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0 0 48px;
+  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+}
+
+.toc a {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.toc a:hover {
+  color: var(--cyan-soft);
+}
+
+.section {
+  margin-bottom: 40px;
+  scroll-margin-top: 24px;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 19px;
+  color: var(--ink);
+  margin: 0 0 14px;
+}
+
+.sectionText {
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+.sectionText strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.list {
+  margin: 0 0 14px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list li {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.list li strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.calloutCard {
+  padding: 20px 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 200, 120, 0.25);
+  background: rgba(255, 200, 120, 0.06);
+  margin: 18px 0;
+}
+
+.calloutTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: #ffd79a;
+  margin: 0 0 8px;
+}
+
+.calloutText {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0;
+}
+
+.infoCard {
+  padding: 20px 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  margin: 18px 0;
+}
+
+.infoTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--cyan-soft);
+  margin: 0 0 8px;
+}
+
+.infoText {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0;
+}
+
+.contactBox {
+  margin-top: 56px;
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(180deg, rgba(24, 30, 44, 0.65), rgba(12, 15, 24, 0.65));
+  text-align: center;
+}
+
+.contactBox p {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+.contactEmail {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--cyan-soft) !important;
+}
+
+.crossLink {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
