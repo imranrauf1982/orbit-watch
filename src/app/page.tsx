@@ -273,9 +273,6 @@ export default function LandingPage() {
               Launch App
               <IconArrow />
             </Link>
-            <a href="#contact" className={styles.ctaSecondary} onClick={(e) => handleNavClick("#contact", e)}>
-              Contact Us
-            </a>
           </div>
 
           <div className={styles.orbitStage} aria-hidden>
