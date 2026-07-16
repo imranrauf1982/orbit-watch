@@ -50,7 +50,7 @@ type Props = {
   onShowOrbitPathsChange: (show: boolean) => void;
   flyMode: boolean;
   onToggleFlyMode: (next: boolean) => void;
-  onShowLocateLine: (id: number) => void;
+  onShowLocateLine: (id: number, force?: boolean) => void;
   onHideLocateLine: () => void;
 };
 
