@@ -61,7 +61,15 @@ export default function CameraFocus({ selectedId, satellites, controlsRef }: Pro
   // "focus on selection" animation ran, which is why selecting a satellite
   // looked like it moved but never actually settled on facing it.
   useEffect(() => {
-    camera.position.copy(DEFAULT_CAMERA_POSITION);
+    // Mobile default view: start zoomed OUT a bit further than desktop so
+    // the whole globe is comfortably visible right away — the person can
+    // pinch-zoom in themselves from there. Desktop keeps the original
+    // distance, untouched.
+    const isNarrow = typeof window !== "undefined" && window.innerWidth < 640;
+    const startPos = isNarrow
+      ? DEFAULT_CAMERA_POSITION.clone().multiplyScalar(1.35)
+      : DEFAULT_CAMERA_POSITION;
+    camera.position.copy(startPos);
     camera.lookAt(0, 0, 0);
     controlsRef.current?.update?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
