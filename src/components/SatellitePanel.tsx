@@ -111,17 +111,26 @@ export default function SatellitePanel({
 
   if (minimized) {
     return (
-      <div className="pointer-events-auto absolute bottom-4 left-4 right-4 sm:right-auto sm:left-6 sm:w-96 z-[2100] animate-panel-in">
+      <div className="pointer-events-auto absolute bottom-4 left-4 right-4 sm:right-auto sm:left-6 sm:w-auto z-[2100] animate-panel-in">
         <button
           onClick={() => setMinimized(false)}
-          className="flex w-full items-center justify-between gap-2 rounded-xl border border-white/5 bg-space-900/80 px-4 py-3 backdrop-blur-xl shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)]"
+          className="flex w-full items-center justify-between gap-2.5 rounded-full border border-orbit/60 bg-space-900/90 py-2.5 pl-3 pr-4 backdrop-blur-xl shadow-[0_0_28px_-4px_rgba(79,216,235,0.5),0_8px_40px_-8px_rgba(0,0,0,0.7)] transition-transform hover:scale-105 sm:w-auto"
           aria-label={`Show ${entry.name} panel`}
+          title={`${entry.name} panel is hidden — tap to bring it back`}
         >
-          <span className="flex min-w-0 items-center gap-2">
-            <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+          <span className="flex min-w-0 items-center gap-2.5">
+            {/* Pulsing "ping" beacon — the whole point is this is easy to
+                spot at a glance, not something you have to go hunting for. */}
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
+              <span
+                className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60"
+                style={{ backgroundColor: color }}
+              />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+            </span>
             <span className="truncate font-display font-bold text-sm text-ink">{entry.name}</span>
           </span>
-          <span className="shrink-0 text-[11px] font-mono text-muted">SHOW</span>
+          <span className="shrink-0 text-[10px] font-mono font-bold text-orbit">SHOW</span>
         </button>
       </div>
     );
