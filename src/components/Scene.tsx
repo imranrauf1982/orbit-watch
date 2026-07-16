@@ -213,9 +213,21 @@ export default function Scene({
     });
   }, [satellites, detailed, filter]);
 
+  // Small perf win on phones: slightly lower the device-pixel-ratio cap and
+  // background star count on narrow screens. Desktop keeps the original
+  // values untouched (dpr up to 1.75, 2500 stars).
+  const [isNarrow, setIsNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    setIsNarrow(mq.matches);
+    const onChange = () => setIsNarrow(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
   return (
     <Canvas
-      dpr={[1, 1.75]} // capped device-pixel-ratio keeps mobile GPUs happy
+      dpr={isNarrow ? [1, 1.5] : [1, 1.75]} // capped device-pixel-ratio keeps mobile GPUs happy
       gl={{ antialias: true, powerPreference: "high-performance" }}
       className="!touch-none"
     >
@@ -225,7 +237,7 @@ export default function Scene({
       <directionalLight position={[5, 3, 5]} intensity={1.1} />
 
       <Suspense fallback={null}>
-        <Stars radius={80} depth={40} count={2500} factor={2} saturation={0} fade speed={0.4} />
+        <Stars radius={80} depth={40} count={isNarrow ? 1400 : 2500} factor={2} saturation={0} fade speed={0.4} />
         <WorldSpin>
           <Earth />
           <ContinentLabels dim={flyMode} />
