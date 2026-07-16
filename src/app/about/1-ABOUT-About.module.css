@@ -1,0 +1,284 @@
+/* ------------------------------------------------------------------ */
+/* OrbitMap — About page. Same visual language as Home.module.css      */
+/* (dark space background, cyan glass cards) but built for long-form    */
+/* reading rather than a single hero screen.                            */
+/* ------------------------------------------------------------------ */
+
+.page {
+  --bg-deep: #05070c;
+  --cyan: #4fd8eb;
+  --cyan-soft: #8fe7f2;
+  --cyan-dim: rgba(79, 216, 235, 0.35);
+  --ink: #eef2fa;
+  --muted: #9aa4bd;
+  --glass-bg: rgba(18, 22, 34, 0.55);
+  --glass-border: rgba(143, 231, 242, 0.16);
+  --radius-lg: 22px;
+  --radius-md: 14px;
+  --font-display: "Space Grotesk", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: clip;
+  background: radial-gradient(ellipse 120% 60% at 50% 0%, #0d1420 0%, var(--bg-deep) 55%), var(--bg-deep);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+}
+
+.page a {
+  color: inherit;
+}
+
+.stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-repeat: repeat;
+  background-image: radial-gradient(1.6px 1.6px at 20px 30px, #fff 100%, transparent 60%),
+    radial-gradient(1.2px 1.2px at 90px 120px, #cfe3ea 100%, transparent 60%),
+    radial-gradient(1.8px 1.8px at 160px 60px, #fff 100%, transparent 60%),
+    radial-gradient(1px 1px at 210px 170px, #9fb3c8 100%, transparent 60%),
+    radial-gradient(1.4px 1.4px at 260px 40px, #fff 100%, transparent 60%);
+  background-size: 420px 240px;
+  opacity: 0.6;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: clamp(48px, 8vw, 96px) 20px 100px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 40px;
+  transition: color 0.2s ease;
+}
+
+.backLink:hover {
+  color: var(--cyan-soft);
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cyan-soft);
+  margin-bottom: 22px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.14;
+  letter-spacing: -0.01em;
+  max-width: 16ch;
+  background: linear-gradient(180deg, #ffffff 0%, #cfe9ee 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0 0 20px;
+}
+
+.lead {
+  font-size: clamp(15px, 1.6vw, 17.5px);
+  line-height: 1.65;
+  color: var(--muted);
+  max-width: 62ch;
+  margin: 0 0 56px;
+}
+
+.section {
+  margin-bottom: 52px;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 21px;
+  color: var(--ink);
+  margin: 0 0 14px;
+}
+
+.sectionText {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+.sectionText strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+@media (min-width: 680px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.card {
+  padding: 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(180deg, rgba(24, 30, 44, 0.65), rgba(12, 15, 24, 0.65));
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+
+.cardText {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0;
+}
+
+.steps {
+  counter-reset: step;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.stepNumber {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(79, 216, 235, 0.1);
+  border: 1px solid var(--glass-border);
+  color: var(--cyan-soft);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.stepBody h3 {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 4px 0 4px;
+}
+
+.stepBody p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0;
+}
+
+.noticeCard {
+  padding: 22px 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 200, 120, 0.25);
+  background: rgba(255, 200, 120, 0.06);
+}
+
+.noticeTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  color: #ffd79a;
+  margin: 0 0 8px;
+}
+
+.noticeText {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0;
+}
+
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.ctaPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 30px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #eaf9fc 0%, #c6ecf3 100%);
+  color: #05141a;
+  font-weight: 700;
+  font-size: 14.5px;
+  box-shadow: 0 12px 40px -10px rgba(79, 216, 235, 0.55);
+}
+
+.ctaSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.footNote {
+  margin-top: 60px;
+  font-size: 12px;
+  color: var(--muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 20px;
+}
+
+.footNote a {
+  color: var(--cyan-soft);
+}
