@@ -40,7 +40,7 @@ type Props = {
   onManualLocation: (lat: number, lon: number) => void;
   flyMode: boolean;
   onToggleFlyMode: (next: boolean) => void;
-  onShowLocateLine: (id: number) => void;
+  onShowLocateLine: (id: number, force?: boolean) => void;
   onHideLocateLine: () => void;
 };
 
@@ -968,7 +968,7 @@ function WhatsAboveModal({
   onRequestLocation: () => void;
   onManualLocation: (lat: number, lon: number) => void;
   onHighlight: (id: number) => void;
-  onShowLocateLine: (id: number) => void;
+  onShowLocateLine: (id: number, force?: boolean) => void;
   onHideLocateLine: () => void;
   onCheckNextPass: () => void;
   onClose: () => void;
@@ -1006,7 +1006,12 @@ function WhatsAboveModal({
       onHideLocateLine();
       return;
     }
-    onShowLocateLine(result.id);
+    // `force: true` — without it, re-showing the same satellite that was
+    // already overhead the last time this card was open would be a no-op
+    // for the camera (see handleShowLocateLine's dedupe), leaving the globe
+    // wherever the person last rotated it instead of swinging back to face
+    // what's actually above them.
+    onShowLocateLine(result.id, true);
     return () => onHideLocateLine();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result?.id]);
