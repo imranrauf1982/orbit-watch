@@ -308,9 +308,47 @@ export default function Hud({
             Live positions from real orbital element data
           </p>
         </div>
-        <div className="flex flex-nowrap items-center justify-start sm:justify-end gap-2 max-w-full overflow-x-auto no-scrollbar sm:flex-wrap sm:overflow-visible">
-          {/* 3D / Map / Sky view toggle */}
+        {/* Mobile-only: view toggle gets its own full-width row so it's
+            always fully visible (never scrolled off, unlike before where
+            SKY could end up out of view in the shared scroll strip).
+            Same buttons/handlers as the desktop copy below — just shown in
+            a different place on small screens. */}
+        <div className="flex sm:hidden w-full">
           <div className="flex rounded-xl border border-white/5 bg-space-900/60 backdrop-blur-xl overflow-hidden text-[11px] font-mono shadow-[0_4px_20px_-6px_rgba(0,0,0,0.6)]">
+            <button
+              onClick={() => onViewModeChange("3d")}
+              className={`px-3 py-1.5 transition-all duration-300 ease-out ${
+                viewMode === "3d" ? "bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]" : "text-muted hover:text-ink"
+              }`}
+              aria-pressed={viewMode === "3d"}
+            >
+              3D
+            </button>
+            <button
+              onClick={() => onViewModeChange("map")}
+              className={`px-3 py-1.5 border-l border-white/5 transition-all duration-300 ease-out ${
+                viewMode === "map" ? "bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]" : "text-muted hover:text-ink"
+              }`}
+              aria-pressed={viewMode === "map"}
+            >
+              MAP
+            </button>
+            <button
+              onClick={() => onViewModeChange("sky")}
+              className={`px-3 py-1.5 border-l border-white/5 transition-all duration-300 ease-out ${
+                viewMode === "sky" ? "bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]" : "text-muted hover:text-ink"
+              }`}
+              aria-pressed={viewMode === "sky"}
+            >
+              SKY
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-nowrap items-center justify-start sm:justify-end gap-2 max-w-full overflow-x-auto no-scrollbar sm:flex-wrap sm:overflow-visible">
+          {/* 3D / Map / Sky view toggle — desktop only here; mobile has its
+              own always-visible copy above. */}
+          <div className="hidden sm:flex rounded-xl border border-white/5 bg-space-900/60 backdrop-blur-xl overflow-hidden text-[11px] font-mono shadow-[0_4px_20px_-6px_rgba(0,0,0,0.6)]">
             <button
               onClick={() => onViewModeChange("3d")}
               className={`px-3 py-1.5 transition-all duration-300 ease-out ${
