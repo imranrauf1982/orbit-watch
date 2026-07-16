@@ -132,16 +132,6 @@ function LogoMark() {
   );
 }
 
-// Deterministic satellite field: fixed positions/rotations/delays so
-// server and client render identically (no Math.random at render time).
-const SATELLITES = [
-  { src: "/satellites/iss.png", top: "6%", left: "6%", w: 92, rot: -18, delay: "0s", dur: "8s" },
-  { src: "/satellites/hubble.png", top: "4%", left: "68%", w: 76, rot: 14, delay: "1.2s", dur: "7s" },
-  { src: "/satellites/tiangong.png", top: "58%", left: "2%", w: 84, rot: 8, delay: "0.6s", dur: "9s" },
-  { src: "/satellites/starlink.png", top: "62%", left: "80%", w: 70, rot: -10, delay: "1.8s", dur: "6.5s" },
-  { src: "/satellites/noaa-19.png", top: "22%", left: "88%", w: 64, rot: 20, delay: "0.3s", dur: "7.5s" },
-];
-
 const FEATURE_CARDS = [
   {
     id: "where-am-i",
@@ -238,7 +228,7 @@ export default function LandingPage() {
         )}
       </header>
 
-      <main>
+      <main className={styles.main}>
         <section className={styles.hero}>
           <span className={styles.heroKicker}>
             <span className={styles.heroKickerDot} />
@@ -266,24 +256,6 @@ export default function LandingPage() {
             <div className={styles.earthGlow} />
             <div className={styles.earth} />
             <div className={styles.earthRim} />
-            {SATELLITES.map((sat) => (
-              <img
-                key={sat.src}
-                src={sat.src}
-                alt=""
-                className={styles.satellite}
-                style={
-                  {
-                    top: sat.top,
-                    left: sat.left,
-                    width: sat.w,
-                    "--rot": `${sat.rot}deg`,
-                    animationDelay: sat.delay,
-                    animationDuration: sat.dur,
-                  } as React.CSSProperties
-                }
-              />
-            ))}
           </div>
         </section>
 
