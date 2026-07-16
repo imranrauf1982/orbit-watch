@@ -329,7 +329,7 @@ export default function Scene({
         //                ~2,124 km — farther out than most of the
         //                satellites being tracked.
         minDistance={flyMode ? 0.3 : 2.75}
-        maxDistance={flyMode ? 20 : 14}
+        maxDistance={flyMode ? 20 : MAX_CAMERA_DISTANCE}
         rotateSpeed={0.5}
         zoomSpeed={0.7}
       />
