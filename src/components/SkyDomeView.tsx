@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import * as satellite from "satellite.js";
 import { getLookAngles } from "@/lib/topocentric";
 import { propagate, type LiveState } from "@/lib/orbit";
@@ -18,6 +18,11 @@ import type { TleResult } from "@/lib/fetch-tle";
 import type { ObserverLocation, LocationStatus } from "@/lib/use-location";
 import LocationSearch from "./LocationSearch";
 import SkyRealisticView from "./SkyRealisticView";
+import {
+  subscribeChromeInsets,
+  getChromeInsetsSnapshot,
+  getChromeInsetsServerSnapshot,
+} from "@/lib/viewport-chrome";
 
 type Props = {
   satellites: TleResult[];
@@ -82,10 +87,10 @@ export default function SkyDomeView({
   }, []);
 
   // Drives the mobile-only padding below. Without this, the compass circle
-  // sized itself to the full screen height and its bottom half ended up
-  // hidden behind the satellite info panel docked at the bottom of the
-  // screen — not actually cropped by the SVG, just covered by opaque UI in
-  // front of it. Desktop is unaffected (panel sits elsewhere there).
+  // sized itself to the full screen height and its top/bottom ended up
+  // hidden behind the header or the satellite info panel — not actually
+  // cropped by the SVG, just covered by opaque UI in front of it. Desktop
+  // is unaffected (panel sits elsewhere there).
   useEffect(() => {
     if (typeof window === "undefined") return;
     const mq = window.matchMedia("(max-width: 639px)");
@@ -94,6 +99,19 @@ export default function SkyDomeView({
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
+
+  // Real, currently-measured header+quick-actions height (top) and
+  // satellite-panel height (bottom), kept in sync by Hud.tsx / SatellitePanel
+  // via ResizeObserver — see lib/viewport-chrome.ts.
+  const { topInset, bottomInset } = useSyncExternalStore(
+    subscribeChromeInsets,
+    getChromeInsetsSnapshot,
+    getChromeInsetsServerSnapshot
+  );
+  // Footer bar is always present even with no satellite panel open, and
+  // isn't separately measured — this small constant covers it so the
+  // circle never sits flush against the very bottom edge.
+  const FOOTER_BAR_RESERVE = 40;
 
   // Same filter-tab logic as Scene/MapView, so "Sky" respects whatever
   // group the person already has selected elsewhere in the app.
@@ -217,8 +235,10 @@ export default function SkyDomeView({
       style={
         isNarrow
           ? {
-              paddingTop: "11rem",
-              paddingBottom: selectedId !== null ? "17.5rem" : "4.5rem",
+              // +12px buffer on top of the real measured heights so the
+              // circle never sits flush against the chrome it's avoiding.
+              paddingTop: topInset > 0 ? topInset + 12 : undefined,
+              paddingBottom: bottomInset > 0 ? bottomInset + 12 : FOOTER_BAR_RESERVE,
             }
           : undefined
       }
