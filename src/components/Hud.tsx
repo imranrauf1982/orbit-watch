@@ -52,6 +52,9 @@ type Props = {
   onToggleFlyMode: (next: boolean) => void;
   onShowLocateLine: (id: number, force?: boolean) => void;
   onHideLocateLine: () => void;
+  /** Optional Quick Actions panel to open automatically on load — see
+   * OrbitWatchApp's `feature` deep link. */
+  initialFeature?: "where-am-i" | "above-me" | "next-pass" | null;
 };
 
 type ListItem = {
@@ -87,6 +90,7 @@ export default function Hud({
   onToggleFlyMode,
   onShowLocateLine,
   onHideLocateLine,
+  initialFeature = null,
 }: Props) {
   const [query, setQuery] = useState("");
   const [listOpen, setListOpen] = useState(false);
@@ -541,6 +545,7 @@ export default function Hud({
         onToggleFlyMode={onToggleFlyMode}
         onShowLocateLine={onShowLocateLine}
         onHideLocateLine={onHideLocateLine}
+        initialFeature={initialFeature}
       />
 
       <div className="flex-1" />
