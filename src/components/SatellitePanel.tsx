@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as satellite from "satellite.js";
 import { CATEGORY_COLOR, CATEGORY_LABEL, type CatalogEntry } from "@/lib/satellite-catalog";
 import type { LiveState } from "@/lib/orbit";
@@ -11,6 +11,7 @@ import type { ObserverLocation, LocationStatus } from "@/lib/use-location";
 import LocationSearch from "./LocationSearch";
 import AlertSignup from "./AlertSignup";
 import { downloadOrbitKml } from "@/lib/kml-export";
+import { setBottomInset } from "@/lib/viewport-chrome";
 
 type Tab = "telemetry" | "info" | "passes";
 
@@ -104,8 +105,30 @@ export default function SatellitePanel({
 
   const color = CATEGORY_COLOR[entry.category];
 
+  // Reports this panel's real, current height (it varies — LIVE vs INFO vs
+  // PASSES tabs, satellite name length, etc.) so the Sky view can reserve
+  // exactly that much space at the bottom instead of a guessed constant.
+  // Cleared back to 0 on unmount (panel closed) so Sky reclaims the room.
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = panelRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const h = entries[0]?.contentRect.height;
+      if (h !== undefined) setBottomInset(h);
+    });
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      setBottomInset(0);
+    };
+  }, []);
+
   return (
-    <div className="pointer-events-auto absolute bottom-0 left-0 right-0 sm:right-auto sm:bottom-6 sm:left-6 sm:w-96 border-t sm:border sm:rounded-xl border-white/5 bg-space-900/60 backdrop-blur-xl flex flex-col max-h-[75vh] sm:max-h-[32rem] animate-panel-in shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)]">
+    <div
+      ref={panelRef}
+      className="pointer-events-auto absolute bottom-0 left-0 right-0 sm:right-auto sm:bottom-6 sm:left-6 sm:w-96 border-t sm:border sm:rounded-xl border-white/5 bg-space-900/60 backdrop-blur-xl flex flex-col max-h-[75vh] sm:max-h-[32rem] animate-panel-in shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)]"
+    >
       {/* Header */}
       <div className="flex items-center justify-between p-4 pb-2">
         <div className="flex items-center gap-2 min-w-0">
