@@ -272,14 +272,13 @@ export default function QuickActions({
 
   return (
     <>
-      {/* Mobile: compact pill row — icon + short label side by side, single
-          line (~34px tall) instead of the old stacked icon-over-label
-          cards (~64px tall). Frees up real vertical space for the
-          globe/sky/map underneath. Sits in normal flow right below the
-          header. New — doesn't touch the desktop panel below, which is
-          unchanged and still positioned/styled exactly as before. */}
+      {/* Mobile: compact horizontal scroll strip, sits in normal flow right
+          below the header so it costs minimal height and leaves the rest
+          of the screen for the globe. New — doesn't touch the desktop
+          panel below, which is unchanged and still positioned/styled
+          exactly as before. */}
       <div
-        className="pointer-events-auto flex sm:hidden items-center gap-1.5 overflow-x-auto no-scrollbar px-4 pb-2"
+        className="pointer-events-auto flex sm:hidden items-center gap-2 overflow-x-auto no-scrollbar px-4 pb-2"
         aria-label="Quick actions"
       >
         {actions.map((a) => {
@@ -290,19 +289,16 @@ export default function QuickActions({
               onClick={() => handleAction(a.id)}
               aria-pressed={isActiveFly}
               title={a.hint}
-              className={`shrink-0 flex items-center gap-1.5 rounded-full border h-8 px-2.5 backdrop-blur-xl transition-all duration-300 ease-out active:scale-95 ${
+              className={`shrink-0 flex flex-col items-center justify-center gap-1 rounded-xl border px-3 py-2 min-w-[64px] backdrop-blur-xl transition-all duration-300 ease-out active:scale-95 ${
                 isActiveFly
                   ? "border-signal/60 bg-signal/[0.12] text-signal"
                   : "border-white/5 bg-space-900/60 text-muted"
               }`}
             >
-              <span
-                className={`flex h-4 w-4 items-center justify-center shrink-0 ${a.accent}`}
-                style={{ transform: "scale(0.75)" }}
-              >
+              <span className={`flex h-6 w-6 items-center justify-center ${a.accent}`}>
                 {a.icon}
               </span>
-              <span className="text-[9px] font-mono leading-none text-center text-ink/90 whitespace-nowrap">
+              <span className="text-[8.5px] font-mono leading-tight text-center text-ink/90 whitespace-nowrap">
                 {isActiveFly ? "EXIT FLY" : a.label.toUpperCase()}
               </span>
             </button>
