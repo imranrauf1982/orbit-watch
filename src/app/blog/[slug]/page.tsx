@@ -41,9 +41,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   if (!post) notFound()
 
-  // Build the extra in-post images (2nd and 3rd) purely from Supabase data.
-  // Editors just drop {{IMAGE_2}} / {{IMAGE_3}} anywhere inside `content`
-  // in Supabase, and fill image_url_2 / image_url_3 — no code changes ever needed.
+  // Build the extra in-post images (2nd and 3rd) from Supabase data.
+  // Preferred: editors drop {{IMAGE_2}} / {{IMAGE_3}} anywhere inside `content`.
+  // Fallback: if no placeholder is found in the content, the image is still
+  // inserted automatically at a sensible spot so it's never silently dropped.
   let renderedContent = post.content || '<p>No content available.</p>'
 
   const buildFigure = (url: string, alt: string) => `
@@ -52,20 +53,38 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     </figure>
   `
 
+  // Inserts figureHtml after the Nth closing </p> tag; if the content doesn't
+  // have that many paragraphs, appends it to the end instead.
+  const insertAfterParagraph = (html: string, figureHtml: string, paragraphIndex: number) => {
+    const closeTag = '</p>'
+    let count = 0
+    let searchFrom = 0
+    while (count < paragraphIndex) {
+      const idx = html.indexOf(closeTag, searchFrom)
+      if (idx === -1) {
+        // Not enough paragraphs — just append at the end.
+        return html + figureHtml
+      }
+      searchFrom = idx + closeTag.length
+      count++
+    }
+    return html.slice(0, searchFrom) + figureHtml + html.slice(searchFrom)
+  }
+
   if (post.image_url_2) {
-    renderedContent = renderedContent.replaceAll(
-      '{{IMAGE_2}}',
-      buildFigure(post.image_url_2, post.title)
-    )
+    const figure2 = buildFigure(post.image_url_2, post.title)
+    renderedContent = renderedContent.includes('{{IMAGE_2}}')
+      ? renderedContent.replaceAll('{{IMAGE_2}}', figure2)
+      : insertAfterParagraph(renderedContent, figure2, 2)
   } else {
     renderedContent = renderedContent.replaceAll('{{IMAGE_2}}', '')
   }
 
   if (post.image_url_3) {
-    renderedContent = renderedContent.replaceAll(
-      '{{IMAGE_3}}',
-      buildFigure(post.image_url_3, post.title)
-    )
+    const figure3 = buildFigure(post.image_url_3, post.title)
+    renderedContent = renderedContent.includes('{{IMAGE_3}}')
+      ? renderedContent.replaceAll('{{IMAGE_3}}', figure3)
+      : insertAfterParagraph(renderedContent, figure3, 4)
   } else {
     renderedContent = renderedContent.replaceAll('{{IMAGE_3}}', '')
   }
@@ -73,23 +92,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   return (
     <main className="min-h-screen pt-20 pb-20 px-4 bg-[#05070c]">
       <div className="max-w-3xl mx-auto">
-        {/* Title & Meta */}
+        {/* Title */}
         <div className="mb-10">
-          <div className="flex items-center gap-3 mb-5 flex-wrap">
-            <span className="bg-[#4fd8eb]/10 text-[#8fe7f2] text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
-              {post.category || 'Satellite Tracking'}
-            </span>
-            <span className="text-gray-500 text-[11px]">
-              {new Date(post.published_at).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              })}
-            </span>
-            <span className="text-gray-500 text-[11px]">
-              {post.author_name || 'OrbitMap Team'}
-            </span>
-          </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">
             {post.title}
           </h1>
@@ -124,21 +128,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           />
         </div>
 
-        {/* Disclosure — affiliate/ad links may appear inside post content */}
-        <p className="text-gray-500 text-xs mt-8 leading-relaxed">
-          Some links in this article may be affiliate links, and this page may display ads. See
-          our{' '}
-          <Link href="/terms" className="text-[#8fe7f2] underline">
-            Terms of Service
-          </Link>{' '}
-          and{' '}
-          <Link href="/privacy" className="text-[#8fe7f2] underline">
-            Privacy Policy
-          </Link>{' '}
-          for details.
-        </p>
-
-        <div className="mt-6">
+        <div className="mt-10">
           <Link href="/blog" className="text-[#8fe7f2] font-medium">
             ← Back to Blog
           </Link>
