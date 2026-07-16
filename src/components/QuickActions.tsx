@@ -272,6 +272,40 @@ export default function QuickActions({
 
   return (
     <>
+      {/* Mobile: compact horizontal scroll strip, sits in normal flow right
+          below the header so it costs minimal height and leaves the rest
+          of the screen for the globe. New — doesn't touch the desktop
+          panel below, which is unchanged and still positioned/styled
+          exactly as before. */}
+      <div
+        className="pointer-events-auto flex sm:hidden items-center gap-2 overflow-x-auto no-scrollbar px-4 pb-2"
+        aria-label="Quick actions"
+      >
+        {actions.map((a) => {
+          const isActiveFly = a.id === "fly-with-satellite" && flyMode;
+          return (
+            <button
+              key={a.id}
+              onClick={() => handleAction(a.id)}
+              aria-pressed={isActiveFly}
+              title={a.hint}
+              className={`shrink-0 flex flex-col items-center justify-center gap-1 rounded-xl border px-3 py-2 min-w-[64px] backdrop-blur-xl transition-all duration-300 ease-out active:scale-95 ${
+                isActiveFly
+                  ? "border-signal/60 bg-signal/[0.12] text-signal"
+                  : "border-white/5 bg-space-900/60 text-muted"
+              }`}
+            >
+              <span className={`flex h-6 w-6 items-center justify-center ${a.accent}`}>
+                {a.icon}
+              </span>
+              <span className="text-[8.5px] font-mono leading-tight text-center text-ink/90 whitespace-nowrap">
+                {isActiveFly ? "EXIT FLY" : a.label.toUpperCase()}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       <div
         className="hidden sm:flex pointer-events-auto absolute left-6 top-24 w-64 flex-col gap-2 rounded-lg border border-panelBorder bg-panel/80 p-3 backdrop-blur-md shadow-[0_0_30px_-12px_rgba(79,216,235,0.25)] animate-panel-in"
         aria-label="Quick actions"
