@@ -1,12 +1,359 @@
-import OrbitWatchApp from "@/components/OrbitWatchApp";
-import { fetchFeaturedTle } from "@/lib/fetch-tle";
+"use client";
 
-export const revalidate = 3600;
+import { useState } from "react";
+import Link from "next/link";
+import { Space_Grotesk } from "next/font/google";
+import styles from "./Home.module.css";
 
-export default async function Page() {
-  // Fast path: only the curated ~15-satellite set, fetched in parallel.
-  // The full multi-thousand-object catalog is loaded lazily on the client
-  // (see OrbitWatchApp) so first paint doesn't wait on it.
-  const satellites = await fetchFeaturedTle();
-  return <OrbitWatchApp initialSatellites={satellites} />;
+// Loaded only for this page — kept out of the shared root layout so it
+// never touches the tracker app's own type system. Aliased to
+// --font-display-landing and referenced solely inside Home.module.css.
+const displayFont = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display-landing",
+  display: "swap",
+});
+
+const NAV_LINKS = [
+  { label: "About", href: "/about" },
+  { label: "Home", href: "/" },
+  { label: "App", href: "/app" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contact", href: "#contact" },
+  { label: "Products", href: "/products" },
+];
+
+const CONTACT_EMAIL = "info@orbitmap.space";
+
+function IconGlobe() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" width="22" height="22" aria-hidden>
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M3.5 12h17M12 3.5c2.6 2.4 4 5.4 4 8.5s-1.4 6.1-4 8.5c-2.6-2.4-4-5.4-4-8.5s1.4-6.1 4-8.5Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+    </svg>
+  );
+}
+
+function IconSatellite() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" width="22" height="22" aria-hidden>
+      <rect
+        x="8.6"
+        y="8.6"
+        width="6.8"
+        height="6.8"
+        rx="1.2"
+        transform="rotate(45 12 12)"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <path d="M3.5 5.5l3.4 3.4M20.5 18.5l-3.4-3.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M1.8 3l3.2 3.2M19 17l3.2 3.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="19" cy="5" r="1.3" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconClock() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" width="22" height="22" aria-hidden>
+      <circle cx="12" cy="12.5" r="8.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M12 8v4.7l3.2 1.9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 2.5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconUser() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" width="18" height="18" aria-hidden>
+      <circle cx="12" cy="8.2" r="3.4" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M4.8 20c1.4-3.6 4.2-5.4 7.2-5.4s5.8 1.8 7.2 5.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconMenu() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" width="18" height="18" aria-hidden>
+      <path d="M4 6.5h16M4 12h16M4 17.5h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconClose() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" width="18" height="18" aria-hidden>
+      <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconArrow() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" width="16" height="16" aria-hidden>
+      <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function LogoMark() {
+  return (
+    <svg
+      className={styles.logoIcon}
+      viewBox="0 0 32 32"
+      width="26"
+      height="26"
+      fill="none"
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id="orbitmapLogoGrad" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#8fe7f2" />
+          <stop offset="1" stopColor="#3aa9c2" />
+        </linearGradient>
+      </defs>
+      <circle cx="16" cy="16" r="8.4" fill="url(#orbitmapLogoGrad)" />
+      <ellipse
+        cx="16"
+        cy="16"
+        rx="14.5"
+        ry="5.2"
+        transform="rotate(-22 16 16)"
+        stroke="#4fd8eb"
+        strokeWidth="1.6"
+      />
+    </svg>
+  );
+}
+
+// Deterministic satellite field: fixed positions/rotations/delays so
+// server and client render identically (no Math.random at render time).
+const SATELLITES = [
+  { src: "/satellites/iss.png", top: "6%", left: "6%", w: 92, rot: -18, delay: "0s", dur: "8s" },
+  { src: "/satellites/hubble.png", top: "4%", left: "68%", w: 76, rot: 14, delay: "1.2s", dur: "7s" },
+  { src: "/satellites/tiangong.png", top: "58%", left: "2%", w: 84, rot: 8, delay: "0.6s", dur: "9s" },
+  { src: "/satellites/starlink.png", top: "62%", left: "80%", w: 70, rot: -10, delay: "1.8s", dur: "6.5s" },
+  { src: "/satellites/noaa-19.png", top: "22%", left: "88%", w: 64, rot: 20, delay: "0.3s", dur: "7.5s" },
+];
+
+const FEATURE_CARDS = [
+  {
+    id: "where-am-i",
+    title: "Where Am I?",
+    hint: "See the live line between you and any satellite",
+    icon: <IconGlobe />,
+    feature: "where-am-i",
+  },
+  {
+    id: "above-me",
+    title: "What's Above Me?",
+    hint: "Find out what's overhead right now",
+    icon: <IconSatellite />,
+    feature: "above-me",
+  },
+  {
+    id: "next-pass",
+    title: "Next Pass",
+    hint: "Get notified before it's visible",
+    icon: <IconClock />,
+    feature: "next-pass",
+  },
+];
+
+export default function LandingPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+
+  const handleNavClick = (href: string, e: React.MouseEvent) => {
+    if (href === "#contact") {
+      e.preventDefault();
+      setMenuOpen(false);
+      setContactOpen(true);
+    } else {
+      setMenuOpen(false);
+    }
+  };
+
+  return (
+    <div className={`${styles.page} ${displayFont.variable}`}>
+      <div className={styles.starsFar} aria-hidden />
+      <div className={styles.stars} aria-hidden />
+      <div className={styles.nebula} aria-hidden />
+
+      <header className={styles.header}>
+        <Link href="/" className={styles.logo}>
+          <LogoMark />
+          <span>
+            OrbitMap
+            <span className={styles.logoSub}>WATCH</span>
+          </span>
+        </Link>
+
+        <nav className={styles.navDesktop} aria-label="Primary">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              className={`${styles.navLink} ${link.href === "/" ? styles.navLinkActive : ""}`}
+              onClick={(e) => handleNavClick(link.href, e)}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className={styles.headerRight}>
+          <Link href="/account" className={styles.profileBtn} aria-label="Account">
+            <IconUser />
+          </Link>
+          <button
+            className={styles.menuBtn}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            {menuOpen ? <IconClose /> : <IconMenu />}
+          </button>
+        </div>
+
+        {menuOpen && (
+          <nav className={styles.mobileNav} aria-label="Mobile">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className={styles.mobileNavLink}
+                onClick={(e) => handleNavClick(link.href, e)}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        )}
+      </header>
+
+      <main>
+        <section className={styles.hero}>
+          <span className={styles.heroKicker}>
+            <span className={styles.heroKickerDot} />
+            LIVE ORBITAL DATA
+          </span>
+
+          <h1 className={styles.headline}>Track Satellites &amp; ISS in Real-Time</h1>
+
+          <p className={styles.subheadline}>
+            Live 3D Orbital Map<span className={styles.subheadlineDivider}>•</span>See What&apos;s
+            Above You
+          </p>
+
+          <div className={styles.ctaRow}>
+            <Link href="/app" className={styles.ctaPrimary}>
+              Launch App
+              <IconArrow />
+            </Link>
+            <a href="#contact" className={styles.ctaSecondary} onClick={(e) => handleNavClick("#contact", e)}>
+              Contact Us
+            </a>
+          </div>
+
+          <div className={styles.orbitStage} aria-hidden>
+            <div className={styles.earthGlow} />
+            <div className={styles.earth} />
+            <div className={styles.earthRim} />
+            {SATELLITES.map((sat) => (
+              <img
+                key={sat.src}
+                src={sat.src}
+                alt=""
+                className={styles.satellite}
+                style={
+                  {
+                    top: sat.top,
+                    left: sat.left,
+                    width: sat.w,
+                    "--rot": `${sat.rot}deg`,
+                    animationDelay: sat.delay,
+                    animationDuration: sat.dur,
+                  } as React.CSSProperties
+                }
+              />
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.featuresWrap} aria-label="Quick actions">
+          <div className={styles.featuresGrid}>
+            {FEATURE_CARDS.map((card) => (
+              <Link
+                key={card.id}
+                href={`/app?feature=${card.feature}`}
+                className={styles.featureCard}
+              >
+                <span className={styles.featureIcon}>{card.icon}</span>
+                <span>
+                  <span className={styles.featureTitle}>{card.title}</span>
+                  <span className={styles.featureHint}>{card.hint}</span>
+                </span>
+                <span className={styles.featureArrow}>
+                  <IconArrow />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      <footer className={styles.footer} id="contact">
+        <div className={styles.footerLeft}>
+          <span className={styles.footerBrand}>OrbitMap Watch</span>
+          <span className={styles.footerCopy}>
+            © {new Date().getFullYear()} OrbitMap ·{" "}
+            <a href={`mailto:${CONTACT_EMAIL}`} className={styles.footerLink}>
+              {CONTACT_EMAIL}
+            </a>
+          </span>
+        </div>
+        <div className={styles.footerLinks}>
+          <Link href="/about" className={styles.footerLink}>
+            About
+          </Link>
+          <Link href="/products" className={styles.footerLink}>
+            Products
+          </Link>
+          <Link href="/blog" className={styles.footerLink}>
+            Blog
+          </Link>
+          <Link href="/app" className={styles.footerLink}>
+            Launch App
+          </Link>
+          <button className={styles.footerLink} onClick={() => setContactOpen(true)}>
+            Contact
+          </button>
+        </div>
+      </footer>
+
+      {contactOpen && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal onClick={() => setContactOpen(false)}>
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.modalTitle}>Get in touch</h2>
+            <p className={styles.modalText}>
+              Questions, feedback, or partnership ideas — we read every message.
+            </p>
+            <a href={`mailto:${CONTACT_EMAIL}`} className={styles.modalEmail}>
+              {CONTACT_EMAIL}
+            </a>
+            <button className={styles.modalClose} onClick={() => setContactOpen(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
