@@ -24,11 +24,21 @@ const DURATION_SEC = 0.9;
 export const DEFAULT_CAMERA_POSITION = new THREE.Vector3(0, 2, 7);
 
 // Keep in sync with the non-fly-mode `maxDistance` on <OrbitControls> in
-// Scene.tsx. Used to clamp how far out we're willing to pull the camera to
-// fit a high-altitude satellite in frame, so we never fight OrbitControls'
-// own limit right after this animation finishes. Exported so LocateFocus
-// (Scene.tsx) can share the exact same limit for the same reason.
-export const MAX_CAMERA_DISTANCE = 14;
+// Scene.tsx (which now imports this constant directly, so the two can't
+// drift apart). Used to clamp how far out we're willing to pull the camera
+// to fit a high-altitude satellite in frame.
+//
+// Was 14, which comfortably covers LEO/MEO but is *closer to Earth's
+// center* than a GEO satellite's own orbital radius (~42,164 km from
+// center ≈ 15.9 scene units at this app's scale). Any satellite farther
+// out than this clamp ends up placed behind the camera along the same
+// viewing ray instead of in front of it — the camera "faces" it but it's
+// off-screen no matter which way you look, which is exactly why "What's
+// Above Me" on a geostationary object (comms/weather satellites are
+// commonly GEO, so this comes up a lot) looked like it hadn't moved the
+// globe at all. 18 leaves headroom past GEO (15.9 + the usual 1.3 margin
+// ≈ 17.2) so those satellites land in frame instead of behind the camera.
+export const MAX_CAMERA_DISTANCE = 18;
 
 /**
  * When the selected satellite changes, smoothly rotates the camera around
