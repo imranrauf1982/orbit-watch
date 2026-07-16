@@ -27,6 +27,17 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Hides the scrollbar on horizontally-scrollable mobile chrome (header
+   controls, quick actions strip) while keeping it fully scrollable —
+   scoped to a class so nothing else on the page is affected. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* High-contrast mode — brighter text/borders for readability in bright
    sunlight or for low-vision users. Toggled via the CONTRAST button or "C". */
 .high-contrast {
