@@ -29,7 +29,6 @@ import {
   toggleSimPaused,
 } from "@/lib/sim-clock";
 import { useHighContrast } from "@/lib/use-high-contrast";
-import { setTopInset } from "@/lib/viewport-chrome";
 
 type Props = {
   satellites: TleResult[];
@@ -96,29 +95,12 @@ export default function Hud({
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const topChromeRef = useRef<HTMLDivElement>(null);
   const [highContrast, setHighContrast] = useHighContrast();
   // Mobile-only "more" menu — collapses CONTRAST/HELP/SUPPORT/ABOUT off the
   // header so the header stays a single compact row on small screens,
   // leaving more room for the globe. Desktop keeps showing all four inline
   // (unchanged), so this state simply doesn't apply there.
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Reports the real, current combined height of the header + quick
-  // actions block, so the Sky view can reserve exactly that much space at
-  // the top on mobile instead of a guessed constant. Re-measures whenever
-  // the browser resizes/reflows this block (rotation, font load, view
-  // toggle appearing/disappearing, etc).
-  useEffect(() => {
-    const el = topChromeRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      const h = entries[0]?.contentRect.height;
-      if (h !== undefined) setTopInset(h);
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
 
   // Playback speed (3D view). Subscribed to the module-level sim-clock store
   // so any component can read/drive it without prop drilling.
@@ -295,11 +277,7 @@ export default function Hud({
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[2000] flex flex-col">
-      {/* Header + Quick Actions — wrapped together so their combined real
-          height can be measured (see topChromeRef effect below) and
-          reported to lib/viewport-chrome, which the Sky view reads to know
-          exactly how much space to leave at the top on mobile. */}
-      <div ref={topChromeRef}>
+      {/* Header */}
       <header className="pointer-events-auto flex flex-wrap items-start justify-between gap-x-4 gap-y-3 p-4 sm:p-6">
         <div className="min-w-0">
           <h1 className="flex items-center gap-2 font-display text-xl sm:text-2xl font-bold tracking-tight">
@@ -564,7 +542,6 @@ export default function Hud({
         onShowLocateLine={onShowLocateLine}
         onHideLocateLine={onHideLocateLine}
       />
-      </div>
 
       <div className="flex-1" />
 
