@@ -43,12 +43,12 @@
   gap: 8px;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--muted) !important;
   margin-bottom: 32px;
 }
 
 .backLink:hover {
-  color: var(--cyan-soft);
+  color: var(--cyan-soft) !important;
 }
 
 .kicker {
@@ -280,7 +280,7 @@
   padding: 11px 22px;
   border-radius: 999px;
   background: linear-gradient(180deg, #eaf9fc 0%, #c6ecf3 100%);
-  color: #05141a;
+  color: #05141a !important;
   font-weight: 700;
   font-size: 13.5px;
 }
@@ -304,10 +304,10 @@
   gap: 8px;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--muted) !important;
   margin-bottom: 32px;
 }
 
 .backToBlog:hover {
-  color: var(--cyan-soft);
+  color: var(--cyan-soft) !important;
 }
