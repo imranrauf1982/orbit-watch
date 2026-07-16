@@ -19,7 +19,8 @@
     "satellite.js": "5.0.0",
     "leaflet": "1.9.4",
     "react-leaflet": "4.2.1",
-    "fuse.js": "7.0.0"
+    "fuse.js": "7.0.0",
+    "marked": "^12.0.2"
   },
   "devDependencies": {
     "typescript": "5.5.3",
