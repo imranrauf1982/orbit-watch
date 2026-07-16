@@ -512,12 +512,18 @@ function ActionCard({
       <div className="pointer-events-auto fixed left-6 top-24 z-[2100] animate-panel-in">
         <button
           onClick={() => setHidden(false)}
-          className="flex max-w-[calc(100vw-3rem)] items-center gap-2 rounded-lg border border-panelBorder bg-panel/95 px-3 py-2 text-[11px] font-mono text-muted shadow-[0_20px_60px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md hover:text-ink"
+          className="group flex max-w-[calc(100vw-3rem)] items-center gap-2.5 rounded-full border border-orbit/60 bg-panel/95 py-2.5 pl-3 pr-4 shadow-[0_0_28px_-4px_rgba(79,216,235,0.5),0_20px_45px_-15px_rgba(0,0,0,0.85)] backdrop-blur-md transition-transform hover:scale-105"
           aria-label={`Show ${title} card`}
+          title={`${title} is hidden — tap to bring it back`}
         >
-          <span aria-hidden>▸</span>
-          <span className="truncate">{title}</span>
-          <span className="shrink-0 text-ink">SHOW</span>
+          {/* Pulsing "ping" beacon — the whole point is this is easy to
+              spot at a glance, not something you have to go hunting for. */}
+          <span className="relative flex h-2.5 w-2.5 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orbit opacity-60" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-orbit" />
+          </span>
+          <span className="truncate text-[11px] font-mono text-ink">{title}</span>
+          <span className="shrink-0 text-[10px] font-mono font-bold text-orbit">SHOW</span>
         </button>
       </div>
     );
