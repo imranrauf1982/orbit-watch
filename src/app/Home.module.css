@@ -66,7 +66,6 @@
     radial-gradient(1.3px 1.3px at 380px 200px, #9fb3c8 100%, transparent 60%);
   background-size: 420px 240px;
   opacity: 0.75;
-  animation: driftStars 140s linear infinite;
 }
 
 .starsFar {
@@ -80,7 +79,6 @@
     radial-gradient(1px 1px at 120px 220px, #7d8aa3 100%, transparent 60%);
   background-size: 380px 380px;
   opacity: 0.45;
-  animation: driftStars 220s linear infinite reverse;
 }
 
 @keyframes driftStars {
@@ -370,85 +368,63 @@
 
 /* ------------------------- Orbital visual --------------------------- */
 
+/* ------------------------- Hero visual (static) ---------------------- */
+/* Previously an animated spinning globe with floating satellite images —
+   replaced with one still image. Continuously-animated background-position
+   (globe spin, star drift) forces a full repaint every frame, which is
+   what was causing the homepage to feel like it was hanging; a single
+   static image with no animation removes that cost entirely and also
+   drops 5 extra image requests, which helps Lighthouse performance too. */
+
 .orbitStage {
   position: relative;
   z-index: 1;
   width: 100%;
   max-width: 1100px;
-  margin: clamp(36px, 6vw, 60px) auto 0;
-  height: clamp(280px, 42vw, 460px);
+  margin: clamp(24px, 5vw, 48px) auto 0;
+  height: clamp(200px, 32vw, 380px);
 }
 
 .earthGlow {
   position: absolute;
   left: 50%;
-  bottom: clamp(-190px, -22vw, -120px);
+  bottom: clamp(-160px, -18vw, -100px);
   transform: translateX(-50%);
-  width: clamp(360px, 60vw, 720px);
-  height: clamp(360px, 60vw, 720px);
+  width: clamp(300px, 50vw, 600px);
+  height: clamp(300px, 50vw, 600px);
   border-radius: 50%;
   background: radial-gradient(circle at 50% 38%, rgba(79, 216, 235, 0.35), transparent 62%);
-  filter: blur(6px);
   pointer-events: none;
 }
 
 .earth {
   position: absolute;
   left: 50%;
-  bottom: clamp(-210px, -24vw, -140px);
+  bottom: clamp(-180px, -20vw, -120px);
   transform: translateX(-50%);
-  width: clamp(340px, 56vw, 660px);
-  height: clamp(340px, 56vw, 660px);
+  width: clamp(280px, 46vw, 560px);
+  height: clamp(280px, 46vw, 560px);
   border-radius: 50%;
   background-image: url("/textures/earth_day.jpg");
-  background-size: 220% 220%;
+  background-size: 175% 175%;
   background-position: 32% 30%;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset,
     0 -40px 90px -30px rgba(79, 216, 235, 0.55), 0 40px 120px -20px rgba(0, 0, 0, 0.8);
-  animation: spinEarth 90s linear infinite;
 }
 
 .earthRim {
   position: absolute;
   left: 50%;
-  bottom: clamp(-210px, -24vw, -140px);
+  bottom: clamp(-180px, -20vw, -120px);
   transform: translateX(-50%);
-  width: clamp(340px, 56vw, 660px);
-  height: clamp(340px, 56vw, 660px);
+  width: clamp(280px, 46vw, 560px);
+  height: clamp(280px, 46vw, 560px);
   border-radius: 50%;
   box-shadow: 0 0 60px 6px rgba(79, 216, 235, 0.35) inset;
   pointer-events: none;
 }
 
-@keyframes spinEarth {
-  from {
-    background-position: 32% 30%;
-  }
-  to {
-    background-position: -188% 30%;
-  }
-}
-
-.satellite {
-  position: absolute;
-  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.6));
-  animation: floatSat 7s ease-in-out infinite;
-  will-change: transform;
-}
-
-@keyframes floatSat {
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(var(--rot, 0deg));
-  }
-  50% {
-    transform: translate(0, -14px) rotate(var(--rot, 0deg));
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .earth,
-  .satellite,
   .stars,
   .starsFar,
   .heroKickerDot {
@@ -677,4 +653,74 @@
 
 .modalClose:hover {
   color: var(--ink);
+}
+
+/* --------------------- Desktop: fit above the fold --------------------- */
+/* On desktop the hero + Quick Actions cards should be visible together
+   without scrolling. Everything below is sized with vh-based clamps
+   (instead of fixed px) so it compresses gracefully on shorter desktop
+   windows too, rather than a hard height:100vh + overflow:hidden that
+   would also hide the footer/contact info from anyone on a small screen. */
+@media (min-width: 860px) {
+  .header {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  .main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: calc(100dvh - 68px);
+  }
+
+  .hero {
+    padding-top: clamp(4px, 2vh, 20px);
+  }
+
+  .heroKicker {
+    margin-bottom: clamp(10px, 2vh, 22px);
+  }
+
+  .headline {
+    font-size: clamp(30px, 5.2vh, 56px);
+  }
+
+  .subheadline {
+    margin-top: clamp(8px, 1.4vh, 16px);
+  }
+
+  .ctaRow {
+    margin-top: clamp(16px, 2.6vh, 28px);
+  }
+
+  .orbitStage {
+    margin-top: clamp(10px, 2.4vh, 32px);
+    height: clamp(120px, 16vh, 220px);
+  }
+
+  .earthGlow,
+  .earth,
+  .earthRim {
+    width: clamp(220px, 22vh, 340px);
+    height: clamp(220px, 22vh, 340px);
+  }
+
+  .earthGlow {
+    bottom: clamp(-110px, -11vh, -80px);
+  }
+
+  .earth,
+  .earthRim {
+    bottom: clamp(-130px, -13vh, -95px);
+  }
+
+  .featuresWrap {
+    margin-top: clamp(8px, 1.6vh, 20px);
+    padding-bottom: clamp(24px, 3.2vh, 40px);
+  }
+
+  .featureCard {
+    padding: clamp(16px, 1.9vh, 24px);
+  }
 }
