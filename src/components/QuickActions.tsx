@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import * as satellite from "satellite.js";
 import type { TleResult } from "@/lib/fetch-tle";
 import type { ObserverLocation, LocationStatus } from "@/lib/use-location";
@@ -42,6 +42,10 @@ type Props = {
   onToggleFlyMode: (next: boolean) => void;
   onShowLocateLine: (id: number, force?: boolean) => void;
   onHideLocateLine: () => void;
+  /** Auto-open a Quick Actions panel on mount — used by the homepage's
+   * feature cards (/app?feature=where-am-i, etc). Maps to the same `id`s
+   * used by handleAction below. Fires once and only once. */
+  initialFeature?: "where-am-i" | "above-me" | "next-pass" | null;
 };
 
 type ModalKind = "where-am-i" | "next-pass" | "whats-above" | "favorites" | null;
@@ -160,6 +164,7 @@ export default function QuickActions({
   onToggleFlyMode,
   onShowLocateLine,
   onHideLocateLine,
+  initialFeature = null,
 }: Props) {
   const [activeModal, setActiveModal] = useState<ModalKind>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
@@ -255,6 +260,25 @@ export default function QuickActions({
         break;
     }
   };
+
+  // Fires the homepage's requested feature exactly once. If no satellite
+  // is selected yet, handleAction already falls back to the "pick a
+  // satellite first" prompt (same as a manual click), so this doesn't need
+  // its own waiting logic — it just needs to run after mount, and only
+  // once, so it doesn't reopen a panel the person has since closed.
+  const firedInitialFeature = useRef(false);
+  useEffect(() => {
+    if (!initialFeature || firedInitialFeature.current) return;
+    firedInitialFeature.current = true;
+    const actionId =
+      initialFeature === "where-am-i"
+        ? "where-am-i"
+        : initialFeature === "above-me"
+        ? "whats-above-me"
+        : "next-pass-alert";
+    handleAction(actionId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFeature]);
 
   // Resolves a satellite picked from the "select a satellite first" prompt,
   // then continues whichever action was waiting on it.
