@@ -500,6 +500,29 @@ function ActionCard({
   onClose: () => void;
   children: ReactNode;
 }) {
+  // Hidden is local, UI-only state — separate from onClose. Closing tears
+  // the feature down (e.g. clears the observer line, deselects a
+  // satellite). Hiding just tucks the card out of the way so the globe
+  // underneath is visible again, without touching any of that: the feature
+  // stays live and the card comes right back where it left off.
+  const [hidden, setHidden] = useState(false);
+
+  if (hidden) {
+    return (
+      <div className="pointer-events-auto fixed left-6 top-24 z-[2100] animate-panel-in">
+        <button
+          onClick={() => setHidden(false)}
+          className="flex max-w-[calc(100vw-3rem)] items-center gap-2 rounded-lg border border-panelBorder bg-panel/95 px-3 py-2 text-[11px] font-mono text-muted shadow-[0_20px_60px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md hover:text-ink"
+          aria-label={`Show ${title} card`}
+        >
+          <span aria-hidden>▸</span>
+          <span className="truncate">{title}</span>
+          <span className="shrink-0 text-ink">SHOW</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div
       className="pointer-events-auto fixed left-6 top-24 z-[2100] w-[calc(100vw-3rem)] max-w-[19rem] sm:left-[17.5rem] sm:w-80 animate-panel-in"
@@ -509,13 +532,23 @@ function ActionCard({
       <div className="flex max-h-[min(30rem,70vh)] flex-col rounded-lg border border-panelBorder bg-panel/95 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md">
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-panelBorder px-4 py-3">
           <h2 className="min-w-0 truncate font-display font-bold text-ink text-sm">{title}</h2>
-          <button
-            onClick={onClose}
-            className="shrink-0 text-muted hover:text-ink text-[11px] font-mono"
-            aria-label="Close"
-          >
-            CLOSE
-          </button>
+          <div className="flex shrink-0 items-center gap-3">
+            <button
+              onClick={() => setHidden(true)}
+              className="text-muted hover:text-ink text-[11px] font-mono"
+              aria-label="Hide card (keeps it running in the background)"
+              title="Tuck this card away without turning the feature off"
+            >
+              HIDE
+            </button>
+            <button
+              onClick={onClose}
+              className="text-muted hover:text-ink text-[11px] font-mono"
+              aria-label="Close"
+            >
+              CLOSE
+            </button>
+          </div>
         </div>
         <div className="overflow-y-auto p-4">{children}</div>
       </div>
@@ -1028,7 +1061,7 @@ function WhatsAboveModal({
             <dd className="tabular text-ink text-right">{fmt(result.velocityKmS, 2)} km/s</dd>
           </dl>
           <p className="text-[10px] text-muted font-mono">
-            Updating live · line to your location stays until you close this card
+            Updating live · line to your location stays until you close this card (hiding it is fine)
           </p>
           <button
             onClick={() => onHighlight(result.id)}
