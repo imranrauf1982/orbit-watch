@@ -198,7 +198,10 @@ export default function SkyDomeView({
 
   return (
     <div className="h-full w-full bg-void flex items-center justify-center p-4">
-      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full h-full max-w-[560px] max-h-[560px]">
+      <svg
+        viewBox={`0 0 ${SIZE} ${SIZE}`}
+        className="w-full h-full max-w-[300px] max-h-[300px] sm:max-w-[560px] sm:max-h-[560px]"
+      >
         {/* Elevation rings */}
         {elevationRings.map((el) => (
           <circle
