@@ -336,6 +336,12 @@ export default function LandingPage() {
           <button className={styles.footerLink} onClick={() => setContactOpen(true)}>
             Contact
           </button>
+          <Link href="/privacy" className={styles.footerLink}>
+            Privacy
+          </Link>
+          <Link href="/terms" className={styles.footerLink}>
+            Terms
+          </Link>
         </div>
       </footer>
 
