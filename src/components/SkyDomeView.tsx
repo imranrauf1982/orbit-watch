@@ -74,10 +74,25 @@ export default function SkyDomeView({
   onManualLocation,
 }: Props) {
   const [now, setNow] = useState(() => Date.now());
+  const [isNarrow, setIsNarrow] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
+  }, []);
+
+  // Drives the mobile-only padding below. Without this, the compass circle
+  // sized itself to the full screen height and its bottom half ended up
+  // hidden behind the satellite info panel docked at the bottom of the
+  // screen — not actually cropped by the SVG, just covered by opaque UI in
+  // front of it. Desktop is unaffected (panel sits elsewhere there).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 639px)");
+    setIsNarrow(mq.matches);
+    const onChange = () => setIsNarrow(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
   }, []);
 
   // Same filter-tab logic as Scene/MapView, so "Sky" respects whatever
@@ -197,11 +212,18 @@ export default function SkyDomeView({
   const elevationRings = [0, 30, 60];
 
   return (
-    <div className="h-full w-full bg-void flex items-center justify-center p-4">
-      <svg
-        viewBox={`0 0 ${SIZE} ${SIZE}`}
-        className="w-full h-full max-w-[300px] max-h-[300px] sm:max-w-[560px] sm:max-h-[560px]"
-      >
+    <div
+      className="h-full w-full bg-void flex items-center justify-center p-4"
+      style={
+        isNarrow
+          ? {
+              paddingTop: "11rem",
+              paddingBottom: selectedId !== null ? "17.5rem" : "4.5rem",
+            }
+          : undefined
+      }
+    >
+      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full h-full max-w-[560px] max-h-[560px]">
         {/* Elevation rings */}
         {elevationRings.map((el) => (
           <circle
