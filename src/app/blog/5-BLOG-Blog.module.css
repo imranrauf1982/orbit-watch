@@ -1,0 +1,313 @@
+/* ------------------------------------------------------------------ */
+/* OrbitMap — Blog listing + post styling                              */
+/* ------------------------------------------------------------------ */
+
+.page {
+  --bg-deep: #05070c;
+  --cyan: #4fd8eb;
+  --cyan-soft: #8fe7f2;
+  --glass-bg: rgba(18, 22, 34, 0.55);
+  --glass-border: rgba(143, 231, 242, 0.16);
+  --ink: #eef2fa;
+  --muted: #9aa4bd;
+  --radius-lg: 22px;
+  --radius-md: 14px;
+  --font-display: "Space Grotesk", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  position: relative;
+  min-height: 100dvh;
+  width: 100%;
+  background: radial-gradient(ellipse 120% 60% at 50% 0%, #0d1420 0%, var(--bg-deep) 55%), var(--bg-deep);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.page * {
+  box-sizing: border-box;
+}
+
+.page a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: clamp(48px, 8vw, 88px) 20px 100px;
+}
+
+.backLink {
+  display: inline-flex;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 32px;
+}
+
+.backLink:hover {
+  color: var(--cyan-soft);
+}
+
+.kicker {
+  display: inline-flex;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cyan-soft);
+  margin-bottom: 20px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.14;
+  max-width: 18ch;
+  background: linear-gradient(180deg, #ffffff 0%, #cfe9ee 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0 0 16px;
+}
+
+.lead {
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: var(--muted);
+  max-width: 60ch;
+  margin: 0 0 48px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+@media (min-width: 700px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.postCard {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(180deg, rgba(24, 30, 44, 0.65), rgba(12, 15, 24, 0.65));
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+
+.postCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(79, 216, 235, 0.35);
+}
+
+.postTag {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(79, 216, 235, 0.1);
+  color: var(--cyan-soft);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.postTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.35;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+
+.postExcerpt {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0 0 18px;
+  flex-grow: 1;
+}
+
+.postMeta {
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.comingSoonCard {
+  padding: 20px 24px;
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--glass-border);
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-top: 8px;
+}
+
+/* --------------------------- Post detail page --------------------------- */
+
+.postContainer {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: clamp(48px, 8vw, 88px) 20px 100px;
+}
+
+.postHeaderMeta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+
+.postHeadline {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(26px, 4.4vw, 38px);
+  line-height: 1.2;
+  color: var(--ink);
+  margin: 0 0 20px;
+}
+
+.postDek {
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 0 0 40px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.articleBody h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--ink);
+  margin: 40px 0 14px;
+}
+
+.articleBody p {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin: 0 0 16px;
+}
+
+.articleBody strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.articleBody ul {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.articleBody li {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.adSlot {
+  margin: 36px 0;
+  padding: 18px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--glass-border);
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.affiliateCard {
+  margin: 32px 0;
+  padding: 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+}
+
+.affiliateLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cyan-soft);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.affiliateTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+
+.affiliateText {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+.affiliateButton {
+  display: inline-flex;
+  padding: 11px 22px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #eaf9fc 0%, #c6ecf3 100%);
+  color: #05141a;
+  font-weight: 700;
+  font-size: 13.5px;
+}
+
+.disclosureNote {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.disclosureNote a {
+  color: var(--cyan-soft);
+  text-decoration: underline;
+}
+
+.backToBlog {
+  display: inline-flex;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 32px;
+}
+
+.backToBlog:hover {
+  color: var(--cyan-soft);
+}
