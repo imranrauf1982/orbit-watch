@@ -214,6 +214,23 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
     }
   }, [satellites]);
 
+  // Deep link support: /app?feature=where-am-i|above-me|next-pass, used by
+  // the marketing homepage's Quick Actions cards to jump straight into a
+  // Quick Actions panel on load. Read once on mount (same pattern as the
+  // `sat` deep link above) and handed down to Hud → QuickActions, which
+  // opens the matching panel itself — this component doesn't otherwise
+  // know anything about the Quick Actions internals.
+  const [initialFeature, setInitialFeature] = useState<
+    "where-am-i" | "above-me" | "next-pass" | null
+  >(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const param = new URLSearchParams(window.location.search).get("feature");
+    if (param === "where-am-i" || param === "above-me" || param === "next-pass") {
+      setInitialFeature(param);
+    }
+  }, []);
+
   const handleSelect = useCallback((id: number, state: LiveState | null) => {
     setSelectedId(id);
     setLiveState(state);
@@ -289,6 +306,7 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
         onToggleFlyMode={handleToggleFlyMode}
         onShowLocateLine={handleShowLocateLine}
         onHideLocateLine={handleHideLocateLine}
+        initialFeature={initialFeature}
       />
 
       {/* Small, always-reachable exit button for the "Fly With Satellite"
