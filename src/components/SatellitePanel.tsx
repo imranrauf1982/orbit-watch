@@ -62,6 +62,11 @@ export default function SatellitePanel({
   const [tab, setTab] = useState<Tab>("telemetry");
   const [passes, setPasses] = useState<PassPrediction[] | null>(null);
   const [computing, setComputing] = useState(false);
+  // Local, UI-only — separate from onClose. Closing deselects the
+  // satellite (stops tracking it). Minimizing just tucks the panel out of
+  // the way, on mobile especially, where it otherwise spans the full width
+  // and sits over the globe it's describing.
+  const [minimized, setMinimized] = useState(false);
 
   const satrec = useMemo(() => satellite.twoline2satrec(line1, line2), [line1, line2]);
   const elements = useMemo(() => getOrbitalElements(satrec), [satrec]);
@@ -104,6 +109,24 @@ export default function SatellitePanel({
 
   const color = CATEGORY_COLOR[entry.category];
 
+  if (minimized) {
+    return (
+      <div className="pointer-events-auto absolute bottom-4 left-4 right-4 sm:right-auto sm:left-6 sm:w-96 z-[2100] animate-panel-in">
+        <button
+          onClick={() => setMinimized(false)}
+          className="flex w-full items-center justify-between gap-2 rounded-xl border border-white/5 bg-space-900/80 px-4 py-3 backdrop-blur-xl shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)]"
+          aria-label={`Show ${entry.name} panel`}
+        >
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+            <span className="truncate font-display font-bold text-sm text-ink">{entry.name}</span>
+          </span>
+          <span className="shrink-0 text-[11px] font-mono text-muted">SHOW</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="pointer-events-auto absolute bottom-0 left-0 right-0 sm:right-auto sm:bottom-6 sm:left-6 sm:w-96 border-t sm:border sm:rounded-xl border-white/5 bg-space-900/60 backdrop-blur-xl flex flex-col max-h-[75vh] sm:max-h-[32rem] animate-panel-in shadow-[0_8px_40px_-8px_rgba(0,0,0,0.7)]">
       {/* Header */}
@@ -133,6 +156,14 @@ export default function SatellitePanel({
             title="Copy shareable link"
           >
             {shareCopied ? "COPIED" : "SHARE"}
+          </button>
+          <button
+            onClick={() => setMinimized(true)}
+            className="text-muted hover:text-ink text-[11px] font-mono"
+            aria-label="Hide panel (keeps this satellite selected)"
+            title="Tuck this panel away without deselecting the satellite"
+          >
+            HIDE
           </button>
           <button
             onClick={onClose}
