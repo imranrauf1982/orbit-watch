@@ -18,16 +18,18 @@ export default function AboutPage() {
           ← Back to home
         </Link>
 
-        <span className={styles.kicker}>About OrbitMap</span>
+        <div className={styles.hero}>
+          <span className={styles.kicker}>About OrbitMap</span>
 
-        <h1 className={styles.title}>Real orbits, real data, right in your browser</h1>
+          <h1 className={styles.title}>Real orbits, real data, right in your browser</h1>
 
-        <p className={styles.lead}>
-          OrbitMap turns publicly available orbital tracking data into a live, explorable 3D map —
-          so anyone can see where the International Space Station, weather satellites, and
-          thousands of other objects actually are right now, without needing a background in
-          orbital mechanics.
-        </p>
+          <p className={styles.lead}>
+            OrbitMap turns publicly available orbital tracking data into a live, explorable 3D map —
+            so anyone can see where the International Space Station, weather satellites, and
+            thousands of other objects actually are right now, without needing a background in
+            orbital mechanics.
+          </p>
+        </div>
 
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Why we built it</h2>
