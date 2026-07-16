@@ -96,6 +96,11 @@ export default function Hud({
   const [shareCopied, setShareCopied] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [highContrast, setHighContrast] = useHighContrast();
+  // Mobile-only "more" menu — collapses CONTRAST/HELP/SUPPORT/ABOUT off the
+  // header so the header stays a single compact row on small screens,
+  // leaving more room for the globe. Desktop keeps showing all four inline
+  // (unchanged), so this state simply doesn't apply there.
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Playback speed (3D view). Subscribed to the module-level sim-clock store
   // so any component can read/drive it without prop drilling.
@@ -303,7 +308,7 @@ export default function Hud({
             Live positions from real orbital element data
           </p>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2 max-w-full">
+        <div className="flex flex-nowrap items-center justify-start sm:justify-end gap-2 max-w-full overflow-x-auto no-scrollbar sm:flex-wrap sm:overflow-visible">
           {/* 3D / Map / Sky view toggle */}
           <div className="flex rounded-xl border border-white/5 bg-space-900/60 backdrop-blur-xl overflow-hidden text-[11px] font-mono shadow-[0_4px_20px_-6px_rgba(0,0,0,0.6)]">
             <button
@@ -365,46 +370,116 @@ export default function Hud({
           )}
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setHighContrast((v) => !v)}
-              className={`rounded-xl border h-8 px-2.5 flex items-center justify-center text-[11px] font-mono backdrop-blur-xl transition-all duration-300 ease-out ${
-                highContrast
-                  ? "border-signal/40 bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]"
-                  : "border-white/5 bg-space-900/60 text-muted hover:text-ink"
-              }`}
-              aria-pressed={highContrast}
-              title="Toggle high-contrast mode (C)"
-            >
-              <span className="hidden sm:inline">CONTRAST</span>
-              <span className="sm:hidden" aria-hidden>
-                ◐
-              </span>
-            </button>
-            <button
-              onClick={() => setTutorialOpen(true)}
-              className="rounded-xl border border-white/5 bg-space-900/60 h-8 px-2.5 flex items-center justify-center text-[11px] font-mono text-muted hover:text-ink backdrop-blur-xl transition-all duration-300 ease-out"
-              aria-label="Help & keyboard shortcuts"
-              title="Help & keyboard shortcuts (?)"
-            >
-              ?
-            </button>
-            <button
-              onClick={() => setSupportOpen(true)}
-              className="rounded-xl border border-white/5 bg-space-900/60 h-8 px-2.5 flex items-center justify-center gap-1 text-[11px] font-mono text-signal hover:text-ink backdrop-blur-xl transition-all duration-300 ease-out"
-              aria-label="Support OrbitMap"
-              title="Support OrbitMap"
-            >
-              <span aria-hidden>♥</span>
-              <span className="hidden sm:inline">SUPPORT</span>
-            </button>
-            <button
-              onClick={() => setAboutOpen(true)}
-              className="rounded-xl border border-white/5 bg-space-900/60 h-8 px-2.5 flex items-center justify-center text-[11px] font-mono text-muted hover:text-ink backdrop-blur-xl transition-all duration-300 ease-out"
-              aria-label="About OrbitMap"
-              title="About & data sources"
-            >
-              ABOUT
-            </button>
+            {/* Desktop: identical to before — all four buttons inline. */}
+            <div className="hidden sm:flex items-center gap-2">
+              <button
+                onClick={() => setHighContrast((v) => !v)}
+                className={`rounded-xl border h-8 px-2.5 flex items-center justify-center text-[11px] font-mono backdrop-blur-xl transition-all duration-300 ease-out ${
+                  highContrast
+                    ? "border-signal/40 bg-gradient-to-r from-signal/10 to-signal/5 text-signal shadow-[0_0_15px_rgba(255,106,61,0.12)]"
+                    : "border-white/5 bg-space-900/60 text-muted hover:text-ink"
+                }`}
+                aria-pressed={highContrast}
+                title="Toggle high-contrast mode (C)"
+              >
+                CONTRAST
+              </button>
+              <button
+                onClick={() => setTutorialOpen(true)}
+                className="rounded-xl border border-white/5 bg-space-900/60 h-8 px-2.5 flex items-center justify-center text-[11px] font-mono text-muted hover:text-ink backdrop-blur-xl transition-all duration-300 ease-out"
+                aria-label="Help & keyboard shortcuts"
+                title="Help & keyboard shortcuts (?)"
+              >
+                ?
+              </button>
+              <button
+                onClick={() => setSupportOpen(true)}
+                className="rounded-xl border border-white/5 bg-space-900/60 h-8 px-2.5 flex items-center justify-center gap-1 text-[11px] font-mono text-signal hover:text-ink backdrop-blur-xl transition-all duration-300 ease-out"
+                aria-label="Support OrbitMap"
+                title="Support OrbitMap"
+              >
+                <span aria-hidden>♥</span>
+                <span>SUPPORT</span>
+              </button>
+              <button
+                onClick={() => setAboutOpen(true)}
+                className="rounded-xl border border-white/5 bg-space-900/60 h-8 px-2.5 flex items-center justify-center text-[11px] font-mono text-muted hover:text-ink backdrop-blur-xl transition-all duration-300 ease-out"
+                aria-label="About OrbitMap"
+                title="About & data sources"
+              >
+                ABOUT
+              </button>
+            </div>
+
+            {/* Mobile: same four actions, collapsed behind a menu button so
+                the header stays one compact row and the globe gets the
+                space back. Same onClick handlers as desktop — nothing
+                about what these buttons *do* has changed. */}
+            <div className="relative sm:hidden">
+              <button
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                className={`rounded-xl border h-8 w-8 flex items-center justify-center text-[13px] backdrop-blur-xl transition-all duration-300 ease-out ${
+                  mobileMenuOpen
+                    ? "border-signal/40 bg-gradient-to-r from-signal/10 to-signal/5 text-signal"
+                    : "border-white/5 bg-space-900/60 text-muted hover:text-ink"
+                }`}
+                aria-label="More options"
+                aria-expanded={mobileMenuOpen}
+              >
+                ⋯
+              </button>
+              {mobileMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-[2050]"
+                    onClick={() => setMobileMenuOpen(false)}
+                    aria-hidden
+                  />
+                  <div className="absolute right-0 top-full mt-2 z-[2060] w-44 rounded-xl border border-white/5 bg-space-900/95 backdrop-blur-xl shadow-[0_8px_30px_-8px_rgba(0,0,0,0.7)] overflow-hidden animate-panel-in">
+                    <button
+                      onClick={() => {
+                        setHighContrast((v) => !v);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-2 px-3 py-2.5 text-left text-[12px] font-mono border-b border-white/5 transition-colors ${
+                        highContrast ? "text-signal" : "text-muted hover:text-ink"
+                      }`}
+                      aria-pressed={highContrast}
+                    >
+                      <span aria-hidden>◐</span> CONTRAST
+                    </button>
+                    <button
+                      onClick={() => {
+                        setTutorialOpen(true);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[12px] font-mono text-muted hover:text-ink border-b border-white/5 transition-colors"
+                    >
+                      <span aria-hidden>?</span> HELP
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSupportOpen(true);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[12px] font-mono text-signal hover:text-ink border-b border-white/5 transition-colors"
+                    >
+                      <span aria-hidden>♥</span> SUPPORT
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAboutOpen(true);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[12px] font-mono text-muted hover:text-ink transition-colors"
+                    >
+                      <span aria-hidden>ⓘ</span> ABOUT
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
             <button
               onClick={() => setListOpen((v) => !v)}
               className="sm:hidden rounded-xl border border-white/5 bg-space-900/60 h-8 px-3 flex items-center justify-center text-[11px] font-mono text-ink backdrop-blur-xl transition-all duration-300 ease-out"
