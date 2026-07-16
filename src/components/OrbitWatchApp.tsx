@@ -164,12 +164,16 @@ export default function OrbitWatchApp({ initialSatellites }: { initialSatellites
     setFlyMode(next);
   }, []);
 
-  const handleShowLocateLine = useCallback((id: number) => {
+  const handleShowLocateLine = useCallback((id: number, force = false) => {
     setLocateLine((prev) => {
       // Same satellite already showing — leave the existing line/key alone
       // so it doesn't remount (and re-trigger the camera swing) on every
       // 1-2s live-update tick from the Where Am I / What's Above Me cards.
-      if (prev && prev.id === id) return prev;
+      // `force` opts out of that dedupe: What's Above Me uses it so opening
+      // the card always swings the globe to face whatever's overhead, even
+      // if it happens to be the same satellite that was overhead last time
+      // (and the person has since rotated the globe away from it).
+      if (prev && prev.id === id && !force) return prev;
       return { id, key: Date.now() };
     });
   }, []);
