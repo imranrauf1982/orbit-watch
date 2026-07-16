@@ -102,6 +102,32 @@ function IconArrow() {
   );
 }
 
+function SatelliteGraphic({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 64 64"
+      fill="none"
+      aria-hidden
+    >
+      {/* left solar panel */}
+      <rect x="2" y="24" width="16" height="16" rx="1.5" fill="#3aa9c2" stroke="#8fe7f2" strokeWidth="1.2" />
+      <path d="M4 28h12M4 32h12M4 36h12" stroke="#0a2e36" strokeWidth="0.8" />
+      {/* right solar panel */}
+      <rect x="46" y="24" width="16" height="16" rx="1.5" fill="#3aa9c2" stroke="#8fe7f2" strokeWidth="1.2" />
+      <path d="M48 28h12M48 32h12M48 36h12" stroke="#0a2e36" strokeWidth="0.8" />
+      {/* panel struts */}
+      <path d="M18 32h8M38 32h8" stroke="#8fe7f2" strokeWidth="1.4" strokeLinecap="round" />
+      {/* body */}
+      <rect x="24" y="22" width="16" height="20" rx="3" fill="#e9f7fa" stroke="#4fd8eb" strokeWidth="1.4" />
+      <circle cx="32" cy="30" r="2.6" fill="#4fd8eb" />
+      {/* antenna */}
+      <path d="M32 22V12" stroke="#eef2fa" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="32" cy="10.5" r="2.2" fill="none" stroke="#eef2fa" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
 function LogoMark() {
   return (
     <svg
@@ -256,6 +282,9 @@ export default function LandingPage() {
             <div className={styles.earthGlow} />
             <div className={styles.earth} />
             <div className={styles.earthRim} />
+            <SatelliteGraphic className={`${styles.orbitSatellite} ${styles.orbitSatellite1}`} />
+            <SatelliteGraphic className={`${styles.orbitSatellite} ${styles.orbitSatellite2}`} />
+            <SatelliteGraphic className={`${styles.orbitSatellite} ${styles.orbitSatellite3}`} />
           </div>
         </section>
 
