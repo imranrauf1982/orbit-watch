@@ -160,6 +160,13 @@ export default function LandingPage() {
 
   return (
     <div className={`${styles.page} ${displayFont.variable}`}>
+      {/* The hero's Earth graphic is a CSS background-image, which the
+          browser can't discover until it parses the stylesheet — that
+          delay was showing up as the page's LCP. Preloading it directly
+          lets the browser start fetching it immediately, in parallel with
+          everything else, instead of only finding out about it late. */}
+      <link rel="preload" as="image" href="/textures/earth_day.jpg" fetchPriority="high" />
+
       <div className={styles.starsFar} aria-hidden />
       <div className={styles.stars} aria-hidden />
       <div className={styles.nebula} aria-hidden />
