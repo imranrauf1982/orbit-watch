@@ -9,6 +9,7 @@ type Props = {
 
 export default function AlertSignup({ satelliteId, satelliteName }: Props) {
   const [email, setEmail] = useState("");
+  const [company, setCompany] = useState(""); // honeypot — real users never see or fill this
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
 
@@ -20,7 +21,7 @@ export default function AlertSignup({ satelliteId, satelliteName }: Props) {
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, satelliteId }),
+        body: JSON.stringify({ email, satelliteId, company }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
@@ -48,6 +49,15 @@ export default function AlertSignup({ satelliteId, satelliteName }: Props) {
         Get an email before the next good pass (coming soon — join early):
       </p>
       <div className="flex gap-1.5">
+        <input
+          type="text"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0 }}
+        />
         <input
           type="email"
           value={email}
