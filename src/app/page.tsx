@@ -20,7 +20,7 @@ const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "App", href: "/app" },
   { label: "Blog", href: "/blog" },
-  { label: "Contact", href: "#contact" },
+  { label: "Contact", href: "/contact" },
   { label: "Products", href: "/products" },
 ];
 
@@ -184,16 +184,9 @@ const FEATURE_CARDS = [
 
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [contactOpen, setContactOpen] = useState(false);
 
-  const handleNavClick = (href: string, e: React.MouseEvent) => {
-    if (href === "#contact") {
-      e.preventDefault();
-      setMenuOpen(false);
-      setContactOpen(true);
-    } else {
-      setMenuOpen(false);
-    }
+  const handleNavClick = () => {
+    setMenuOpen(false);
   };
 
   return (
@@ -217,7 +210,7 @@ export default function LandingPage() {
               key={link.label}
               href={link.href}
               className={`${styles.navLink} ${link.href === "/" ? styles.navLinkActive : ""}`}
-              onClick={(e) => handleNavClick(link.href, e)}
+              onClick={handleNavClick}
             >
               {link.label}
             </Link>
@@ -245,7 +238,7 @@ export default function LandingPage() {
                 key={link.label}
                 href={link.href}
                 className={styles.mobileNavLink}
-                onClick={(e) => handleNavClick(link.href, e)}
+                onClick={handleNavClick}
               >
                 {link.label}
               </Link>
@@ -330,9 +323,9 @@ export default function LandingPage() {
           <Link href="/app" className={styles.footerLink}>
             Launch App
           </Link>
-          <button className={styles.footerLink} onClick={() => setContactOpen(true)}>
+          <Link href="/contact" className={styles.footerLink}>
             Contact
-          </button>
+          </Link>
           <Link href="/privacy" className={styles.footerLink}>
             Privacy
           </Link>
@@ -341,23 +334,6 @@ export default function LandingPage() {
           </Link>
         </div>
       </footer>
-
-      {contactOpen && (
-        <div className={styles.modalOverlay} role="dialog" aria-modal onClick={() => setContactOpen(false)}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-            <h2 className={styles.modalTitle}>Get in touch</h2>
-            <p className={styles.modalText}>
-              Questions, feedback, or partnership ideas — we read every message.
-            </p>
-            <a href={`mailto:${CONTACT_EMAIL}`} className={styles.modalEmail}>
-              {CONTACT_EMAIL}
-            </a>
-            <button className={styles.modalClose} onClick={() => setContactOpen(false)}>
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
