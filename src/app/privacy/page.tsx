@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     "How OrbitMap collects, uses, and protects information, including location data, cookies, advertising, and analytics.",
 };
 
-const LAST_UPDATED = "July 16, 2026";
+const LAST_UPDATED = "July 18, 2026";
 const CONTACT_EMAIL = "info@orbitmap.space";
 
 export default function PrivacyPolicyPage() {
@@ -22,6 +22,14 @@ export default function PrivacyPolicyPage() {
         <span className={styles.kicker}>Legal</span>
         <h1 className={styles.title}>Privacy Policy</h1>
         <p className={styles.updated}>Last updated: {LAST_UPDATED}</p>
+
+        <p className={styles.sectionText}>
+          <strong>
+            OrbitMap is committed to protecting your privacy. We collect minimal data, process
+            location information locally in your browser, and use advertising and affiliate links
+            to keep the live satellite tracker free.
+          </strong>
+        </p>
 
         <p className={styles.intro}>
           This Privacy Policy explains what information OrbitMap (&ldquo;OrbitMap,&rdquo;
@@ -119,6 +127,10 @@ export default function PrivacyPolicyPage() {
               Most browsers let you block or delete cookies through their settings; doing so may
               affect how parts of the Service function.
             </li>
+            <li>
+              We use a cookie consent banner to comply with applicable privacy regulations (such
+              as GDPR).
+            </li>
           </ul>
           <div className={styles.infoCard}>
             <h3 className={styles.infoTitle}>In short</h3>
@@ -207,6 +219,12 @@ export default function PrivacyPolicyPage() {
             example, under the GDPR in the EU/UK or the CCPA/CPRA in California). To exercise any
             of these rights, contact us at the email below and we&apos;ll respond within a
             reasonable time.
+          </p>
+          <p className={styles.sectionText}>
+            To request deletion of your email address (from pass alerts) or any other personal
+            data we hold, please email{" "}
+            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> with the subject &ldquo;Data
+            Deletion Request&rdquo;.
           </p>
         </section>
 
