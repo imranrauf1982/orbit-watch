@@ -48,9 +48,9 @@ const FAQ_ITEMS = [
       'No. Location is processed locally in your browser only when you use features like "What\'s Above Me". We never store or share it.',
   },
   {
-    question: "How do you make money?",
+    question: "Is OrbitMap completely free?",
     answer:
-      "Through Amazon affiliate links (recommended gear) and non-intrusive advertising. This helps keep the tracker free.",
+      "Yes. The tracker and all main features are free forever. We show minimal ads and affiliate recommendations to help cover server costs.",
   },
 ];
 
