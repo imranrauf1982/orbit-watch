@@ -5,13 +5,11 @@ import { liveViewerEstimate } from "@/lib/live-stats";
 import { getSimClockSnapshot, subscribeSimClock } from "@/lib/sim-clock";
 
 type Props = {
-  onAbout: () => void;
-  onSupport: () => void;
   /** True while the satellite detail panel is open — lifts the pill above it instead of overlapping. */
   raised?: boolean;
 };
 
-export default function Footer({ onAbout, onSupport, raised = false }: Props) {
+export default function Footer({ raised = false }: Props) {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -39,7 +37,7 @@ export default function Footer({ onAbout, onSupport, raised = false }: Props) {
     >
       <span className="flex items-center gap-1.5">
         <span className="h-1.5 w-1.5 rounded-full bg-signal animate-pulse" />
-        {viewers !== null ? `${viewers} tracking now` : "—"}
+        {viewers !== null ? `${viewers.toLocaleString("en-US")} tracking now` : "—"}
       </span>
       <span className="text-panelBorder">·</span>
       <span className="tabular" title="Local time">
@@ -55,25 +53,6 @@ export default function Footer({ onAbout, onSupport, raised = false }: Props) {
           <span className="text-signal">{rateLabel}</span>
         </>
       )}
-      <span className="text-panelBorder">·</span>
-      <button onClick={onAbout} className="hover:text-ink transition-all duration-300 ease-out">
-        About
-      </button>
-      <span className="text-panelBorder">·</span>
-      <button onClick={onAbout} className="hover:text-ink transition-all duration-300 ease-out">
-        Data Sources
-      </button>
-      <span className="text-panelBorder">·</span>
-      <a
-        href="mailto:hello@orbitmap.space?subject=OrbitMap%20feedback"
-        className="hover:text-ink transition-all duration-300 ease-out"
-      >
-        Feedback
-      </a>
-      <span className="text-panelBorder">·</span>
-      <button onClick={onSupport} className="text-signal hover:text-ink transition-all duration-300 ease-out">
-        Support
-      </button>
     </footer>
   );
 }
