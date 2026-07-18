@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 const INQUIRY_TYPES: { value: string; label: string; hint: string }[] = [
   {
@@ -45,33 +46,42 @@ export default function ContactForm() {
     e.preventDefault();
     if (state === "sending") return;
 
-    if (!name.trim() || !email.trim() || !description.trim()) {
-      setError("Please fill in your name, email, and a short description.");
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const trimmedDescription = description.trim();
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
+
+    if (!trimmedName || !isValidEmail || !trimmedDescription) {
+      setError("Please fill in your name, a valid email, and a short description.");
       return;
     }
 
     setState("sending");
     setError(null);
 
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, inquiryType, description, company }),
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data.ok) {
-        setState("error");
-        setError(data.error ?? "Something went wrong. Please try again.");
-        return;
-      }
-
+    // Honeypot tripped — silently "succeed" without writing anything, so we
+    // don't tip the bot off that it was caught.
+    if (company.trim().length > 0) {
       setState("done");
-    } catch {
-      setState("error");
-      setError("Network error — please try again in a moment.");
+      return;
     }
+
+    const { error: insertError } = await supabase.from("contact_submissions").insert({
+      name: trimmedName,
+      email: trimmedEmail,
+      inquiry_type: inquiryType,
+      description: trimmedDescription,
+      source_page: "/contact",
+    });
+
+    if (insertError) {
+      console.error("contact_submissions insert failed:", insertError);
+      setState("error");
+      setError("Something went wrong. Please try again, or email us directly.");
+      return;
+    }
+
+    setState("done");
   };
 
   if (state === "done") {
