@@ -227,8 +227,8 @@ export default function Scene({
 
   return (
     <Canvas
-      dpr={isNarrow ? [1, 1.5] : [1, 1.75]} // capped device-pixel-ratio keeps mobile GPUs happy
-      gl={{ antialias: true, powerPreference: "high-performance" }}
+      dpr={isNarrow ? 1 : [1, 1.75]} // no supersampling on phones — biggest single lever on render cost
+      gl={{ antialias: !isNarrow, powerPreference: "high-performance" }} // MSAA is expensive; skip it on narrow screens
       className="!touch-none"
     >
       <PerspectiveCamera makeDefault fov={45} />
