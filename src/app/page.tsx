@@ -26,6 +26,34 @@ const NAV_LINKS = [
 
 const CONTACT_EMAIL = "info@orbitmap.space";
 
+const FAQ_ITEMS = [
+  {
+    question: "Is OrbitMap free to use?",
+    answer:
+      "Yes! The live 3D tracker and all core features are completely free with no signup required.",
+  },
+  {
+    question: "How accurate is the satellite tracking?",
+    answer:
+      "Very accurate for casual and educational use. Positions are calculated from public TLE data and updated regularly. Not intended for professional navigation or safety-critical decisions.",
+  },
+  {
+    question: "What satellites can I track?",
+    answer:
+      "ISS, Hubble, Tiangong, Starlink, weather satellites, Earth observation satellites, and over 14,000 other objects.",
+  },
+  {
+    question: "Do you store my location data?",
+    answer:
+      'No. Location is processed locally in your browser only when you use features like "What\'s Above Me". We never store or share it.',
+  },
+  {
+    question: "How do you make money?",
+    answer:
+      "Through Amazon affiliate links (recommended gear) and non-intrusive advertising. This helps keep the tracker free.",
+  },
+];
+
 function IconGlobe() {
   return (
     <svg viewBox="0 0 24 24" fill="none" width="22" height="22" aria-hidden>
@@ -189,6 +217,19 @@ export default function LandingPage() {
     setMenuOpen(false);
   };
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ_ITEMS.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+
   return (
     <div className={`${styles.page} ${displayFont.variable}`}>
       <div className={styles.starsFar} aria-hidden />
@@ -248,56 +289,130 @@ export default function LandingPage() {
       </header>
 
       <main className={styles.main}>
-        <section className={styles.hero}>
-          <span className={styles.heroKicker}>
-            <span className={styles.heroKickerDot} />
-            LIVE ORBITAL DATA
-          </span>
+        {/* Hero + Features stay grouped in their own wrapper so the existing
+            desktop "fits above the fold, no scroll" behavior (defined on
+            .main at >=860px) still centers just this block — new content
+            below flows normally instead of being squeezed into that box. */}
+        <div className={styles.foldWrap}>
+          <section className={styles.hero}>
+            <span className={styles.heroKicker}>
+              <span className={styles.heroKickerDot} />
+              LIVE ORBITAL DATA
+            </span>
 
-          <h1 className={styles.headline}>Track Satellites &amp; ISS in Real-Time</h1>
+            <h1 className={styles.headline}>Track Satellites &amp; ISS in Real-Time</h1>
 
-          <p className={styles.subheadline}>
-            Live 3D Orbital Map<span className={styles.subheadlineDivider}>•</span>See What&apos;s
-            Above You
-          </p>
+            <p className={styles.subheadline}>
+              Live 3D Orbital Map<span className={styles.subheadlineDivider}>•</span>See What&apos;s
+              Above You
+            </p>
 
-          <div className={styles.ctaRow}>
-            <Link href="/app" className={styles.ctaPrimary}>
-              Launch App
-              <IconArrow />
-            </Link>
+            <div className={styles.ctaRow}>
+              <Link href="/app" className={styles.ctaPrimary}>
+                Launch App
+                <IconArrow />
+              </Link>
+            </div>
+
+            <div className={styles.orbitStage} aria-hidden>
+              <div className={styles.earthGlow} />
+              <div className={styles.earth} />
+              <div className={styles.earthRim} />
+              <SatelliteGraphic className={`${styles.orbitSatellite} ${styles.orbitSatellite1}`} />
+              <SatelliteGraphic className={`${styles.orbitSatellite} ${styles.orbitSatellite2}`} />
+              <SatelliteGraphic className={`${styles.orbitSatellite} ${styles.orbitSatellite3}`} />
+            </div>
+          </section>
+
+          <section className={styles.featuresWrap} aria-label="Quick actions">
+            <div className={styles.featuresGrid}>
+              {FEATURE_CARDS.map((card) => (
+                <Link
+                  key={card.id}
+                  href={`/app?feature=${card.feature}`}
+                  className={styles.featureCard}
+                >
+                  <span className={styles.featureIcon}>{card.icon}</span>
+                  <span>
+                    <span className={styles.featureTitle}>{card.title}</span>
+                    <span className={styles.featureHint}>{card.hint}</span>
+                  </span>
+                  <span className={styles.featureArrow}>
+                    <IconArrow />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* How It Works Section */}
+        <section className={styles.howItWorks} aria-label="How OrbitMap works">
+          <div className={styles.sectionHeader}>
+            <h2>How OrbitMap Works</h2>
+            <p>Real-time satellite tracking made simple and accurate</p>
           </div>
 
-          <div className={styles.orbitStage} aria-hidden>
-            <div className={styles.earthGlow} />
-            <div className={styles.earth} />
-            <div className={styles.earthRim} />
-            <SatelliteGraphic className={`${styles.orbitSatellite} ${styles.orbitSatellite1}`} />
-            <SatelliteGraphic className={`${styles.orbitSatellite} ${styles.orbitSatellite2}`} />
-            <SatelliteGraphic className={`${styles.orbitSatellite} ${styles.orbitSatellite3}`} />
+          <div className={styles.stepsGrid}>
+            <div className={styles.step}>
+              <div className={styles.stepNumber}>1</div>
+              <h3>Fetch Public Orbital Data</h3>
+              <p>
+                We pull live Two-Line Element (TLE) data from{" "}
+                <a
+                  href="https://celestrak.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.inlineLink}
+                >
+                  CelesTrak
+                </a>
+                , a trusted public catalog used by NASA and astronomers worldwide.
+              </p>
+            </div>
+            <div className={styles.step}>
+              <div className={styles.stepNumber}>2</div>
+              <h3>Calculate Live Positions</h3>
+              <p>
+                Using the industry-standard SGP4/SDP4 model, positions are computed
+                continuously in your browser.
+              </p>
+            </div>
+            <div className={styles.step}>
+              <div className={styles.stepNumber}>3</div>
+              <h3>Render Beautiful 3D Views</h3>
+              <p>
+                Interactive globe, sky view, and pass predictions — all running
+                locally for speed and privacy. See it live in the{" "}
+                <Link href="/app" className={styles.inlineLink}>
+                  app
+                </Link>
+                .
+              </p>
+            </div>
           </div>
         </section>
 
-        <section className={styles.featuresWrap} aria-label="Quick actions">
-          <div className={styles.featuresGrid}>
-            {FEATURE_CARDS.map((card) => (
-              <Link
-                key={card.id}
-                href={`/app?feature=${card.feature}`}
-                className={styles.featureCard}
-              >
-                <span className={styles.featureIcon}>{card.icon}</span>
-                <span>
-                  <span className={styles.featureTitle}>{card.title}</span>
-                  <span className={styles.featureHint}>{card.hint}</span>
-                </span>
-                <span className={styles.featureArrow}>
-                  <IconArrow />
-                </span>
-              </Link>
+        {/* FAQ Section */}
+        <section className={styles.faqSection} aria-label="Frequently asked questions">
+          <div className={styles.sectionHeader}>
+            <h2>Frequently Asked Questions</h2>
+          </div>
+
+          <div className={styles.faqGrid}>
+            {FAQ_ITEMS.map((item) => (
+              <details key={item.question} className={styles.faqItem}>
+                <summary>{item.question}</summary>
+                <p>{item.answer}</p>
+              </details>
             ))}
           </div>
         </section>
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
       </main>
 
       <footer className={styles.footer} id="contact">
