@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import SiteChrome from "@/components/SiteChrome";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 // Premium humanist sans — powers all headings, body copy, labels, and
 // button text. Kept as one family (mapped to --font-sans, with --font-display
@@ -88,6 +89,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sansFont.variable} ${mono.variable} font-sans antialiased`}>
       <body className="bg-void text-ink antialiased">
+        <GoogleAnalytics />
         <ServiceWorkerRegister />
         <SiteChrome>{children}</SiteChrome>
       </body>
