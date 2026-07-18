@@ -64,11 +64,13 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "OrbitMap",
     url: "https://orbitmap.space",
+    images: [{ url: "/og-blog.png", width: 1200, height: 630, alt: "OrbitMap — Live ISS & Satellite Tracker" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "OrbitMap — Live ISS & Satellite Tracker",
     description: SITE_DESCRIPTION,
+    images: ["/og-blog.png"],
   },
 };
 
