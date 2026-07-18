@@ -14,7 +14,7 @@ export function liveViewerEstimate(date: Date = new Date()): number {
   const x = Math.sin(bucket * 12.9898) * 43758.5453;
   const frac = x - Math.floor(x);
 
-  const base = 320;
-  const range = 260;
+  const base = 32000;
+  const range = 13000; // base + range = 45000, so output stays within [32000, 45000]
   return Math.round(base + frac * range);
 }
