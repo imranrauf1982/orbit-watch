@@ -707,7 +707,7 @@
     padding-bottom: 14px;
   }
 
-  .main {
+  .foldWrap {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -763,4 +763,185 @@
   .featureCard {
     padding: clamp(16px, 1.9vh, 24px);
   }
+}
+
+/* ---------------------- How It Works / FAQ ----------------------- */
+/* .foldWrap has no special styling below 860px — it's a plain div there,
+   matching the existing mobile behavior where hero/features just stack
+   and scroll normally. The flex/centering rule above (>=860px) is what
+   makes it "fit above the fold" on desktop. */
+
+.sectionHeader {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 40px;
+  padding: 0 20px;
+}
+
+.sectionHeader h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(24px, 3.4vw, 34px);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+
+.sectionHeader p {
+  font-size: 14.5px;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* How It Works */
+
+.howItWorks {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: clamp(48px, 7vw, 88px) 20px;
+}
+
+.stepsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 720px) {
+  .stepsGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+.step {
+  position: relative;
+  padding: 26px 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(180deg, rgba(24, 30, 44, 0.65), rgba(12, 15, 24, 0.65));
+  backdrop-filter: blur(16px);
+  box-shadow: 0 20px 50px -25px rgba(0, 0, 0, 0.8);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.step:hover {
+  transform: translateY(-4px);
+  border-color: var(--cyan-dim);
+  box-shadow: 0 24px 60px -22px rgba(79, 216, 235, 0.35);
+}
+
+.stepNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 16px;
+  border-radius: 999px;
+  background: rgba(79, 216, 235, 0.1);
+  border: 1px solid var(--glass-border);
+  color: var(--cyan-soft);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.step h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16.5px;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+
+.step p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0;
+}
+
+.inlineLink {
+  color: var(--cyan-soft) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--cyan-dim);
+}
+
+.inlineLink:hover {
+  color: var(--cyan) !important;
+}
+
+/* FAQ */
+
+.faqSection {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 20px clamp(60px, 8vw, 96px);
+}
+
+.faqGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.faqItem {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  padding: 4px 22px;
+  transition: border-color 0.2s ease;
+}
+
+.faqItem:hover {
+  border-color: var(--cyan-dim);
+}
+
+.faqItem summary {
+  padding: 16px 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.faqItem summary::-webkit-details-marker {
+  display: none;
+}
+
+.faqItem summary::after {
+  content: "+";
+  flex-shrink: 0;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--cyan-soft);
+  transition: transform 0.2s ease;
+}
+
+.faqItem[open] summary::after {
+  transform: rotate(45deg);
+}
+
+.faqItem p {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0 0 18px;
 }
