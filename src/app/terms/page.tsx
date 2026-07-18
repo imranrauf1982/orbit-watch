@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     "Terms of Service for OrbitMap, including accuracy disclaimers, affiliate and advertising disclosures, and intellectual property notices.",
 };
 
-const LAST_UPDATED = "July 16, 2026";
+const LAST_UPDATED = "July 18, 2026";
 const CONTACT_EMAIL = "info@orbitmap.space";
 
 export default function TermsPage() {
@@ -42,6 +42,7 @@ export default function TermsPage() {
           <a href="#conduct">Acceptable Use</a>
           <a href="#changes">Changes to the Service or Terms</a>
           <a href="#law">Governing Law</a>
+          <a href="#terms-changes">Changes to Terms</a>
           <a href="#contact">Contact</a>
         </nav>
 
@@ -191,9 +192,18 @@ export default function TermsPage() {
         <section id="law" className={styles.section}>
           <h2 className={styles.sectionTitle}>11. Governing Law</h2>
           <p className={styles.sectionText}>
-            These Terms are governed by the laws of the jurisdiction in which OrbitMap operates,
-            without regard to conflict-of-law principles.{" "}
-            <em>(Update this section with your specific country/state before publishing.)</em>
+            These Terms are governed by the laws of Pakistan, without regard to conflict-of-law
+            principles.
+          </p>
+        </section>
+
+        <section id="terms-changes" className={styles.section}>
+          <h2 className={styles.sectionTitle}>12. Changes to Terms</h2>
+          <p className={styles.sectionText}>
+            We may update these Terms from time to time. We will notify users of any material
+            changes by posting the new Terms on this page and updating the &ldquo;Last
+            updated&rdquo; date. Your continued use of the Service after such changes constitutes
+            your acceptance of the new Terms.
           </p>
         </section>
 
