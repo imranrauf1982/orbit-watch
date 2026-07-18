@@ -40,7 +40,10 @@ export const metadata: Metadata = {
     "orbital map",
     "satellite visibility",
   ],
-  metadataBase: new URL("https://www.orbitmap.space"),
+  metadataBase: new URL("https://orbitmap.space"),
+  alternates: {
+    canonical: "https://orbitmap.space",
+  },
   manifest: "/site.webmanifest",
   icons: {
     icon: [
@@ -60,7 +63,7 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     type: "website",
     siteName: "OrbitMap",
-    url: "https://www.orbitmap.space",
+    url: "https://orbitmap.space",
   },
   twitter: {
     card: "summary_large_image",
