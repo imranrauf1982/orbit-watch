@@ -1,88 +1,87 @@
-# Orbit Watch — Live Satellite Tracker
+# OrbitWatch / OrbitMap — 3D Real-Time Satellite Tracker
 
-3D real-time satellite tracker built with Next.js 14, react-three-fiber, aur satellite.js.
-Data source: Celestrak (free, no API key needed).
+**Live demo: [orbitmap.space](https://orbitmap.space)**
 
-## Step 1 — Apne computer pe download/copy karo
+A real-time 3D satellite tracker built with Next.js 14 and React Three Fiber. Watch the ISS, Hubble, weather satellites, and Starlink move across a live wireframe globe, a 2D map, or a naked-eye sky view — all powered by real orbital data.
 
-Ye poora `space-tracker` folder apne computer pe copy kar lo (ya GitHub se clone karoge, Step 3 dekho).
+---
 
-## Step 2 — Dependencies install karo
+### 🚀 Hire Me — Custom 3D / WebGL Development
 
-Terminal khol kar folder mein jao:
+This project is a portfolio piece. If you need a custom **Next.js, React Three Fiber, or WebGL** build — interactive 3D dashboards, data visualizations, real-time tracking apps, or marketing sites with a "mission control" feel like this one — I'm available for freelance and contract work.
+
+📩 **Contact:** [info@orbitmap.space](mailto:info@orbitmap.space)
+
+---
+
+## Features
+
+- **Next.js 14 (App Router)** — server components fetch initial data, client components handle all interactivity
+- **React Three Fiber + three.js** — a real-time, rotating wireframe 3D globe (no heavy Earth texture, so it loads fast)
+- **CelesTrak TLE API integration** — live orbital element data for hundreds of active satellites, fetched server-side and cached (`src/app/api/tle/route.ts`)
+- **satellite.js (SGP4/SDP4)** — converts raw TLE data into real-time latitude/longitude/altitude positions
+- **Three view modes** — 3D globe, 2D Leaflet map, and a sky-dome "what's above me right now" view
+- **Pass predictions** — see when a satellite (e.g. the ISS) will next be visible from your location
+- **Tailwind CSS** — utility-first styling with a dark, tactical "mission-control" visual theme
+- **PWA-ready** — installable with an offline-capable service worker
+- **Optional Supabase backend** — powers the blog and affiliate products pages (not required to run the core tracker)
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 (App Router), TypeScript |
+| 3D rendering | three.js, @react-three/fiber, @react-three/drei |
+| Orbital mechanics | satellite.js |
+| 2D map | Leaflet, react-leaflet |
+| Styling | Tailwind CSS |
+| Backend (optional) | Supabase (Postgres + RLS) |
+| Data source | [CelesTrak](https://celestrak.org) (free, no API key required) |
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18.17 or later
+- npm (or your preferred package manager)
+
+### Installation
 
 ```bash
-cd space-tracker
+git clone https://github.com/YOUR-USERNAME/orbit-watch.git
+cd orbit-watch
 npm install
 ```
 
-Ye package.json mein likhi saari libraries download karega (Next.js, Three.js, satellite.js waghera).
+### Environment variables
 
-## Step 3 — Local pe chala kar dekho
+The core satellite tracker (globe, map, sky view, TLE data) works with **no environment variables at all** — CelesTrak requires no API key.
+
+The blog and products pages use Supabase, and analytics is optional. Copy the example env file and fill in your own values if you want those features:
+
+```bash
+cp .env.example .env.local
+```
+
+See [`.env.example`](.env.example) for the full list of variables and what each one does. Never commit `.env.local` — it's already listed in `.gitignore`.
+
+### Run locally
 
 ```bash
 npm run dev
 ```
 
-Browser mein jao: `http://localhost:3000` — globe ghoomta dikhega, satellites live position update hote rahenge.
+Open [http://localhost:3000](http://localhost:3000) — the landing page loads first; click **Launch App** (or go to `/app`) for the live tracker.
 
-Agar globe nahi dikh raha ya error aaye, terminal ka error message check karo — zyada tar wajah missing dependency hoti hai, dobara `npm install` chalao.
-
-## Step 4 — GitHub pe push karo
-
-1. GitHub.com pe login karo, naya repository banao (jaise `orbit-watch`), **empty** rakho (README na add karo wahan)
-2. Apne terminal mein:
+### Production build
 
 ```bash
-git init
-git add .
-git commit -m "Initial commit: Orbit Watch satellite tracker"
-git branch -M main
-git remote add origin https://github.com/TUMHARA-USERNAME/orbit-watch.git
-git push -u origin main
+npm run build
+npm run start
 ```
 
-`.gitignore` file already `node_modules` aur build files ko exclude kar deti hai — sirf source code push hoga, clean rahega.
+## Deployment
 
-## Step 5 — Vercel pe deploy karo
+Deploys cleanly to [Vercel](https://vercel.com) with zero configuration — connect the GitHub repo, add your environment variables (if using Supabase/analytics) in Project Settings, and deploy.
 
-1. [vercel.com](https://vercel.com) pe jao, **"Sign up"** — GitHub account se login karo (same account jahan repo push kiya)
-2. Dashboard mein **"Add New Project"** dabao
-3. Apni `orbit-watch` repository select karo — Vercel automatically Next.js detect kar lega
-4. Kuch settings change karne ki zaroorat nahi, seedha **"Deploy"** dabao
-5. 1-2 minute mein live link mil jayega: `orbit-watch-xyz.vercel.app`
-
-Har baar jab tum GitHub pe naya code push karoge, Vercel automatically redeploy kar dega — kuch manually karne ki zaroorat nahi.
-
-## Step 6 — Custom domain lagana (optional)
-
-Agar apna domain chahiye (jaise `orbitwatch.com`):
-1. Namecheap/GoDaddy se domain khareedo (~$10/year)
-2. Vercel project → Settings → Domains → apna domain add karo
-3. Vercel jo DNS records dikhaye, wo apne domain provider ke DNS settings mein daal do
-4. 10-30 minute mein live ho jayega custom domain pe
-
-## Kaise kaam karta hai (short explanation)
-
-- `src/app/api/tle/route.ts` — Celestrak se satellite orbital data (TLE) fetch karta hai, 1 ghante cache rehta hai
-- `src/lib/orbit.ts` — TLE data ko real lat/lon/altitude coordinates mein convert karta hai (satellite.js library se)
-- `src/components/Earth.tsx` — 3D globe render karta hai (wireframe grid style — mission-control look, koi heavy image texture nahi, isliye fast load hota hai)
-- `src/components/SatelliteMarker.tsx` — har satellite ka live position + chhota orbit trail dikhata hai, har frame update hota hai
-- `src/components/Hud.tsx` — search bar, satellite list, aur telemetry panel (lat/lon/altitude/speed) — mobile pe bottom sheet, desktop pe side panel
-
-## Naye satellites add karna
-
-`src/lib/satellite-catalog.ts` khol kar list mein naya entry add karo, bas NORAD catalog ID chahiye hoti hai (Celestrak.org se dhoond sakte ho kisi bhi satellite ka naam search kar ke).
-
-## Lighthouse / Performance notes
-
-- Fonts `next/font/google` se load hote hain — automatically self-hosted hote hain (Google ko extra request nahi jaati runtime pe), isse performance score high rehta hai
-- Earth ek generated wireframe hai, koi bhari image texture download nahi hoti
-- `dpr={[1, 1.75]}` — mobile devices pe rendering resolution capped hai taake GPU pe load kam rahe aur frame rate smooth rahe
-- Agar future mein photoreal Earth texture chahiye, `public/textures/` mein apni image daal kar `Earth.tsx` mein `useTexture` se load kar sakte ho — abhi wireframe design jaan-boojh kar rakha hai taake load fast rahe aur "tactical/mission-control" look mile jo generic space website se alag lage
-
-## Gig portfolio ke liye
-
-1. `npm run build && npm run start` chala kar production version dekho (dev mode se thoda slower hota hai, production zyada tez hai)
-2. Vercel wala live link screen-record karo (globe ghoomte, satellite click karte, mobile responsive dikhate)
-3. Us recording ko Fiverr gig video/gallery mein daal do
+## Project Structure
