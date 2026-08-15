@@ -85,3 +85,23 @@ npm run start
 Deploys cleanly to [Vercel](https://vercel.com) with zero configuration — connect the GitHub repo, add your environment variables (if using Supabase/analytics) in Project Settings, and deploy.
 
 ## Project Structure
+
+```
+src/
+  app/            # Next.js App Router pages & API routes
+    api/tle/      # Serves cached CelesTrak satellite data
+    api/subscribe/# Pass-alert signup endpoint
+  components/     # React components (3D scene, HUD, map, sky view, etc.)
+  lib/            # Orbital math, TLE fetching/caching, Supabase clients, hooks
+  workers/        # Web Worker for off-main-thread orbit propagation
+```
+
+See [`PROJECT_DOCUMENTATION.md`](PROJECT_DOCUMENTATION.md) for a full file-by-file breakdown of how the app works.
+
+## Contributing
+
+Issues and pull requests are welcome. For larger changes, please open an issue first to discuss what you'd like to change.
+
+## License
+
+MIT — see [LICENSE](LICENSE) for details.
