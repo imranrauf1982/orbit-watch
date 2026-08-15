@@ -24,3 +24,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# vercel
+.vercel
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+.idea
