@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Space_Grotesk } from "next/font/google";
 import styles from "./Home.module.css";
 import LandingHeader from "@/components/LandingHeader";
+import ForSaleBar from "@/components/ForSaleBar";
 
 // Loaded only for this page — kept out of the shared root layout so it
 // never touches the tracker app's own type system. Aliased to
@@ -140,6 +141,8 @@ export default function LandingPage() {
           lets the browser start fetching it immediately, in parallel with
           everything else, instead of only finding out about it late. */}
       <link rel="preload" as="image" href="/textures/earth_day.jpg" fetchPriority="high" />
+
+      <ForSaleBar />
 
       <div className={styles.starsFar} aria-hidden />
       <div className={styles.stars} aria-hidden />
