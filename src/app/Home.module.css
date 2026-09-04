@@ -21,15 +21,28 @@
   --font-display: var(--font-display-landing), "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
+  /* Height reserved for the sticky "for sale" announcement bar. Referenced
+     by .page's own top padding and by .header's sticky offset below, so
+     both stay in sync automatically (including the mobile override where
+     the bar wraps onto two lines and gets taller). */
+  --announce-h: 44px;
+
   position: relative;
   isolation: isolate;
   min-height: 100dvh;
   width: 100%;
   overflow-x: clip;
+  padding-top: var(--announce-h);
   background: radial-gradient(ellipse 120% 60% at 50% 0%, #0d1420 0%, var(--bg-deep) 55%),
     var(--bg-deep);
   color: var(--ink);
   font-family: var(--font-body);
+}
+
+@media (max-width: 640px) {
+  .page {
+    --announce-h: 72px;
+  }
 }
 
 .page *,
@@ -104,7 +117,9 @@
 
 .header {
   position: sticky;
-  top: 0;
+  /* Sticks directly below the announcement bar (instead of at the very
+     top of the viewport) so the fixed bar never overlaps it. */
+  top: var(--announce-h);
   z-index: 40;
   display: flex;
   align-items: center;
@@ -640,7 +655,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: calc(100dvh - 68px);
+    min-height: calc(100dvh - 68px - var(--announce-h));
   }
 
   .hero {
@@ -857,4 +872,71 @@
   line-height: 1.65;
   color: var(--muted);
   margin: 0 0 18px;
+}
+
+/* ------------------------- For sale announcement bar ------------------------- */
+/* Fixed above everything (including the sticky header) so it stays visible
+   while scrolling. .page reserves space for it via --announce-h (top
+   padding) and the header's sticky offset is shifted down by the same
+   amount, so nothing renders underneath it. Rendered only from page.tsx,
+   so it never appears on /app or other routes. */
+
+.forSaleBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-height: var(--announce-h, 44px);
+  padding: 8px clamp(12px, 4vw, 24px);
+  background: linear-gradient(180deg, #0a0e18 0%, #05070c 100%);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: 0 4px 24px -8px rgba(0, 0, 0, 0.6);
+  text-align: center;
+}
+
+.forSaleBarText {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.forSaleBarCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #eaf9fc 0%, #c6ecf3 100%);
+  color: #05141a !important;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35) inset;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.forSaleBarCta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5) inset, 0 6px 18px -4px rgba(79, 216, 235, 0.6);
+}
+
+@media (max-width: 640px) {
+  .forSaleBar {
+    padding: 10px 14px;
+    gap: 6px;
+  }
+
+  .forSaleBarText {
+    font-size: 12px;
+    width: 100%;
+  }
 }
