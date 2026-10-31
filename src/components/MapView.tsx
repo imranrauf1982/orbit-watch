@@ -17,6 +17,17 @@ import type { TleResult } from "@/lib/fetch-tle";
 import type { ObserverLocation } from "@/lib/use-location";
 import { reverseGeocode } from "@/lib/geocode";
 
+// Map tiles: set NEXT_PUBLIC_MAP_TILE_URL (and optionally
+// NEXT_PUBLIC_MAP_TILE_ATTRIBUTION) in Vercel/Netlify env vars.
+// Falls back to keyless CARTO tiles (which now show an "API KEY REQUIRED" watermark).
+const TILE_URL =
+  process.env.NEXT_PUBLIC_MAP_TILE_URL ||
+  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+const TILE_ATTRIBUTION =
+  process.env.NEXT_PUBLIC_MAP_TILE_ATTRIBUTION ||
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
+
 type Props = {
   satellites: TleResult[];
   selectedId: number | null;
@@ -256,8 +267,8 @@ export default function MapView({ satellites, selectedId, onSelect, location, fi
         attributionControl={true}
       >
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url={TILE_URL}
+          attribution={TILE_ATTRIBUTION}
           subdomains="abcd"
           maxZoom={19}
         />
